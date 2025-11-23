@@ -19,8 +19,8 @@ interface Evidence {
   id: string;
   submittedBy: string;
   content: string;
-  sourceUrl: string;
-  sourceType: "factual" | "opinionated";
+  sourceUrl?: string;
+  sourceType?: "factual" | "opinionated";
   status: "pending" | "agreed" | "challenged" | "validated";
   debater1Agreed: boolean;
   debater2Agreed: boolean;
@@ -85,16 +85,23 @@ const ActiveDebate = () => {
         if (updated.debater1Agreed && updated.debater2Agreed) {
           updated.status = "agreed";
           
-          // Award points: +2 for getting evidence agreed upon
+          // Award points based on source provision
+          const hasSource = !!ev.sourceUrl;
+          const basePoints = 1; // Base points for agreement
+          const sourceBonus = hasSource ? 2 : 0; // Bonus for providing source
+          const totalPoints = basePoints + sourceBonus;
+          
           if (ev.submittedBy === debateSetup?.debater1Name) {
-            setDebater1Score(prev => prev + 2);
+            setDebater1Score(prev => prev + totalPoints);
           } else {
-            setDebater2Score(prev => prev + 2);
+            setDebater2Score(prev => prev + totalPoints);
           }
           
           toast({
             title: "Evidence Accepted",
-            description: "Both debaters have agreed. +2 points awarded!",
+            description: hasSource 
+              ? `Both debaters agreed on sourced evidence! +${totalPoints} points awarded.`
+              : `Both debaters agreed. +${totalPoints} point awarded.`,
           });
         }
         
@@ -125,16 +132,23 @@ const ActiveDebate = () => {
   const handleValidate = (evidenceId: string) => {
     setEvidenceList(evidenceList.map(ev => {
       if (ev.id === evidenceId) {
-        // Award points: +3 for successfully defending evidence
+        // Award points for successfully defending evidence
+        const hasSource = !!ev.sourceUrl;
+        const basePoints = 2; // Base points for validation
+        const sourceBonus = hasSource ? 2 : 0; // Bonus for defending sourced evidence
+        const totalPoints = basePoints + sourceBonus;
+        
         if (ev.submittedBy === debateSetup?.debater1Name) {
-          setDebater1Score(prev => prev + 3);
+          setDebater1Score(prev => prev + totalPoints);
         } else {
-          setDebater2Score(prev => prev + 3);
+          setDebater2Score(prev => prev + totalPoints);
         }
         
         toast({
           title: "Evidence Validated",
-          description: "Original evidence defended successfully! +3 points awarded.",
+          description: hasSource
+            ? `Sourced evidence defended successfully! +${totalPoints} points awarded.`
+            : `Evidence defended successfully! +${totalPoints} points awarded.`,
         });
         return {
           ...ev,
