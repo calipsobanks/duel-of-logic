@@ -40,6 +40,7 @@ const Discussions = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditBeliefsOpen, setIsEditBeliefsOpen] = useState(false);
   const [beliefsInput, setBeliefsInput] = useState('');
+  const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -186,6 +187,21 @@ const Discussions = () => {
     fetchProfiles();
   };
 
+  const handleBeliefClick = (belief: string) => {
+    if (selectedBelief === belief) {
+      setSelectedBelief(null); // Clear filter if clicking the same belief
+    } else {
+      setSelectedBelief(belief);
+    }
+  };
+
+  // Filter profiles based on selected belief
+  const filteredProfiles = selectedBelief
+    ? profiles.filter(profile => 
+        profile.beliefs?.some(belief => belief === selectedBelief)
+      )
+    : profiles;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-6">
       <div className="max-w-6xl mx-auto">
@@ -236,9 +252,28 @@ const Discussions = () => {
 
           {/* Members List */}
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Members</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Members</h2>
+              {selectedBelief && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSelectedBelief(null)}
+                  className="text-xs"
+                >
+                  Clear Filter: {selectedBelief}
+                </Button>
+              )}
+            </div>
+            {selectedBelief && (
+              <div className="mb-4 p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Showing members who believe in <Badge variant="secondary">{selectedBelief}</Badge>
+                </p>
+              </div>
+            )}
             <div className="space-y-4">
-              {profiles.map((profile) => (
+              {filteredProfiles.map((profile) => (
                 <Card key={profile.id}>
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-center">
@@ -259,7 +294,12 @@ const Discussions = () => {
                           {profile.beliefs && profile.beliefs.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {profile.beliefs.map((belief, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge 
+                                  key={index} 
+                                  variant={selectedBelief === belief ? "default" : "secondary"} 
+                                  className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
+                                  onClick={() => handleBeliefClick(belief)}
+                                >
                                   {belief}
                                 </Badge>
                               ))}
@@ -331,6 +371,13 @@ const Discussions = () => {
                   </CardContent>
                 </Card>
               ))}
+              {filteredProfiles.length === 0 && profiles.length > 0 && (
+                <Card>
+                  <CardContent className="pt-6 text-center text-muted-foreground">
+                    No members found with belief: {selectedBelief}
+                  </CardContent>
+                </Card>
+              )}
               {profiles.length === 0 && (
                 <Card>
                   <CardContent className="pt-6 text-center text-muted-foreground">
