@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
 
 interface Profile {
   id: string;
   username: string;
+  avatar_url?: string | null;
 }
 
 interface Debate {
@@ -119,10 +122,38 @@ const Debates = () => {
             <h1 className="text-4xl font-bold">My Debates</h1>
             <p className="text-muted-foreground mt-2">Start a discussion or continue an existing one</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-4">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profiles.find(p => p.id === user?.id)?.avatar_url || undefined} />
+                    <AvatarFallback>
+                      <User className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Profile Settings</DialogTitle>
+                  <DialogDescription>
+                    Update your profile picture
+                  </DialogDescription>
+                </DialogHeader>
+                <ProfilePictureUpload
+                  userId={user?.id || ''}
+                  currentAvatarUrl={profiles.find(p => p.id === user?.id)?.avatar_url}
+                  username={profiles.find(p => p.id === user?.id)?.username || ''}
+                  onUploadComplete={fetchProfiles}
+                />
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -167,13 +198,21 @@ const Debates = () => {
                 <Card key={profile.id}>
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold">
-                          @{profile.username}
-                          {profile.id === user?.id && (
-                            <span className="ml-2 text-xs text-muted-foreground">(You)</span>
-                          )}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
+                          <AvatarFallback>
+                            <User className="h-5 w-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold">
+                            @{profile.username}
+                            {profile.id === user?.id && (
+                              <span className="ml-2 text-xs text-muted-foreground">(You)</span>
+                            )}
+                          </p>
+                        </div>
                       </div>
                       {profile.id !== user?.id && (
                         <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
