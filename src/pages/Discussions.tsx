@@ -8,13 +8,16 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Profile {
   id: string;
   username: string;
   avatar_url?: string | null;
+  beliefs?: string[] | null;
 }
 
 interface Discussion {
@@ -35,6 +38,8 @@ const Discussions = () => {
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [topic, setTopic] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditBeliefsOpen, setIsEditBeliefsOpen] = useState(false);
+  const [beliefsInput, setBeliefsInput] = useState('');
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -144,6 +149,43 @@ const Discussions = () => {
     }
   };
 
+  const handleEditBeliefs = (profile: Profile) => {
+    const beliefsList = profile.beliefs || [];
+    setBeliefsInput(beliefsList.join(', '));
+    setIsEditBeliefsOpen(true);
+  };
+
+  const handleSaveBeliefs = async () => {
+    if (!user) return;
+
+    // Parse the input - split by comma and clean up hashtags
+    const beliefsArray = beliefsInput
+      .split(',')
+      .map(belief => {
+        let cleaned = belief.trim();
+        // Add # if not present
+        if (cleaned && !cleaned.startsWith('#')) {
+          cleaned = '#' + cleaned;
+        }
+        return cleaned;
+      })
+      .filter(belief => belief.length > 1); // Filter out empty or just '#'
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ beliefs: beliefsArray })
+      .eq('id', user.id);
+
+    if (error) {
+      toast.error('Failed to update beliefs');
+      return;
+    }
+
+    toast.success('Beliefs updated!');
+    setIsEditBeliefsOpen(false);
+    fetchProfiles();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-6">
       <div className="max-w-6xl mx-auto">
@@ -214,21 +256,40 @@ const Discussions = () => {
                               <span className="ml-2 text-xs text-muted-foreground">(You)</span>
                             )}
                           </p>
+                          {profile.beliefs && profile.beliefs.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {profile.beliefs.map((belief, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {belief}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       {profile.id === user?.id && (
-                        <label htmlFor={`avatar-upload-${profile.id}`} className="cursor-pointer">
-                          <input
-                            id={`avatar-upload-${profile.id}`}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleAvatarUpload(e, profile.id)}
-                            className="hidden"
-                          />
-                          <Button variant="outline" size="sm" asChild>
-                            <span>Upload Picture</span>
+                        <div className="flex gap-2">
+                          <label htmlFor={`avatar-upload-${profile.id}`} className="cursor-pointer">
+                            <input
+                              id={`avatar-upload-${profile.id}`}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleAvatarUpload(e, profile.id)}
+                              className="hidden"
+                            />
+                            <Button variant="outline" size="sm" asChild>
+                              <span>Upload Picture</span>
+                            </Button>
+                          </label>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleEditBeliefs(profile)}
+                          >
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Edit Beliefs
                           </Button>
-                        </label>
+                        </div>
                       )}
                       {profile.id !== user?.id && (
                         <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
@@ -280,6 +341,48 @@ const Discussions = () => {
             </div>
           </div>
         </div>
+
+        {/* Edit Beliefs Dialog */}
+        <Dialog open={isEditBeliefsOpen} onOpenChange={setIsEditBeliefsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Your Beliefs</DialogTitle>
+              <DialogDescription>
+                Add hashtags that represent what you believe in. Separate multiple beliefs with commas.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="beliefs">Your Beliefs</Label>
+                <Textarea
+                  id="beliefs"
+                  placeholder="e.g., #ClimateAction, #Education, #Freedom"
+                  value={beliefsInput}
+                  onChange={(e) => setBeliefsInput(e.target.value)}
+                  className="min-h-[100px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Hashtags will be automatically added if you don't include them
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditBeliefsOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveBeliefs}
+                  className="flex-1"
+                >
+                  Save Beliefs
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
