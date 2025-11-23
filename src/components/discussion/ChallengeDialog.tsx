@@ -15,14 +15,14 @@ interface ChallengeDialogProps {
     sourceUrl: string;
     sourceType: "factual" | "opinionated";
   }) => void;
-  currentDebaterName: string;
+  currentParticipantName: string;
 }
 
 export const ChallengeDialog = ({
   open,
   onOpenChange,
   onSubmit,
-  currentDebaterName
+  currentParticipantName
 }: ChallengeDialogProps) => {
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
@@ -33,7 +33,7 @@ export const ChallengeDialog = ({
     
     if (content && sourceUrl) {
       onSubmit({
-        submittedBy: currentDebaterName,
+        submittedBy: currentParticipantName,
         content,
         sourceUrl,
         sourceType

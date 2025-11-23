@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     toast.success('Account created! Please check your email to verify your account.');
-    navigate('/debates');
+    navigate('/discussions');
   };
 
   const signIn = async (email: string, password: string) => {
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     toast.success('Welcome back!');
-    navigate('/debates');
+    navigate('/discussions');
   };
 
   const signOut = async () => {
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     toast.success('Password updated successfully!');
-    navigate('/debates');
+    navigate('/discussions');
   };
 
   return (

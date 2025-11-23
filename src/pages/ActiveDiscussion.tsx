@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus } from "lucide-react";
-import { EvidenceCard } from "@/components/debate/EvidenceCard";
-import { AddEvidenceDialog } from "@/components/debate/AddEvidenceDialog";
+import { EvidenceCard } from "@/components/discussion/EvidenceCard";
+import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface DebateData {
+interface DiscussionData {
   id: string;
   topic: string;
   debater1_id: string;
@@ -32,16 +32,16 @@ interface Evidence {
   created_at: string;
 }
 
-const ActiveDebate = () => {
+const ActiveDiscussion = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const debateId = searchParams.get('id');
+  const discussionId = searchParams.get('id');
   const { toast } = useToast();
   const { user } = useAuth();
-  const [debate, setDebate] = useState<DebateData | null>(null);
+  const [discussion, setDiscussion] = useState<DiscussionData | null>(null);
   const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
   const [isAddingEvidence, setIsAddingEvidence] = useState(false);
-  const [currentDebater, setCurrentDebater] = useState<1 | 2>(1);
+  const [currentParticipant, setCurrentParticipant] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,16 +50,16 @@ const ActiveDebate = () => {
       return;
     }
 
-    if (!debateId) {
-      navigate('/debates');
+    if (!discussionId) {
+      navigate('/discussions');
       return;
     }
 
-    loadDebate();
+    loadDiscussion();
     loadEvidence();
-  }, [debateId, user, navigate]);
+  }, [discussionId, user, navigate]);
 
-  const loadDebate = async () => {
+  const loadDiscussion = async () => {
     const { data, error } = await supabase
       .from('debates')
       .select(`
@@ -67,21 +67,21 @@ const ActiveDebate = () => {
         debater1:profiles!debates_debater1_id_fkey(username),
         debater2:profiles!debates_debater2_id_fkey(username)
       `)
-      .eq('id', debateId)
+      .eq('id', discussionId)
       .single();
 
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to load debate",
+        description: "Failed to load discussion",
         variant: "destructive",
       });
-      navigate('/debates');
+      navigate('/discussions');
       return;
     }
 
-    setDebate(data);
-    setCurrentDebater(data.debater1_id === user?.id ? 1 : 2);
+    setDiscussion(data);
+    setCurrentParticipant(data.debater1_id === user?.id ? 1 : 2);
     setLoading(false);
   };
 
@@ -89,7 +89,7 @@ const ActiveDebate = () => {
     const { data, error } = await supabase
       .from('evidence')
       .select('*')
-      .eq('debate_id', debateId)
+      .eq('debate_id', discussionId)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -108,7 +108,7 @@ const ActiveDebate = () => {
     const { error } = await supabase
       .from('evidence')
       .insert({
-        debate_id: debateId,
+        debate_id: discussionId,
         debater_id: user?.id,
         claim: evidenceData.content,
         source_url: evidenceData.sourceUrl,
@@ -130,7 +130,7 @@ const ActiveDebate = () => {
     
     toast({
       title: "Evidence Added",
-      description: "Waiting for both debaters to review and agree.",
+      description: "Waiting for both participants to review and agree.",
     });
   };
 
@@ -158,24 +158,24 @@ const ActiveDebate = () => {
     const sourceBonus = hasSource ? 2 : 0;
     const totalPoints = basePoints + sourceBonus;
 
-    const isDebater1 = evidence.debater_id === debate?.debater1_id;
+    const isDebater1 = evidence.debater_id === discussion?.debater1_id;
     const newScore = isDebater1 
-      ? debate!.debater1_score + totalPoints 
-      : debate!.debater2_score + totalPoints;
+      ? discussion!.debater1_score + totalPoints 
+      : discussion!.debater2_score + totalPoints;
 
     await supabase
       .from('debates')
       .update(isDebater1 ? { debater1_score: newScore } : { debater2_score: newScore })
-      .eq('id', debateId);
+      .eq('id', discussionId);
 
-    loadDebate();
+    loadDiscussion();
     loadEvidence();
 
     toast({
       title: "Evidence Accepted",
       description: hasSource 
-        ? `Both debaters agreed on sourced evidence! +${totalPoints} points awarded.`
-        : `Both debaters agreed. +${totalPoints} point awarded.`,
+        ? `Both participants agreed on sourced evidence! +${totalPoints} points awarded.`
+        : `Both participants agreed. +${totalPoints} point awarded.`,
     });
   };
 
@@ -203,17 +203,17 @@ const ActiveDebate = () => {
     const sourceBonus = hasSource ? 2 : 0;
     const totalPoints = basePoints + sourceBonus;
 
-    const isDebater1 = evidence.debater_id === debate?.debater1_id;
+    const isDebater1 = evidence.debater_id === discussion?.debater1_id;
     const newScore = isDebater1 
-      ? debate!.debater1_score + totalPoints 
-      : debate!.debater2_score + totalPoints;
+      ? discussion!.debater1_score + totalPoints 
+      : discussion!.debater2_score + totalPoints;
 
     await supabase
       .from('debates')
       .update(isDebater1 ? { debater1_score: newScore } : { debater2_score: newScore })
-      .eq('id', debateId);
+      .eq('id', discussionId);
 
-    loadDebate();
+    loadDiscussion();
     loadEvidence();
 
     toast({
@@ -224,10 +224,10 @@ const ActiveDebate = () => {
     });
   };
 
-  if (loading || !debate) {
+  if (loading || !discussion) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading debate...</p>
+        <p>Loading discussion...</p>
       </div>
     );
   }
@@ -237,15 +237,15 @@ const ActiveDebate = () => {
      evidenceList[evidenceList.length - 1].status === "validated");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-debate-blue-light py-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-discussion-blue-light py-8">
       <div className="container mx-auto px-4">
         <Button
           variant="ghost"
-          onClick={() => navigate('/debates')}
+          onClick={() => navigate('/discussions')}
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Debates
+          Back to Discussions
         </Button>
 
         {/* Header */}
@@ -253,11 +253,11 @@ const ActiveDebate = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                {debate.topic}
+                {discussion.topic}
               </h1>
               <div className="flex items-center gap-4 flex-wrap">
                 <span className="text-muted-foreground">
-                  {debate.debater1.username} vs {debate.debater2.username}
+                  {discussion.debater1.username} vs {discussion.debater2.username}
                 </span>
               </div>
             </div>
@@ -265,13 +265,13 @@ const ActiveDebate = () => {
             {/* Score Display */}
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">{debate.debater1.username}</div>
-                <div className="text-3xl font-bold text-debate-blue">{debate.debater1_score}</div>
+                <div className="text-sm text-muted-foreground mb-1">{discussion.debater1.username}</div>
+                <div className="text-3xl font-bold text-discussion-blue">{discussion.debater1_score}</div>
               </div>
               <div className="text-2xl font-bold text-muted-foreground">-</div>
               <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">{debate.debater2.username}</div>
-                <div className="text-3xl font-bold text-debate-amber">{debate.debater2_score}</div>
+                <div className="text-sm text-muted-foreground mb-1">{discussion.debater2.username}</div>
+                <div className="text-3xl font-bold text-discussion-amber">{discussion.debater2_score}</div>
               </div>
             </div>
             
@@ -286,15 +286,15 @@ const ActiveDebate = () => {
           </div>
 
           {/* Leading Indicator */}
-          {debate.debater1_score !== debate.debater2_score && evidenceList.length > 0 && (
+          {discussion.debater1_score !== discussion.debater2_score && evidenceList.length > 0 && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-sm text-center text-muted-foreground">
                 <span className="font-semibold text-foreground">
-                  {debate.debater1_score > debate.debater2_score ? debate.debater1.username : debate.debater2.username}
+                  {discussion.debater1_score > discussion.debater2_score ? discussion.debater1.username : discussion.debater2.username}
                 </span>
                 {" "}is currently leading by{" "}
                 <span className="font-semibold text-foreground">
-                  {Math.abs(debate.debater1_score - debate.debater2_score)} point{Math.abs(debate.debater1_score - debate.debater2_score) !== 1 ? 's' : ''}
+                  {Math.abs(discussion.debater1_score - discussion.debater2_score)} point{Math.abs(discussion.debater1_score - discussion.debater2_score) !== 1 ? 's' : ''}
                 </span>
               </p>
             </div>
@@ -306,7 +306,7 @@ const ActiveDebate = () => {
           {evidenceList.length === 0 ? (
             <Card className="p-12 text-center">
               <p className="text-lg text-muted-foreground">
-                No evidence submitted yet. Click "Add Evidence" to begin the debate.
+                No evidence submitted yet. Click "Add Evidence" to begin the discussion.
               </p>
             </Card>
           ) : (
@@ -317,7 +317,7 @@ const ActiveDebate = () => {
                     <div className="flex items-center gap-3">
                       <Badge variant="outline">#{index + 1}</Badge>
                       <span className="text-sm text-muted-foreground">
-                        by {evidence.debater_id === debate.debater1_id ? debate.debater1.username : debate.debater2.username}
+                        by {evidence.debater_id === discussion.debater1_id ? discussion.debater1.username : discussion.debater2.username}
                       </span>
                       {evidence.source_type && (
                         <Badge variant={evidence.source_type === "factual" ? "default" : "secondary"}>
@@ -372,11 +372,11 @@ const ActiveDebate = () => {
           open={isAddingEvidence}
           onOpenChange={setIsAddingEvidence}
           onSubmit={handleAddEvidence}
-          currentDebaterName={currentDebater === 1 ? debate.debater1.username : debate.debater2.username}
+          currentParticipantName={currentParticipant === 1 ? discussion.debater1.username : discussion.debater2.username}
         />
       </div>
     </div>
   );
 };
 
-export default ActiveDebate;
+export default ActiveDiscussion;

@@ -9,30 +9,30 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 
 type ReasoningType = "inductive" | "deductive" | null;
 
-const DebateSetup = () => {
+const DiscussionSetup = () => {
   const navigate = useNavigate();
-  const [debater1Name, setDebater1Name] = useState("");
-  const [debater2Name, setDebater2Name] = useState("");
+  const [participant1Name, setParticipant1Name] = useState("");
+  const [participant2Name, setParticipant2Name] = useState("");
   const [topic, setTopic] = useState("");
   const [reasoningType, setReasoningType] = useState<ReasoningType>(null);
 
-  const handleStartDebate = () => {
-    if (debater1Name && debater2Name && topic && reasoningType) {
-      // Store debate setup in localStorage for now
-      localStorage.setItem('debateSetup', JSON.stringify({
-        debater1Name,
-        debater2Name,
+  const handleStartDiscussion = () => {
+    if (participant1Name && participant2Name && topic && reasoningType) {
+      // Store discussion setup in localStorage for now
+      localStorage.setItem('discussionSetup', JSON.stringify({
+        participant1Name,
+        participant2Name,
         topic,
         reasoningType
       }));
-      navigate('/debate/active');
+      navigate('/discussion/active');
     }
   };
 
-  const isFormValid = debater1Name && debater2Name && topic && reasoningType;
+  const isFormValid = participant1Name && participant2Name && topic && reasoningType;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-debate-blue-light py-12">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-discussion-blue-light py-12">
       <div className="container mx-auto px-4">
         <Button
           variant="ghost"
@@ -46,49 +46,49 @@ const DebateSetup = () => {
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-foreground mb-4">
-              Set Up Your Debate
+              Set Up Your Discussion
             </h1>
             <p className="text-lg text-muted-foreground">
-              Configure the participants and reasoning framework for your debate
+              Configure the participants and reasoning framework for your discussion
             </p>
           </div>
 
           <Card className="p-8 space-y-8">
-            {/* Debater Names */}
+            {/* Participant Names */}
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="debater1" className="text-base font-semibold">
-                  Debater 1 Name
+                <Label htmlFor="participant1" className="text-base font-semibold">
+                  Participant 1 Name
                 </Label>
                 <Input
-                  id="debater1"
-                  placeholder="Enter first debater's name"
-                  value={debater1Name}
-                  onChange={(e) => setDebater1Name(e.target.value)}
+                  id="participant1"
+                  placeholder="Enter first participant's name"
+                  value={participant1Name}
+                  onChange={(e) => setParticipant1Name(e.target.value)}
                   className="text-lg"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="debater2" className="text-base font-semibold">
-                  Debater 2 Name
+                <Label htmlFor="participant2" className="text-base font-semibold">
+                  Participant 2 Name
                 </Label>
                 <Input
-                  id="debater2"
-                  placeholder="Enter second debater's name"
-                  value={debater2Name}
-                  onChange={(e) => setDebater2Name(e.target.value)}
+                  id="participant2"
+                  placeholder="Enter second participant's name"
+                  value={participant2Name}
+                  onChange={(e) => setParticipant2Name(e.target.value)}
                   className="text-lg"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="topic" className="text-base font-semibold">
-                  Debate Topic
+                  Discussion Topic
                 </Label>
                 <Input
                   id="topic"
-                  placeholder="What will you debate about?"
+                  placeholder="What will you discuss?"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   className="text-lg"
@@ -150,9 +150,9 @@ const DebateSetup = () => {
               size="lg"
               className="w-full text-lg"
               disabled={!isFormValid}
-              onClick={handleStartDebate}
+              onClick={handleStartDiscussion}
             >
-              Start Debate
+              Start Discussion
               <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
           </Card>
@@ -162,4 +162,4 @@ const DebateSetup = () => {
   );
 };
 
-export default DebateSetup;
+export default DiscussionSetup;

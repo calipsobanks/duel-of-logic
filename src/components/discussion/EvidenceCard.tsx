@@ -20,18 +20,18 @@ interface Evidence {
   sourceUrl?: string;
   sourceType?: "factual" | "opinionated";
   status: "pending" | "agreed" | "challenged" | "validated";
-  debater1Agreed: boolean;
-  debater2Agreed: boolean;
+  participant1Agreed: boolean;
+  participant2Agreed: boolean;
   challenges: Challenge[];
 }
 
 interface EvidenceCardProps {
   evidence: Evidence;
   index: number;
-  currentDebater: 1 | 2;
-  debater1Name: string;
-  debater2Name: string;
-  onAgree: (evidenceId: string, debater: 1 | 2) => void;
+  currentParticipant: 1 | 2;
+  participant1Name: string;
+  participant2Name: string;
+  onAgree: (evidenceId: string, participant: 1 | 2) => void;
   onChallenge: (evidenceId: string, challenge: Omit<Challenge, "id">) => void;
   onValidate: (evidenceId: string) => void;
 }
@@ -39,23 +39,23 @@ interface EvidenceCardProps {
 export const EvidenceCard = ({
   evidence,
   index,
-  currentDebater,
-  debater1Name,
-  debater2Name,
+  currentParticipant,
+  participant1Name,
+  participant2Name,
   onAgree,
   onChallenge,
   onValidate
 }: EvidenceCardProps) => {
   const [isChallenging, setIsChallenging] = useState(false);
   
-  const isDebater1 = currentDebater === 1;
-  const currentDebaterName = isDebater1 ? debater1Name : debater2Name;
-  const hasAgreed = isDebater1 ? evidence.debater1Agreed : evidence.debater2Agreed;
-  const submittedByCurrentDebater = evidence.submittedBy === currentDebaterName;
+  const isParticipant1 = currentParticipant === 1;
+  const currentParticipantName = isParticipant1 ? participant1Name : participant2Name;
+  const hasAgreed = isParticipant1 ? evidence.participant1Agreed : evidence.participant2Agreed;
+  const submittedByCurrentParticipant = evidence.submittedBy === currentParticipantName;
 
   const statusColor = {
-    pending: "bg-debate-warning/10 text-debate-warning border-debate-warning/20",
-    agreed: "bg-debate-success/10 text-debate-success border-debate-success/20",
+    pending: "bg-discussion-warning/10 text-discussion-warning border-discussion-warning/20",
+    agreed: "bg-discussion-success/10 text-discussion-success border-discussion-success/20",
     challenged: "bg-destructive/10 text-destructive border-destructive/20",
     validated: "bg-primary/10 text-primary border-primary/20"
   };
@@ -113,21 +113,21 @@ export const EvidenceCard = ({
       {/* Agreement Status */}
       <div className="flex items-center gap-4 pt-4 border-t">
         <div className="flex items-center gap-2">
-          <CheckCircle className={`w-5 h-5 ${evidence.debater1Agreed ? 'text-debate-success' : 'text-muted'}`} />
-          <span className="text-sm text-muted-foreground">{debater1Name}</span>
+          <CheckCircle className={`w-5 h-5 ${evidence.participant1Agreed ? 'text-discussion-success' : 'text-muted'}`} />
+          <span className="text-sm text-muted-foreground">{participant1Name}</span>
         </div>
         <div className="flex items-center gap-2">
-          <CheckCircle className={`w-5 h-5 ${evidence.debater2Agreed ? 'text-debate-success' : 'text-muted'}`} />
-          <span className="text-sm text-muted-foreground">{debater2Name}</span>
+          <CheckCircle className={`w-5 h-5 ${evidence.participant2Agreed ? 'text-discussion-success' : 'text-muted'}`} />
+          <span className="text-sm text-muted-foreground">{participant2Name}</span>
         </div>
       </div>
 
       {/* Actions */}
-      {evidence.status === "pending" && !submittedByCurrentDebater && (
+      {evidence.status === "pending" && !submittedByCurrentParticipant && (
         <div className="flex gap-3 pt-2">
           <Button
             variant="default"
-            onClick={() => onAgree(evidence.id, currentDebater)}
+            onClick={() => onAgree(evidence.id, currentParticipant)}
             disabled={hasAgreed}
             className="flex-1"
           >
@@ -143,7 +143,7 @@ export const EvidenceCard = ({
         </div>
       )}
 
-      {/* Challenged state - both debaters can respond */}
+      {/* Challenged state - both participants can respond */}
       {evidence.status === "challenged" && (
         <div className="flex gap-3 pt-2">
           <Button
@@ -151,7 +151,7 @@ export const EvidenceCard = ({
             onClick={() => setIsChallenging(true)}
             className="flex-1"
           >
-            {submittedByCurrentDebater ? "Defend Evidence" : "Add Counter-Challenge"}
+            {submittedByCurrentParticipant ? "Defend Evidence" : "Add Counter-Challenge"}
           </Button>
           <Button
             variant="default"
@@ -201,7 +201,7 @@ export const EvidenceCard = ({
           onChallenge(evidence.id, challenge);
           setIsChallenging(false);
         }}
-        currentDebaterName={currentDebaterName}
+        currentParticipantName={currentParticipantName}
       />
     </Card>
   );

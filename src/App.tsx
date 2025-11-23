@@ -6,9 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Debates from "./pages/Debates";
-import DebateSetup from "./pages/DebateSetup";
-import ActiveDebate from "./pages/ActiveDebate";
+import Discussions from "./pages/Discussions";
+import DiscussionSetup from "./pages/DiscussionSetup";
+import ActiveDiscussion from "./pages/ActiveDiscussion";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -24,9 +24,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/debates" element={<Debates />} />
-            <Route path="/debate/setup" element={<DebateSetup />} />
-            <Route path="/debate/active" element={<ActiveDebate />} />
+            <Route path="/discussions" element={<Discussions />} />
+            <Route path="/discussion/setup" element={<DiscussionSetup />} />
+            <Route path="/discussion/active" element={<ActiveDiscussion />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
