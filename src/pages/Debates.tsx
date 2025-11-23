@@ -10,7 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { LogOut, Plus, MessageSquare, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
 
 interface Profile {
   id: string;
@@ -106,6 +105,37 @@ const Debates = () => {
     navigate(`/debate/active?id=${data.id}`);
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>, userId: string) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) return;
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: data.publicUrl })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      toast.success('Profile picture updated!');
+      fetchProfiles();
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to upload profile picture');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -122,38 +152,10 @@ const Debates = () => {
             <h1 className="text-4xl font-bold">My Debates</h1>
             <p className="text-muted-foreground mt-2">Start a discussion or continue an existing one</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={profiles.find(p => p.id === user?.id)?.avatar_url || undefined} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Profile Settings</DialogTitle>
-                  <DialogDescription>
-                    Update your profile picture
-                  </DialogDescription>
-                </DialogHeader>
-                <ProfilePictureUpload
-                  userId={user?.id || ''}
-                  currentAvatarUrl={profiles.find(p => p.id === user?.id)?.avatar_url}
-                  username={profiles.find(p => p.id === user?.id)?.username || ''}
-                  onUploadComplete={fetchProfiles}
-                />
-              </DialogContent>
-            </Dialog>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -214,6 +216,20 @@ const Debates = () => {
                           </p>
                         </div>
                       </div>
+                      {profile.id === user?.id && (
+                        <label htmlFor={`avatar-upload-${profile.id}`} className="cursor-pointer">
+                          <input
+                            id={`avatar-upload-${profile.id}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleAvatarUpload(e, profile.id)}
+                            className="hidden"
+                          />
+                          <Button variant="outline" size="sm" asChild>
+                            <span>Upload Picture</span>
+                          </Button>
+                        </label>
+                      )}
                       {profile.id !== user?.id && (
                         <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
                           setIsDialogOpen(open);
