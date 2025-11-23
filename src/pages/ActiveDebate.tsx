@@ -42,6 +42,8 @@ const ActiveDebate = () => {
   const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
   const [isAddingEvidence, setIsAddingEvidence] = useState(false);
   const [currentDebater, setCurrentDebater] = useState<1 | 2>(1);
+  const [debater1Score, setDebater1Score] = useState(0);
+  const [debater2Score, setDebater2Score] = useState(0);
 
   useEffect(() => {
     const setup = localStorage.getItem('debateSetup');
@@ -82,9 +84,17 @@ const ActiveDebate = () => {
         
         if (updated.debater1Agreed && updated.debater2Agreed) {
           updated.status = "agreed";
+          
+          // Award points: +2 for getting evidence agreed upon
+          if (ev.submittedBy === debateSetup?.debater1Name) {
+            setDebater1Score(prev => prev + 2);
+          } else {
+            setDebater2Score(prev => prev + 2);
+          }
+          
           toast({
             title: "Evidence Accepted",
-            description: "Both debaters have agreed. You can proceed to the next evidence.",
+            description: "Both debaters have agreed. +2 points awarded!",
           });
         }
         
@@ -115,9 +125,16 @@ const ActiveDebate = () => {
   const handleValidate = (evidenceId: string) => {
     setEvidenceList(evidenceList.map(ev => {
       if (ev.id === evidenceId) {
+        // Award points: +3 for successfully defending evidence
+        if (ev.submittedBy === debateSetup?.debater1Name) {
+          setDebater1Score(prev => prev + 3);
+        } else {
+          setDebater2Score(prev => prev + 3);
+        }
+        
         toast({
           title: "Evidence Validated",
-          description: "The original evidence has been accepted. You can proceed to the next evidence.",
+          description: "Original evidence defended successfully! +3 points awarded.",
         });
         return {
           ...ev,
@@ -149,7 +166,7 @@ const ActiveDebate = () => {
         {/* Header */}
         <Card className="p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {debateSetup.topic}
               </h1>
@@ -162,6 +179,19 @@ const ActiveDebate = () => {
                 </span>
               </div>
             </div>
+
+            {/* Score Display */}
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground mb-1">{debateSetup.debater1Name}</div>
+                <div className="text-3xl font-bold text-debate-blue">{debater1Score}</div>
+              </div>
+              <div className="text-2xl font-bold text-muted-foreground">-</div>
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground mb-1">{debateSetup.debater2Name}</div>
+                <div className="text-3xl font-bold text-debate-amber">{debater2Score}</div>
+              </div>
+            </div>
             
             <Button
               size="lg"
@@ -172,6 +202,21 @@ const ActiveDebate = () => {
               Add Evidence
             </Button>
           </div>
+
+          {/* Leading Indicator */}
+          {debater1Score !== debater2Score && evidenceList.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-sm text-center text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {debater1Score > debater2Score ? debateSetup.debater1Name : debateSetup.debater2Name}
+                </span>
+                {" "}is currently leading by{" "}
+                <span className="font-semibold text-foreground">
+                  {Math.abs(debater1Score - debater2Score)} point{Math.abs(debater1Score - debater2Score) !== 1 ? 's' : ''}
+                </span>
+              </p>
+            </div>
+          )}
         </Card>
 
         {/* Debater Switch */}
