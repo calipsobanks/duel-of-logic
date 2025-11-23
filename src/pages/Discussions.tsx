@@ -17,7 +17,7 @@ interface Profile {
   avatar_url?: string | null;
 }
 
-interface Debate {
+interface Discussion {
   id: string;
   topic: string;
   debater1_id: string;
@@ -29,9 +29,9 @@ interface Debate {
   profiles: Profile;
 }
 
-const Debates = () => {
+const Discussions = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [debates, setDebates] = useState<Debate[]>([]);
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [topic, setTopic] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -45,7 +45,7 @@ const Debates = () => {
     }
 
     fetchProfiles();
-    fetchDebates();
+    fetchDiscussions();
   }, [user, navigate]);
 
   const fetchProfiles = async () => {
@@ -62,7 +62,7 @@ const Debates = () => {
     setProfiles(data || []);
   };
 
-  const fetchDebates = async () => {
+  const fetchDiscussions = async () => {
     const { data, error } = await supabase
       .from('debates')
       .select(`
@@ -73,14 +73,14 @@ const Debates = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Failed to load debates');
+      toast.error('Failed to load discussions');
       return;
     }
 
-    setDebates(data || []);
+    setDiscussions(data || []);
   };
 
-  const startDebate = async () => {
+  const startDiscussion = async () => {
     if (!selectedMember || !topic.trim()) return;
 
     const { data, error } = await supabase
@@ -94,15 +94,15 @@ const Debates = () => {
       .single();
 
     if (error) {
-      toast.error('Failed to create debate');
+      toast.error('Failed to create discussion');
       return;
     }
 
-    toast.success('Debate started!');
+    toast.success('Discussion started!');
     setIsDialogOpen(false);
     setTopic('');
     setSelectedMember(null);
-    navigate(`/debate/active?id=${data.id}`);
+    navigate(`/discussion/active?id=${data.id}`);
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>, userId: string) => {
@@ -149,7 +149,7 @@ const Debates = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold">My Debates</h1>
+            <h1 className="text-4xl font-bold">My Discussions</h1>
             <p className="text-muted-foreground mt-2">Start a discussion or continue an existing one</p>
           </div>
           <Button variant="outline" onClick={handleLogout}>
@@ -159,33 +159,33 @@ const Debates = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Active Debates */}
+          {/* Active Discussions */}
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Active Debates</h2>
+            <h2 className="text-2xl font-semibold mb-4">Active Discussions</h2>
             <div className="space-y-4">
-              {debates.map((debate) => (
-                <Card key={debate.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/debate/active?id=${debate.id}`)}>
+              {discussions.map((discussion) => (
+                <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MessageSquare className="h-5 w-5" />
-                      {debate.topic}
+                      {discussion.topic}
                     </CardTitle>
                     <CardDescription>
-                      With @{debate.profiles.username}
+                      With @{discussion.profiles.username}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between text-sm">
-                      <span>Your score: {debate.debater1_score}</span>
-                      <span>Their score: {debate.debater2_score}</span>
+                      <span>Your score: {discussion.debater1_score}</span>
+                      <span>Their score: {discussion.debater2_score}</span>
                     </div>
                   </CardContent>
                 </Card>
               ))}
-              {debates.length === 0 && (
+              {discussions.length === 0 && (
                 <Card>
                   <CardContent className="pt-6 text-center text-muted-foreground">
-                    No active debates yet. Start one with a member!
+                    No active discussions yet. Start one with a member!
                   </CardContent>
                 </Card>
               )}
@@ -239,19 +239,19 @@ const Debates = () => {
                           <DialogTrigger asChild>
                             <Button size="sm" onClick={() => setSelectedMember(profile)}>
                               <Plus className="mr-2 h-4 w-4" />
-                              Start Debate
+                              Start Discussion
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Start a debate with @{profile.username}</DialogTitle>
+                              <DialogTitle>Start a discussion with @{profile.username}</DialogTitle>
                               <DialogDescription>
-                                Choose a topic for your debate
+                                Choose a topic for your discussion
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 pt-4">
                               <div className="space-y-2">
-                                <Label htmlFor="topic">Debate Topic</Label>
+                                <Label htmlFor="topic">Discussion Topic</Label>
                                 <Input
                                   id="topic"
                                   placeholder="Enter the topic for discussion..."
@@ -259,8 +259,8 @@ const Debates = () => {
                                   onChange={(e) => setTopic(e.target.value)}
                                 />
                               </div>
-                              <Button onClick={startDebate} className="w-full" disabled={!topic.trim()}>
-                                Start Debate
+                              <Button onClick={startDiscussion} className="w-full" disabled={!topic.trim()}>
+                                Start Discussion
                               </Button>
                             </div>
                           </DialogContent>
@@ -285,4 +285,4 @@ const Debates = () => {
   );
 };
 
-export default Debates;
+export default Discussions;

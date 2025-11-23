@@ -47,12 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        debate: {
-          blue: "hsl(var(--debate-blue))",
-          "blue-light": "hsl(var(--debate-blue-light))",
-          amber: "hsl(var(--debate-amber))",
-          success: "hsl(var(--debate-success))",
-          warning: "hsl(var(--debate-warning))",
+        discussion: {
+          blue: "hsl(var(--discussion-blue))",
+          "blue-light": "hsl(var(--discussion-blue-light))",
+          amber: "hsl(var(--discussion-amber))",
+          success: "hsl(var(--discussion-success))",
+          warning: "hsl(var(--discussion-warning))",
         },
       },
       borderRadius: {

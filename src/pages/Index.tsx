@@ -11,12 +11,12 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/debates');
+      navigate('/discussions');
     }
   }, [user, loading, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-debate-blue-light">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-discussion-blue-light">
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto text-center space-y-8">
@@ -26,7 +26,7 @@ const Index = () => {
           
           <h1 className="text-6xl font-bold text-foreground tracking-tight">
             Evidence-Based<br />
-            <span className="text-primary">Debate Platform</span>
+            <span className="text-primary">Discussion Platform</span>
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -81,20 +81,20 @@ const Index = () => {
           </Card>
 
           <Card className="p-6 space-y-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div className="w-12 h-12 rounded-lg bg-debate-success/10 flex items-center justify-center">
-              <Scale className="w-6 h-6 text-debate-success" />
+            <div className="w-12 h-12 rounded-lg bg-discussion-success/10 flex items-center justify-center">
+              <Scale className="w-6 h-6 text-discussion-success" />
             </div>
             <h3 className="text-xl font-semibold text-card-foreground">
               Mutual Agreement
             </h3>
             <p className="text-muted-foreground">
-              Progress only when both debaters acknowledge the validity of evidence.
+              Progress only when both participants acknowledge the validity of evidence.
             </p>
           </Card>
 
           <Card className="p-6 space-y-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div className="w-12 h-12 rounded-lg bg-debate-warning/10 flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-debate-warning" />
+            <div className="w-12 h-12 rounded-lg bg-discussion-warning/10 flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-discussion-warning" />
             </div>
             <h3 className="text-xl font-semibold text-card-foreground">
               Challenge Evidence
@@ -128,7 +128,7 @@ const Index = () => {
               {
                 step: "3",
                 title: "Validate Together",
-                description: "Both debaters review and agree on the validity of each piece of evidence before moving forward."
+                description: "Both participants review and agree on the validity of each piece of evidence before moving forward."
               },
               {
                 step: "4",
@@ -158,7 +158,7 @@ const Index = () => {
       <section className="container mx-auto px-4 py-20">
         <Card className="max-w-3xl mx-auto p-12 text-center space-y-6 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
           <h2 className="text-4xl font-bold">
-            Ready to Elevate Your Debates?
+            Ready to Elevate Your Discussions?
           </h2>
           <p className="text-xl opacity-90">
             Start building stronger arguments with evidence-based reasoning.

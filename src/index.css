@@ -39,11 +39,11 @@ All colors MUST be HSL.
     --radius: 0.75rem;
     
     /* Custom tokens */
-    --debate-blue: 215 70% 35%;
-    --debate-blue-light: 215 60% 85%;
-    --debate-amber: 30 95% 55%;
-    --debate-success: 142 70% 45%;
-    --debate-warning: 45 95% 55%;
+    --discussion-blue: 215 70% 35%;
+    --discussion-blue-light: 215 60% 85%;
+    --discussion-amber: 30 95% 55%;
+    --discussion-success: 142 70% 45%;
+    --discussion-warning: 45 95% 55%;
     
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(215 70% 35%), hsl(215 70% 45%));
@@ -99,11 +99,11 @@ All colors MUST be HSL.
     --ring: 215 70% 50%;
     
     /* Custom tokens dark */
-    --debate-blue: 215 70% 50%;
-    --debate-blue-light: 215 60% 25%;
-    --debate-amber: 30 95% 55%;
-    --debate-success: 142 70% 45%;
-    --debate-warning: 45 95% 55%;
+    --discussion-blue: 215 70% 50%;
+    --discussion-blue-light: 215 60% 25%;
+    --discussion-amber: 30 95% 55%;
+    --discussion-success: 142 70% 45%;
+    --discussion-warning: 45 95% 55%;
     
     --gradient-hero: linear-gradient(135deg, hsl(215 70% 40%), hsl(215 70% 50%));
     --gradient-card: linear-gradient(180deg, hsl(220 35% 12%), hsl(220 35% 14%));

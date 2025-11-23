@@ -15,14 +15,14 @@ interface AddEvidenceDialogProps {
     sourceUrl?: string;
     sourceType?: "factual" | "opinionated";
   }) => void;
-  currentDebaterName: string;
+  currentParticipantName: string;
 }
 
 export const AddEvidenceDialog = ({
   open,
   onOpenChange,
   onSubmit,
-  currentDebaterName
+  currentParticipantName
 }: AddEvidenceDialogProps) => {
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
@@ -33,7 +33,7 @@ export const AddEvidenceDialog = ({
     
     if (content) {
       onSubmit({
-        submittedBy: currentDebaterName,
+        submittedBy: currentParticipantName,
         content,
         ...(sourceUrl && { sourceUrl, sourceType })
       });
