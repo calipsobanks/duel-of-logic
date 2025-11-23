@@ -47,15 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        debate: {
+          blue: "hsl(var(--debate-blue))",
+          "blue-light": "hsl(var(--debate-blue-light))",
+          amber: "hsl(var(--debate-amber))",
+          success: "hsl(var(--debate-success))",
+          warning: "hsl(var(--debate-warning))",
         },
       },
       borderRadius: {
