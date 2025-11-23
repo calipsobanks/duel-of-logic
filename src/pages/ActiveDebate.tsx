@@ -21,7 +21,7 @@ interface Evidence {
   content: string;
   sourceUrl: string;
   sourceType: "factual" | "opinionated";
-  status: "pending" | "agreed" | "challenged";
+  status: "pending" | "agreed" | "challenged" | "validated";
   debater1Agreed: boolean;
   debater2Agreed: boolean;
   challenges: Challenge[];
@@ -112,10 +112,27 @@ const ActiveDebate = () => {
     });
   };
 
+  const handleValidate = (evidenceId: string) => {
+    setEvidenceList(evidenceList.map(ev => {
+      if (ev.id === evidenceId) {
+        toast({
+          title: "Evidence Validated",
+          description: "The original evidence has been accepted. You can proceed to the next evidence.",
+        });
+        return {
+          ...ev,
+          status: "validated"
+        };
+      }
+      return ev;
+    }));
+  };
+
   if (!debateSetup) return null;
 
   const canAddEvidence = evidenceList.length === 0 || 
-    evidenceList[evidenceList.length - 1].status === "agreed";
+    (evidenceList[evidenceList.length - 1].status === "agreed" || 
+     evidenceList[evidenceList.length - 1].status === "validated");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-debate-blue-light py-8">
@@ -196,6 +213,7 @@ const ActiveDebate = () => {
                 debater2Name={debateSetup.debater2Name}
                 onAgree={handleAgree}
                 onChallenge={handleChallenge}
+                onValidate={handleValidate}
               />
             ))
           )}
