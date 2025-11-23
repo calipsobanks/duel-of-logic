@@ -2,9 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Brain, Scale, CheckCircle, AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/debates');
+    }
+  }, [user, loading, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-debate-blue-light">
@@ -29,9 +38,9 @@ const Index = () => {
             <Button 
               size="lg" 
               className="text-lg px-8"
-              onClick={() => navigate('/debate/setup')}
+              onClick={() => navigate('/auth')}
             >
-              Start a Debate
+              Get Started
             </Button>
             <Button 
               size="lg" 
@@ -158,9 +167,9 @@ const Index = () => {
             size="lg" 
             variant="secondary"
             className="text-lg px-8"
-            onClick={() => navigate('/debate/setup')}
+            onClick={() => navigate('/auth')}
           >
-            Begin Your First Debate
+            Join Now
           </Button>
         </Card>
       </section>
