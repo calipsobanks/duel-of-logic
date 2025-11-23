@@ -11,13 +11,15 @@ import { toast } from 'sonner';
 import { LogOut, Plus, MessageSquare, User, Edit2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface Profile {
   id: string;
   username: string;
   avatar_url?: string | null;
-  beliefs?: string[] | null;
+  religion?: string | null;
+  political_view?: string | null;
+  university_degree?: string | null;
 }
 
 interface Discussion {
@@ -39,7 +41,9 @@ const Discussions = () => {
   const [topic, setTopic] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditBeliefsOpen, setIsEditBeliefsOpen] = useState(false);
-  const [beliefsInput, setBeliefsInput] = useState('');
+  const [religion, setReligion] = useState('');
+  const [politicalView, setPoliticalView] = useState('');
+  const [universityDegree, setUniversityDegree] = useState('');
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -151,30 +155,22 @@ const Discussions = () => {
   };
 
   const handleEditBeliefs = (profile: Profile) => {
-    const beliefsList = profile.beliefs || [];
-    setBeliefsInput(beliefsList.join(', '));
+    setReligion(profile.religion || '');
+    setPoliticalView(profile.political_view || '');
+    setUniversityDegree(profile.university_degree || '');
     setIsEditBeliefsOpen(true);
   };
 
   const handleSaveBeliefs = async () => {
     if (!user) return;
 
-    // Parse the input - split by comma and clean up hashtags
-    const beliefsArray = beliefsInput
-      .split(',')
-      .map(belief => {
-        let cleaned = belief.trim();
-        // Add # if not present
-        if (cleaned && !cleaned.startsWith('#')) {
-          cleaned = '#' + cleaned;
-        }
-        return cleaned;
-      })
-      .filter(belief => belief.length > 1); // Filter out empty or just '#'
-
     const { error } = await supabase
       .from('profiles')
-      .update({ beliefs: beliefsArray })
+      .update({ 
+        religion: religion || null,
+        political_view: politicalView || null,
+        university_degree: universityDegree || null
+      })
       .eq('id', user.id);
 
     if (error) {
@@ -187,19 +183,30 @@ const Discussions = () => {
     fetchProfiles();
   };
 
-  const handleBeliefClick = (belief: string) => {
-    if (selectedBelief === belief) {
+  const handleBeliefClick = (beliefType: string, value: string) => {
+    const beliefTag = `#${beliefType}: ${value}`;
+    if (selectedBelief === beliefTag) {
       setSelectedBelief(null); // Clear filter if clicking the same belief
     } else {
-      setSelectedBelief(belief);
+      setSelectedBelief(beliefTag);
     }
+  };
+
+  // Get belief tags for a profile
+  const getBeliefTags = (profile: Profile): Array<{type: string, value: string}> => {
+    const tags: Array<{type: string, value: string}> = [];
+    if (profile.religion) tags.push({ type: 'Religion', value: profile.religion });
+    if (profile.political_view) tags.push({ type: 'Politics', value: profile.political_view });
+    if (profile.university_degree) tags.push({ type: 'Education', value: profile.university_degree });
+    return tags;
   };
 
   // Filter profiles based on selected belief
   const filteredProfiles = selectedBelief
-    ? profiles.filter(profile => 
-        profile.beliefs?.some(belief => belief === selectedBelief)
-      )
+    ? profiles.filter(profile => {
+        const tags = getBeliefTags(profile);
+        return tags.some(tag => `#${tag.type}: ${tag.value}` === selectedBelief);
+      })
     : profiles;
 
   return (
@@ -291,18 +298,21 @@ const Discussions = () => {
                               <span className="ml-2 text-xs text-muted-foreground">(You)</span>
                             )}
                           </p>
-                          {profile.beliefs && profile.beliefs.length > 0 && (
+                          {getBeliefTags(profile).length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {profile.beliefs.map((belief, index) => (
-                                <Badge 
-                                  key={index} 
-                                  variant={selectedBelief === belief ? "default" : "secondary"} 
-                                  className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
-                                  onClick={() => handleBeliefClick(belief)}
-                                >
-                                  {belief}
-                                </Badge>
-                              ))}
+                              {getBeliefTags(profile).map((tag, index) => {
+                                const tagString = `#${tag.type}: ${tag.value}`;
+                                return (
+                                  <Badge 
+                                    key={index} 
+                                    variant={selectedBelief === tagString ? "default" : "secondary"} 
+                                    className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
+                                    onClick={() => handleBeliefClick(tag.type, tag.value)}
+                                  >
+                                    {tagString}
+                                  </Badge>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -391,28 +401,88 @@ const Discussions = () => {
 
         {/* Edit Beliefs Dialog */}
         <Dialog open={isEditBeliefsOpen} onOpenChange={setIsEditBeliefsOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Your Beliefs</DialogTitle>
               <DialogDescription>
-                Add hashtags that represent what you believe in. Separate multiple beliefs with commas.
+                Share your beliefs to help others understand your perspective
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="beliefs">Your Beliefs</Label>
-                <Textarea
-                  id="beliefs"
-                  placeholder="e.g., #ClimateAction, #Education, #Freedom"
-                  value={beliefsInput}
-                  onChange={(e) => setBeliefsInput(e.target.value)}
-                  className="min-h-[100px]"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Hashtags will be automatically added if you don't include them
-                </p>
+            <div className="space-y-6 pt-4">
+              {/* Religion */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Religion</Label>
+                <RadioGroup value={religion} onValueChange={setReligion}>
+                  {[
+                    'Christianity',
+                    'Islam', 
+                    'Judaism',
+                    'Hinduism',
+                    'Buddhism',
+                    'Atheism',
+                    'Agnosticism',
+                    'Spiritual but not religious',
+                    'Other',
+                    'Prefer not to say'
+                  ].map((option) => (
+                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value={option} id={`religion-${option}`} />
+                      <Label htmlFor={`religion-${option}`} className="flex-1 cursor-pointer">
+                        {option}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
               </div>
-              <div className="flex gap-2">
+
+              {/* Political View */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Political View</Label>
+                <RadioGroup value={politicalView} onValueChange={setPoliticalView}>
+                  {[
+                    'Liberal',
+                    'Conservative',
+                    'Moderate',
+                    'Libertarian',
+                    'Progressive',
+                    'Socialist',
+                    'Independent',
+                    'Apolitical',
+                    'Other',
+                    'Prefer not to say'
+                  ].map((option) => (
+                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value={option} id={`political-${option}`} />
+                      <Label htmlFor={`political-${option}`} className="flex-1 cursor-pointer">
+                        {option}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+
+              {/* University Degree */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">4-Year University Degree</Label>
+                <RadioGroup value={universityDegree} onValueChange={setUniversityDegree}>
+                  {[
+                    'Yes - Completed',
+                    'Currently enrolled',
+                    'Some college',
+                    'No',
+                    'Prefer not to say'
+                  ].map((option) => (
+                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value={option} id={`university-${option}`} />
+                      <Label htmlFor={`university-${option}`} className="flex-1 cursor-pointer">
+                        {option}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+
+              <div className="flex gap-2 pt-4">
                 <Button 
                   variant="outline" 
                   onClick={() => setIsEditBeliefsOpen(false)}
