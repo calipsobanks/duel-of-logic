@@ -14,7 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      debates: {
+        Row: {
+          created_at: string
+          debater1_id: string
+          debater1_score: number
+          debater2_id: string
+          debater2_score: number
+          id: string
+          status: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          debater1_id: string
+          debater1_score?: number
+          debater2_id: string
+          debater2_score?: number
+          id?: string
+          status?: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          debater1_id?: string
+          debater1_score?: number
+          debater2_id?: string
+          debater2_score?: number
+          id?: string
+          status?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debates_debater1_id_fkey"
+            columns: ["debater1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debates_debater2_id_fkey"
+            columns: ["debater2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evidence: {
+        Row: {
+          claim: string
+          created_at: string
+          debate_id: string
+          debater_id: string
+          id: string
+          source_type: string | null
+          source_url: string | null
+          status: string
+        }
+        Insert: {
+          claim: string
+          created_at?: string
+          debate_id: string
+          debater_id: string
+          id?: string
+          source_type?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Update: {
+          claim?: string
+          created_at?: string
+          debate_id?: string
+          debater_id?: string
+          id?: string
+          source_type?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_debate_id_fkey"
+            columns: ["debate_id"]
+            isOneToOne: false
+            referencedRelation: "debates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_debater_id_fkey"
+            columns: ["debater_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
