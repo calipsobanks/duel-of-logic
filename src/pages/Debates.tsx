@@ -50,7 +50,7 @@ const Debates = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .neq('id', user?.id);
+      .order('username', { ascending: true });
 
     if (error) {
       toast.error('Failed to load members');
@@ -168,42 +168,49 @@ const Debates = () => {
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold">@{profile.username}</p>
+                        <p className="font-semibold">
+                          @{profile.username}
+                          {profile.id === user?.id && (
+                            <span className="ml-2 text-xs text-muted-foreground">(You)</span>
+                          )}
+                        </p>
                       </div>
-                      <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
-                        setIsDialogOpen(open);
-                        if (open) setSelectedMember(profile);
-                        else setSelectedMember(null);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button size="sm" onClick={() => setSelectedMember(profile)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Start Debate
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Start a debate with @{profile.username}</DialogTitle>
-                            <DialogDescription>
-                              Choose a topic for your debate
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 pt-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="topic">Debate Topic</Label>
-                              <Input
-                                id="topic"
-                                placeholder="Enter the topic for discussion..."
-                                value={topic}
-                                onChange={(e) => setTopic(e.target.value)}
-                              />
-                            </div>
-                            <Button onClick={startDebate} className="w-full" disabled={!topic.trim()}>
+                      {profile.id !== user?.id && (
+                        <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
+                          setIsDialogOpen(open);
+                          if (open) setSelectedMember(profile);
+                          else setSelectedMember(null);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" onClick={() => setSelectedMember(profile)}>
+                              <Plus className="mr-2 h-4 w-4" />
                               Start Debate
                             </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Start a debate with @{profile.username}</DialogTitle>
+                              <DialogDescription>
+                                Choose a topic for your debate
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 pt-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="topic">Debate Topic</Label>
+                                <Input
+                                  id="topic"
+                                  placeholder="Enter the topic for discussion..."
+                                  value={topic}
+                                  onChange={(e) => setTopic(e.target.value)}
+                                />
+                              </div>
+                              <Button onClick={startDebate} className="w-full" disabled={!topic.trim()}>
+                                Start Debate
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
