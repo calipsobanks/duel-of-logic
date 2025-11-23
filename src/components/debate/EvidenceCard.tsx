@@ -17,8 +17,8 @@ interface Evidence {
   id: string;
   submittedBy: string;
   content: string;
-  sourceUrl: string;
-  sourceType: "factual" | "opinionated";
+  sourceUrl?: string;
+  sourceType?: "factual" | "opinionated";
   status: "pending" | "agreed" | "challenged" | "validated";
   debater1Agreed: boolean;
   debater2Agreed: boolean;
@@ -76,9 +76,16 @@ export const EvidenceCard = ({
               {evidence.status === "challenged" && <AlertTriangle className="w-3 h-3 mr-1" />}
               {evidence.status.charAt(0).toUpperCase() + evidence.status.slice(1)}
             </Badge>
-            <Badge variant={evidence.sourceType === "factual" ? "default" : "secondary"}>
-              {evidence.sourceType === "factual" ? "Factual Source" : "Opinionated Source"}
-            </Badge>
+            {evidence.sourceUrl && evidence.sourceType && (
+              <Badge variant={evidence.sourceType === "factual" ? "default" : "secondary"}>
+                {evidence.sourceType === "factual" ? "Factual Source" : "Opinionated Source"}
+              </Badge>
+            )}
+            {!evidence.sourceUrl && (
+              <Badge variant="outline" className="text-xs">
+                No Source
+              </Badge>
+            )}
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -89,15 +96,17 @@ export const EvidenceCard = ({
             {evidence.content}
           </p>
 
-          <a 
-            href={evidence.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-          >
-            View Source
-            <ExternalLink className="w-3 h-3" />
-          </a>
+          {evidence.sourceUrl && (
+            <a 
+              href={evidence.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              View Source
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
         </div>
       </div>
 

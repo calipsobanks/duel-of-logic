@@ -12,8 +12,8 @@ interface AddEvidenceDialogProps {
   onSubmit: (evidence: {
     submittedBy: string;
     content: string;
-    sourceUrl: string;
-    sourceType: "factual" | "opinionated";
+    sourceUrl?: string;
+    sourceType?: "factual" | "opinionated";
   }) => void;
   currentDebaterName: string;
 }
@@ -31,12 +31,11 @@ export const AddEvidenceDialog = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (content && sourceUrl) {
+    if (content) {
       onSubmit({
         submittedBy: currentDebaterName,
         content,
-        sourceUrl,
-        sourceType
+        ...(sourceUrl && { sourceUrl, sourceType })
       });
       
       // Reset form
@@ -70,7 +69,7 @@ export const AddEvidenceDialog = ({
 
           <div className="space-y-2">
             <Label htmlFor="sourceUrl" className="text-base">
-              Source URL
+              Source URL <span className="text-muted-foreground text-sm">(Optional - Bonus points if provided)</span>
             </Label>
             <Input
               id="sourceUrl"
@@ -78,37 +77,38 @@ export const AddEvidenceDialog = ({
               placeholder="https://example.com/source"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
-              required
             />
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-base">Source Classification</Label>
-            <RadioGroup
-              value={sourceType}
-              onValueChange={(value) => setSourceType(value as "factual" | "opinionated")}
-            >
-              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                <RadioGroupItem value="factual" id="factual" />
-                <Label htmlFor="factual" className="flex-1 cursor-pointer">
-                  <span className="font-semibold">Factual Source</span>
-                  <p className="text-sm text-muted-foreground">
-                    Based on verifiable data, research, or objective information
-                  </p>
-                </Label>
-              </div>
+          {sourceUrl && (
+            <div className="space-y-3">
+              <Label className="text-base">Source Classification</Label>
+              <RadioGroup
+                value={sourceType}
+                onValueChange={(value) => setSourceType(value as "factual" | "opinionated")}
+              >
+                <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="factual" id="factual" />
+                  <Label htmlFor="factual" className="flex-1 cursor-pointer">
+                    <span className="font-semibold">Factual Source</span>
+                    <p className="text-sm text-muted-foreground">
+                      Based on verifiable data, research, or objective information
+                    </p>
+                  </Label>
+                </div>
 
-              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                <RadioGroupItem value="opinionated" id="opinionated" />
-                <Label htmlFor="opinionated" className="flex-1 cursor-pointer">
-                  <span className="font-semibold">Opinionated Source</span>
-                  <p className="text-sm text-muted-foreground">
-                    Contains subjective views, interpretations, or editorial content
-                  </p>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="opinionated" id="opinionated" />
+                  <Label htmlFor="opinionated" className="flex-1 cursor-pointer">
+                    <span className="font-semibold">Opinionated Source</span>
+                    <p className="text-sm text-muted-foreground">
+                      Contains subjective views, interpretations, or editorial content
+                    </p>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button
@@ -122,7 +122,7 @@ export const AddEvidenceDialog = ({
             <Button
               type="submit"
               className="flex-1"
-              disabled={!content || !sourceUrl}
+              disabled={!content}
             >
               Submit Evidence
             </Button>
