@@ -19,7 +19,7 @@ interface Evidence {
   content: string;
   sourceUrl: string;
   sourceType: "factual" | "opinionated";
-  status: "pending" | "agreed" | "challenged";
+  status: "pending" | "agreed" | "challenged" | "validated";
   debater1Agreed: boolean;
   debater2Agreed: boolean;
   challenges: Challenge[];
@@ -33,6 +33,7 @@ interface EvidenceCardProps {
   debater2Name: string;
   onAgree: (evidenceId: string, debater: 1 | 2) => void;
   onChallenge: (evidenceId: string, challenge: Omit<Challenge, "id">) => void;
+  onValidate: (evidenceId: string) => void;
 }
 
 export const EvidenceCard = ({
@@ -42,7 +43,8 @@ export const EvidenceCard = ({
   debater1Name,
   debater2Name,
   onAgree,
-  onChallenge
+  onChallenge,
+  onValidate
 }: EvidenceCardProps) => {
   const [isChallenging, setIsChallenging] = useState(false);
   
@@ -54,7 +56,8 @@ export const EvidenceCard = ({
   const statusColor = {
     pending: "bg-debate-warning/10 text-debate-warning border-debate-warning/20",
     agreed: "bg-debate-success/10 text-debate-success border-debate-success/20",
-    challenged: "bg-destructive/10 text-destructive border-destructive/20"
+    challenged: "bg-destructive/10 text-destructive border-destructive/20",
+    validated: "bg-primary/10 text-primary border-primary/20"
   };
 
   return (
@@ -127,6 +130,26 @@ export const EvidenceCard = ({
             className="flex-1"
           >
             Challenge
+          </Button>
+        </div>
+      )}
+
+      {/* Challenged state - both debaters can respond */}
+      {evidence.status === "challenged" && (
+        <div className="flex gap-3 pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsChallenging(true)}
+            className="flex-1"
+          >
+            {submittedByCurrentDebater ? "Defend Evidence" : "Add Counter-Challenge"}
+          </Button>
+          <Button
+            variant="default"
+            onClick={() => onValidate(evidence.id)}
+            className="flex-1"
+          >
+            Validate Original Evidence
           </Button>
         </div>
       )}
