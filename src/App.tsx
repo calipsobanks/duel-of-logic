@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Debates from "./pages/Debates";
 import DebateSetup from "./pages/DebateSetup";
 import ActiveDebate from "./pages/ActiveDebate";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/debates" element={<Debates />} />
             <Route path="/debate/setup" element={<DebateSetup />} />
             <Route path="/debate/active" element={<ActiveDebate />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
