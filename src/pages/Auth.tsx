@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Auth = () => {
   const [loginEmail, setLoginEmail] = useState('');
@@ -18,6 +20,11 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [changeEmail, setChangeEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const { signIn, signUp, user, resetPassword } = useAuth();
   const navigate = useNavigate();
@@ -61,6 +68,58 @@ const Auth = () => {
       setResetEmail('');
     } catch (error) {
       console.error('Reset password error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Sign in first to verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: changeEmail,
+        password: currentPassword
+      });
+
+      if (signInError) {
+        toast.error('Invalid email or current password');
+        setIsLoading(false);
+        return;
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) {
+        toast.error(updateError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      toast.success('Password changed successfully!');
+      setIsChangePasswordOpen(false);
+      setChangeEmail('');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      navigate('/discussions');
+    } catch (error) {
+      console.error('Change password error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -133,6 +192,75 @@ const Auth = () => {
                       </div>
                       <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading ? 'Sending...' : 'Send Reset Link'}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="link" className="w-full text-sm">
+                      Change password
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Change Password</DialogTitle>
+                      <DialogDescription>
+                        Enter your current password and choose a new one.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleChangePassword} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="change-email">Email</Label>
+                        <Input
+                          id="change-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={changeEmail}
+                          onChange={(e) => setChangeEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="current-password">Current Password</Label>
+                        <Input
+                          id="current-password"
+                          type="password"
+                          placeholder="••••••••"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">New Password</Label>
+                        <Input
+                          id="new-password"
+                          type="password"
+                          placeholder="••••••••"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                        <Input
+                          id="confirm-new-password"
+                          type="password"
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                      {newPassword !== confirmPassword && confirmPassword && (
+                        <p className="text-sm text-destructive">Passwords do not match</p>
+                      )}
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? 'Changing...' : 'Change Password'}
                       </Button>
                     </form>
                   </DialogContent>
