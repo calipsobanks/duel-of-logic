@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -34,9 +34,18 @@ interface Discussion {
   profiles: Profile;
 }
 
+interface LeaderboardEntry {
+  userId: string;
+  username: string;
+  avatar_url?: string | null;
+  totalPoints: number;
+  debatesCount: number;
+}
+
 const Discussions = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [topic, setTopic] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -85,6 +94,61 @@ const Discussions = () => {
     }
 
     setProfiles(data || []);
+    
+    // Fetch leaderboard after profiles are loaded
+    if (data && data.length > 0) {
+      await fetchLeaderboardWithProfiles(data);
+    }
+  };
+
+  const fetchLeaderboardWithProfiles = async (profilesData: Profile[]) => {
+    const { data: debates, error } = await supabase
+      .from('debates')
+      .select('*');
+
+    if (error) {
+      toast.error('Failed to load leaderboard');
+      return;
+    }
+
+    // Aggregate scores per user
+    const scoreMap = new Map<string, { totalPoints: number; debatesCount: number }>();
+    
+    debates?.forEach(debate => {
+      // Add scores for debater1
+      const debater1Stats = scoreMap.get(debate.debater1_id) || { totalPoints: 0, debatesCount: 0 };
+      debater1Stats.totalPoints += debate.debater1_score;
+      debater1Stats.debatesCount += 1;
+      scoreMap.set(debate.debater1_id, debater1Stats);
+
+      // Add scores for debater2
+      const debater2Stats = scoreMap.get(debate.debater2_id) || { totalPoints: 0, debatesCount: 0 };
+      debater2Stats.totalPoints += debate.debater2_score;
+      debater2Stats.debatesCount += 1;
+      scoreMap.set(debate.debater2_id, debater2Stats);
+    });
+
+    // Combine with profile data
+    const leaderboardData: LeaderboardEntry[] = profilesData
+      .map(profile => {
+        const stats = scoreMap.get(profile.id) || { totalPoints: 0, debatesCount: 0 };
+        return {
+          userId: profile.id,
+          username: profile.username,
+          avatar_url: profile.avatar_url,
+          totalPoints: stats.totalPoints,
+          debatesCount: stats.debatesCount
+        };
+      })
+      .sort((a, b) => b.totalPoints - a.totalPoints);
+
+    setLeaderboard(leaderboardData);
+  };
+
+  const fetchLeaderboard = async () => {
+    if (profiles.length > 0) {
+      await fetchLeaderboardWithProfiles(profiles);
+    }
   };
 
   const fetchDiscussions = async () => {
@@ -196,6 +260,7 @@ const Discussions = () => {
     toast.success('Beliefs updated!');
     setIsEditBeliefsOpen(false);
     fetchProfiles();
+    fetchLeaderboard();
   };
 
   const handleBeliefClick = (beliefType: string, value: string) => {
@@ -245,6 +310,66 @@ const Discussions = () => {
             </Button>
           </div>
         </div>
+
+        {/* Leaderboard */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-yellow-500" />
+              Leaderboard
+            </CardTitle>
+            <CardDescription>Top debaters ranked by total points</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {leaderboard.slice(0, 10).map((entry, index) => (
+                <div 
+                  key={entry.userId}
+                  className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                    entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-muted/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`text-2xl font-bold min-w-[2rem] text-center ${
+                      index === 0 ? 'text-yellow-500' :
+                      index === 1 ? 'text-gray-400' :
+                      index === 2 ? 'text-orange-600' :
+                      'text-muted-foreground'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={entry.avatar_url || undefined} alt={entry.username} />
+                      <AvatarFallback>
+                        <User className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold">
+                        @{entry.username}
+                        {entry.userId === user?.id && (
+                          <span className="ml-2 text-xs text-muted-foreground">(You)</span>
+                        )}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {entry.debatesCount} {entry.debatesCount === 1 ? 'debate' : 'debates'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-primary">{entry.totalPoints}</p>
+                    <p className="text-xs text-muted-foreground">points</p>
+                  </div>
+                </div>
+              ))}
+              {leaderboard.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No debates yet. Start one to earn points!
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Active Discussions */}
