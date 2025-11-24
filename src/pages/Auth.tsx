@@ -24,7 +24,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/debates');
+      navigate('/discussions');
     }
   }, [user, navigate]);
 
