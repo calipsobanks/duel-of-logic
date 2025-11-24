@@ -40,38 +40,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, username: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+    // Use email as password for simplicity
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
+      password: email, // Using email as password for instant access
       options: {
-        emailRedirectTo: `${window.location.origin}/discussions`,
         data: {
           username
         }
       }
     });
 
-    if (error) {
-      toast.error(error.message);
-      throw error;
+    if (signUpError) {
+      toast.error(signUpError.message);
+      throw signUpError;
     }
 
-    toast.success('Check your email for the login link!');
+    toast.success('Welcome! You\'re all set.');
+    navigate('/discussions');
   };
 
   const signIn = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+    // Try to sign in with email as password
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/discussions`,
-      }
+      password: email, // Using email as password
     });
 
     if (error) {
-      toast.error(error.message);
+      toast.error('Account not found. Please sign up first.');
       throw error;
     }
 
-    toast.success('Check your email for the login link!');
+    toast.success('Welcome back!');
+    navigate('/discussions');
   };
 
   const signOut = async () => {

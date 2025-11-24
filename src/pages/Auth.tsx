@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail } from 'lucide-react';
 
 const Auth = () => {
   const [loginEmail, setLoginEmail] = useState('');
@@ -52,7 +51,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Debate Platform</CardTitle>
-          <CardDescription>Passwordless login - we'll email you a magic link</CardDescription>
+          <CardDescription>Enter your email to get started - no password needed!</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
@@ -74,17 +73,10 @@ const Auth = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    'Sending magic link...'
-                  ) : (
-                    <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Send Login Link
-                    </>
-                  )}
+                  {isLoading ? 'Logging in...' : 'Login'}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  Check your email for a login link. No password required!
+                  Just enter your email - instant access!
                 </p>
               </form>
             </TabsContent>
@@ -113,17 +105,10 @@ const Auth = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    'Sending magic link...'
-                  ) : (
-                    <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Send Signup Link
-                    </>
-                  )}
+                  {isLoading ? 'Creating account...' : 'Sign Up'}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  We'll send you an email with a link to create your account. No password needed!
+                  Create your account instantly - no verification needed!
                 </p>
               </form>
             </TabsContent>
