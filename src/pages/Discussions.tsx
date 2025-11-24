@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2 } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -45,6 +45,7 @@ const Discussions = () => {
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -56,7 +57,21 @@ const Discussions = () => {
 
     fetchProfiles();
     fetchDiscussions();
+    checkAdminStatus();
   }, [user, navigate]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+
+    setIsAdmin(!!data);
+  };
 
   const fetchProfiles = async () => {
     const { data, error } = await supabase
@@ -217,10 +232,18 @@ const Discussions = () => {
             <h1 className="text-4xl font-bold">My Discussions</h1>
             <p className="text-muted-foreground mt-2">Start a discussion or continue an existing one</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button variant="secondary" onClick={() => navigate('/admin')}>
+                <Shield className="mr-2 h-4 w-4" />
+                Admin
+              </Button>
+            )}
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
