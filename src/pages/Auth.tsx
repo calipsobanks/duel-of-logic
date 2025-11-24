@@ -1,27 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Mail } from 'lucide-react';
 
 const Auth = () => {
   const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
   const [signupUsername, setSignupUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-  const [changeEmail, setChangeEmail] = useState('');
 
-  const { signIn, signUp, user, resetPassword } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,7 +27,7 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await signIn(loginEmail, loginPassword);
+      await signIn(loginEmail);
     } catch (error) {
       console.error('Login error:', error);
     } finally {
@@ -46,37 +39,9 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await signUp(signupEmail, signupPassword, signupUsername);
+      await signUp(signupEmail, signupUsername);
     } catch (error) {
       console.error('Signup error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await resetPassword(resetEmail);
-      setIsResetDialogOpen(false);
-      setResetEmail('');
-    } catch (error) {
-      console.error('Reset password error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await resetPassword(changeEmail);
-      setIsChangePasswordOpen(false);
-      setChangeEmail('');
-    } catch (error) {
-      console.error('Change password error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +52,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Debate Platform</CardTitle>
-          <CardDescription>Join the conversation and share your perspective</CardDescription>
+          <CardDescription>Passwordless login - we'll email you a magic link</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
@@ -108,82 +73,19 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                  />
-                </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  {isLoading ? (
+                    'Sending magic link...'
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send Login Link
+                    </>
+                  )}
                 </Button>
-                <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button type="button" variant="link" className="w-full text-sm">
-                      Forgot password?
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Reset Password</DialogTitle>
-                      <DialogDescription>
-                        Enter your email address and we'll send you a link to reset your password.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleResetPassword} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-email">Email</Label>
-                        <Input
-                          id="reset-email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? 'Sending...' : 'Send Reset Link'}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-                <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
-                  <DialogTrigger asChild>
-                    <Button type="button" variant="link" className="w-full text-sm">
-                      Change password
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Change Password</DialogTitle>
-                      <DialogDescription>
-                        Enter your email and we'll send you a link to change your password.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleChangePassword} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="change-email">Email</Label>
-                        <Input
-                          id="change-email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={changeEmail}
-                          onChange={(e) => setChangeEmail(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? 'Sending...' : 'Send Reset Link'}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <p className="text-xs text-muted-foreground text-center mt-4">
+                  Check your email for a login link. No password required!
+                </p>
               </form>
             </TabsContent>
             <TabsContent value="signup">
@@ -210,21 +112,19 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Creating account...' : 'Create Account'}
+                  {isLoading ? (
+                    'Sending magic link...'
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send Signup Link
+                    </>
+                  )}
                 </Button>
+                <p className="text-xs text-muted-foreground text-center mt-4">
+                  We'll send you an email with a link to create your account. No password needed!
+                </p>
               </form>
             </TabsContent>
           </Tabs>
