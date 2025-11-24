@@ -41,9 +41,6 @@ const Discussions = () => {
   const [topic, setTopic] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditBeliefsOpen, setIsEditBeliefsOpen] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [religion, setReligion] = useState('');
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
@@ -236,9 +233,6 @@ const Discussions = () => {
             <p className="text-muted-foreground mt-2">Start a discussion or continue an existing one</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setIsChangePasswordOpen(true)}>
-              Change Password
-            </Button>
             {isAdmin && (
               <Button variant="secondary" onClick={() => navigate('/admin')}>
                 <Shield className="mr-2 h-4 w-4" />
@@ -524,88 +518,6 @@ const Discussions = () => {
                   className="flex-1"
                 >
                   Save Beliefs
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Change Password Dialog */}
-        <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Change Password</DialogTitle>
-              <DialogDescription>
-                Enter your new password below
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  minLength={6}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={6}
-                />
-              </div>
-              {newPassword !== confirmPassword && confirmPassword && (
-                <p className="text-sm text-destructive">Passwords do not match</p>
-              )}
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsChangePasswordOpen(false);
-                    setNewPassword('');
-                    setConfirmPassword('');
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={async () => {
-                    if (newPassword !== confirmPassword) {
-                      toast.error('Passwords do not match');
-                      return;
-                    }
-                    if (newPassword.length < 6) {
-                      toast.error('Password must be at least 6 characters');
-                      return;
-                    }
-                    
-                    const { error } = await supabase.auth.updateUser({
-                      password: newPassword
-                    });
-
-                    if (error) {
-                      toast.error(error.message);
-                      return;
-                    }
-
-                    toast.success('Password updated successfully!');
-                    setIsChangePasswordOpen(false);
-                    setNewPassword('');
-                    setConfirmPassword('');
-                  }}
-                  className="flex-1"
-                  disabled={!newPassword || newPassword !== confirmPassword}
-                >
-                  Update Password
                 </Button>
               </div>
             </div>

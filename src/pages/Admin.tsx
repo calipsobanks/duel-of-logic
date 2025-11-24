@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Shield, Mail, Loader2 } from 'lucide-react';
+import { Shield, Loader2 } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -23,7 +23,6 @@ const Admin = () => {
   const [checking, setChecking] = useState(true);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
-  const [sendingReset, setSendingReset] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -80,42 +79,6 @@ const Admin = () => {
     }
   }, [isAdmin]);
 
-  const handleSendPasswordReset = async (userId: string, username: string) => {
-    const newPassword = prompt(`Enter new password for ${username} (min 6 characters):`);
-    
-    if (!newPassword || !newPassword.trim()) {
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    setSendingReset(userId);
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const { error } = await supabase.functions.invoke('admin-reset-password', {
-        body: { userId, newPassword: newPassword.trim() },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-      });
-
-      if (error) {
-        toast.error(`Failed to reset password: ${error.message}`);
-      } else {
-        toast.success(`Password updated for ${username}`);
-      }
-    } catch (error: any) {
-      toast.error(`Error: ${error.message}`);
-    }
-
-    setSendingReset(null);
-  };
-
   if (authLoading || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -148,7 +111,7 @@ const Admin = () => {
           <CardHeader>
             <CardTitle>User Management</CardTitle>
             <CardDescription>
-              View all users and directly set their passwords
+              View all registered users
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -164,7 +127,6 @@ const Admin = () => {
                     <TableHead>Religion</TableHead>
                     <TableHead>Political View</TableHead>
                     <TableHead>University</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -174,23 +136,6 @@ const Admin = () => {
                       <TableCell>{profile.religion || 'Not set'}</TableCell>
                       <TableCell>{profile.political_view || 'Not set'}</TableCell>
                       <TableCell>{profile.university_degree || 'Not set'}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSendPasswordReset(profile.id, profile.username)}
-                          disabled={sendingReset === profile.id}
-                        >
-                          {sendingReset === profile.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Set Password
-                            </>
-                          )}
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

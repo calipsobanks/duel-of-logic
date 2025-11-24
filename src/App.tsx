@@ -9,7 +9,6 @@ import Auth from "./pages/Auth";
 import Discussions from "./pages/Discussions";
 import DiscussionSetup from "./pages/DiscussionSetup";
 import ActiveDiscussion from "./pages/ActiveDiscussion";
-import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -28,7 +27,6 @@ const App = () => (
             <Route path="/discussions" element={<Discussions />} />
             <Route path="/discussion/setup" element={<DiscussionSetup />} />
             <Route path="/discussion/active" element={<ActiveDiscussion />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
