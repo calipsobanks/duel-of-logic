@@ -2,3 +2,6 @@ project_id = "xuohskyiyjfuitzpeevt"
 
 [functions.delete-all-users]
 verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
