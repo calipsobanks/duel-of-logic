@@ -68,7 +68,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     if (error) {
-      toast.error('Account not found. Please sign up first.');
+      // If login fails, might be an old user - try to create new account
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Account found but password mismatch. Please contact support or try signing up with a different email.');
+      } else {
+        toast.error(error.message);
+      }
       throw error;
     }
 
