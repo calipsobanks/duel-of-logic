@@ -1,4 +1,4 @@
 project_id = "xuohskyiyjfuitzpeevt"
 
-[functions.fix-user-password]
+[functions.delete-all-users]
 verify_jwt = false
