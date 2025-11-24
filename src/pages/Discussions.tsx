@@ -306,7 +306,7 @@ const Discussions = () => {
               {filteredProfiles.map((profile) => (
                 <Card key={profile.id}>
                   <CardContent className="pt-6">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start gap-3">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
@@ -321,23 +321,6 @@ const Discussions = () => {
                               <span className="ml-2 text-xs text-muted-foreground">(You)</span>
                             )}
                           </p>
-                          {getBeliefTags(profile).length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {getBeliefTags(profile).map((tag, index) => {
-                                const tagString = `#${tag.type}: ${tag.value}`;
-                                return (
-                                  <Badge 
-                                    key={index} 
-                                    variant={selectedBelief === tagString ? "default" : "secondary"} 
-                                    className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
-                                    onClick={() => handleBeliefClick(tag.type, tag.value)}
-                                  >
-                                    {tagString}
-                                  </Badge>
-                                );
-                              })}
-                            </div>
-                          )}
                         </div>
                       </div>
                       {profile.id === user?.id && (
@@ -401,6 +384,23 @@ const Discussions = () => {
                         </Dialog>
                       )}
                     </div>
+                    {getBeliefTags(profile).length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {getBeliefTags(profile).map((tag, index) => {
+                          const tagString = `#${tag.type}: ${tag.value}`;
+                          return (
+                            <Badge 
+                              key={index} 
+                              variant={selectedBelief === tagString ? "default" : "secondary"} 
+                              className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
+                              onClick={() => handleBeliefClick(tag.type, tag.value)}
+                            >
+                              {tagString}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
