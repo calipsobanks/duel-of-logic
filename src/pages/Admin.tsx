@@ -81,22 +81,36 @@ const Admin = () => {
   }, [isAdmin]);
 
   const handleSendPasswordReset = async (userId: string, username: string) => {
-    const emailPrompt = prompt(`Enter the email address for ${username}:`);
+    const newPassword = prompt(`Enter new password for ${username} (min 6 characters):`);
     
-    if (!emailPrompt || !emailPrompt.trim()) {
+    if (!newPassword || !newPassword.trim()) {
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
       return;
     }
 
     setSendingReset(userId);
     
-    const { error } = await supabase.auth.resetPasswordForEmail(emailPrompt.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const { error } = await supabase.functions.invoke('admin-reset-password', {
+        body: { userId, newPassword: newPassword.trim() },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
 
-    if (error) {
-      toast.error(`Failed to send reset email: ${error.message}`);
-    } else {
-      toast.success(`Password reset email sent to ${emailPrompt}`);
+      if (error) {
+        toast.error(`Failed to reset password: ${error.message}`);
+      } else {
+        toast.success(`Password updated for ${username}`);
+      }
+    } catch (error: any) {
+      toast.error(`Error: ${error.message}`);
     }
 
     setSendingReset(null);
@@ -134,7 +148,7 @@ const Admin = () => {
           <CardHeader>
             <CardTitle>User Management</CardTitle>
             <CardDescription>
-              View all users and send password reset emails
+              View all users and directly set their passwords
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -172,7 +186,7 @@ const Admin = () => {
                           ) : (
                             <>
                               <Mail className="h-4 w-4 mr-2" />
-                              Reset Password
+                              Set Password
                             </>
                           )}
                         </Button>
