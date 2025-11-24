@@ -41,10 +41,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, username: string) => {
     // Use email as password for simplicity
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password: email, // Using email as password for instant access
       options: {
+        emailRedirectTo: `${window.location.origin}/discussions`,
         data: {
           username
         }
@@ -52,33 +53,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     if (signUpError) {
+      // If user already exists, try to sign in instead
+      if (signUpError.message.includes('already registered')) {
+        toast.error('Account already exists. Trying to log you in...');
+        return signIn(email);
+      }
       toast.error(signUpError.message);
       throw signUpError;
     }
 
-    toast.success('Welcome! You\'re all set.');
-    navigate('/discussions');
+    // If email confirmation is disabled, user will be logged in immediately
+    // If enabled, they need to check email
+    if (data.user && data.session) {
+      toast.success('Welcome! You\'re all set.');
+      navigate('/discussions');
+    } else {
+      toast.info('Please check your email to confirm your account, then try logging in.');
+    }
   };
 
   const signIn = async (email: string) => {
     // Try to sign in with email as password
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: email, // Using email as password
     });
 
     if (error) {
-      // If login fails, might be an old user - try to create new account
+      // If login fails, suggest signing up
       if (error.message.includes('Invalid login credentials')) {
-        toast.error('Account found but password mismatch. Please contact support or try signing up with a different email.');
+        toast.error('Account not found or password mismatch. Please sign up first or check that email confirmation is disabled in Supabase settings.');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Please confirm your email first. Check your inbox for a confirmation link.');
       } else {
         toast.error(error.message);
       }
       throw error;
     }
 
-    toast.success('Welcome back!');
-    navigate('/discussions');
+    if (data.session) {
+      toast.success('Welcome back!');
+      navigate('/discussions');
+    }
   };
 
   const signOut = async () => {
