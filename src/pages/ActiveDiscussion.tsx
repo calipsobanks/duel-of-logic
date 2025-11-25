@@ -3,12 +3,20 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb } from "lucide-react";
 import { EvidenceCard } from "@/components/discussion/EvidenceCard";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface DiscussionData {
   id: string;
@@ -275,14 +283,67 @@ const ActiveDiscussion = () => {
               </div>
             </div>
             
-            <Button
-              size="lg"
-              onClick={() => setIsAddingEvidence(true)}
-              disabled={!canAddEvidence}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Evidence
-            </Button>
+            <div className="flex items-center gap-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="lg">
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Debate Tips
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-primary" />
+                      How to Debate Effectively
+                    </DialogTitle>
+                    <DialogDescription>
+                      Use these reasoning techniques to strengthen your arguments.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <h4 className="font-semibold text-foreground mb-2">🔽 Deductive Reasoning</h4>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Start with a general statement and reach a specific conclusion.
+                      </p>
+                      <div className="text-sm bg-background p-3 rounded border border-border/50">
+                        <p className="font-medium text-foreground">Example:</p>
+                        <p className="text-muted-foreground italic">
+                          "All mammals are warm-blooded. Dogs are mammals. Therefore, dogs are warm-blooded."
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <h4 className="font-semibold text-foreground mb-2">🔼 Inductive Reasoning</h4>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Start with specific observations and reach a general conclusion.
+                      </p>
+                      <div className="text-sm bg-background p-3 rounded border border-border/50">
+                        <p className="font-medium text-foreground">Example:</p>
+                        <p className="text-muted-foreground italic">
+                          "Every swan I've seen is white. Therefore, all swans are probably white."
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <p className="text-sm text-foreground">
+                        <span className="font-semibold">💡 Pro Tip:</span> Always back your arguments with credible sources to earn bonus points!
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Button
+                size="lg"
+                onClick={() => setIsAddingEvidence(true)}
+                disabled={!canAddEvidence}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Evidence
+              </Button>
+            </div>
           </div>
 
           {/* Leading Indicator */}
