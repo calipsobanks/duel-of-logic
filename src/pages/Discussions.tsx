@@ -395,10 +395,17 @@ const Discussions = () => {
                         With @{opponent?.username || 'Unknown'}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-3">
                       <div className="flex justify-between text-sm">
                         <span>Your score: {yourScore}</span>
                         <span>Their score: {theirScore}</span>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-md border border-border/50">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">💡 Debate Tip:</span>{' '}
+                          Use <span className="font-semibold">deductive reasoning</span> (general → specific) or{' '}
+                          <span className="font-semibold">inductive reasoning</span> (specific → general) to strengthen your arguments.
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
