@@ -232,6 +232,28 @@ const ActiveDiscussion = () => {
     });
   };
 
+  const handleChallenge = async (evidenceId: string) => {
+    const { error } = await supabase
+      .from('evidence')
+      .update({ status: 'challenged' })
+      .eq('id', evidenceId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to challenge evidence",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    loadEvidence();
+    toast({
+      title: "Evidence Challenged",
+      description: "You can now add counter-evidence to disprove the claim.",
+    });
+  };
+
   if (loading || !discussion) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -240,9 +262,11 @@ const ActiveDiscussion = () => {
     );
   }
 
+  const lastEvidence = evidenceList[evidenceList.length - 1];
   const canAddEvidence = evidenceList.length === 0 || 
-    (evidenceList[evidenceList.length - 1].status === "agreed" || 
-     evidenceList[evidenceList.length - 1].status === "validated");
+    lastEvidence?.status === "agreed" || 
+    lastEvidence?.status === "validated" ||
+    (lastEvidence?.status === "challenged" && lastEvidence?.debater_id !== user?.id);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-discussion-blue-light py-8">
@@ -413,6 +437,13 @@ const ActiveDiscussion = () => {
                     <div className="flex gap-2">
                       <Button onClick={() => handleAgree(evidence.id)} size="sm">
                         Agree
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleChallenge(evidence.id)} 
+                        size="sm"
+                      >
+                        Challenge
                       </Button>
                     </div>
                   )}
