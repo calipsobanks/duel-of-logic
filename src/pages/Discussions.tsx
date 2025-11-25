@@ -31,7 +31,8 @@ interface Discussion {
   debater2_score: number;
   status: string;
   created_at: string;
-  profiles: Profile;
+  debater1: { id: string; username: string } | null;
+  debater2: { id: string; username: string } | null;
 }
 
 interface LeaderboardEntry {
@@ -156,9 +157,10 @@ const Discussions = () => {
       .from('debates')
       .select(`
         *,
-        profiles!debates_debater2_id_fkey(id, username)
+        debater1:profiles!debates_debater1_id_fkey(id, username),
+        debater2:profiles!debates_debater2_id_fkey(id, username)
       `)
-      .eq('debater1_id', user?.id)
+      .or(`debater1_id.eq.${user?.id},debater2_id.eq.${user?.id}`)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -376,25 +378,32 @@ const Discussions = () => {
           <div>
             <h2 className="text-2xl font-semibold mb-4">Active Discussions</h2>
             <div className="space-y-4">
-              {discussions.map((discussion) => (
-                <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      {discussion.topic}
-                    </CardTitle>
-                    <CardDescription>
-                      With @{discussion.profiles.username}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between text-sm">
-                      <span>Your score: {discussion.debater1_score}</span>
-                      <span>Their score: {discussion.debater2_score}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {discussions.map((discussion) => {
+                const isDebater1 = discussion.debater1_id === user?.id;
+                const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
+                const yourScore = isDebater1 ? discussion.debater1_score : discussion.debater2_score;
+                const theirScore = isDebater1 ? discussion.debater2_score : discussion.debater1_score;
+                
+                return (
+                  <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5" />
+                        {discussion.topic}
+                      </CardTitle>
+                      <CardDescription>
+                        With @{opponent?.username || 'Unknown'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between text-sm">
+                        <span>Your score: {yourScore}</span>
+                        <span>Their score: {theirScore}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
               {discussions.length === 0 && (
                 <Card>
                   <CardContent className="pt-6 text-center text-muted-foreground">
