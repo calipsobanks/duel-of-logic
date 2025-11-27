@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -43,6 +43,8 @@ interface LeaderboardEntry {
   debatesCount: number;
 }
 
+type TabType = 'home' | 'leaderboard' | 'members' | 'profile';
+
 const Discussions = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
@@ -56,8 +58,11 @@ const Discussions = () => {
   const [universityDegree, setUniversityDegree] = useState('');
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('home');
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const currentUserProfile = profiles.find(p => p.id === user?.id);
 
   useEffect(() => {
     if (!user) {
@@ -78,7 +83,7 @@ const Discussions = () => {
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     setIsAdmin(!!data);
   };
@@ -96,7 +101,6 @@ const Discussions = () => {
 
     setProfiles(data || []);
     
-    // Fetch leaderboard after profiles are loaded
     if (data && data.length > 0) {
       await fetchLeaderboardWithProfiles(data);
     }
@@ -112,24 +116,20 @@ const Discussions = () => {
       return;
     }
 
-    // Aggregate scores per user
     const scoreMap = new Map<string, { totalPoints: number; debatesCount: number }>();
     
     debates?.forEach(debate => {
-      // Add scores for debater1
       const debater1Stats = scoreMap.get(debate.debater1_id) || { totalPoints: 0, debatesCount: 0 };
       debater1Stats.totalPoints += debate.debater1_score;
       debater1Stats.debatesCount += 1;
       scoreMap.set(debate.debater1_id, debater1Stats);
 
-      // Add scores for debater2
       const debater2Stats = scoreMap.get(debate.debater2_id) || { totalPoints: 0, debatesCount: 0 };
       debater2Stats.totalPoints += debate.debater2_score;
       debater2Stats.debatesCount += 1;
       scoreMap.set(debate.debater2_id, debater2Stats);
     });
 
-    // Combine with profile data
     const leaderboardData: LeaderboardEntry[] = profilesData
       .map(profile => {
         const stats = scoreMap.get(profile.id) || { totalPoints: 0, debatesCount: 0 };
@@ -144,12 +144,6 @@ const Discussions = () => {
       .sort((a, b) => b.totalPoints - a.totalPoints);
 
     setLeaderboard(leaderboardData);
-  };
-
-  const fetchLeaderboard = async () => {
-    if (profiles.length > 0) {
-      await fetchLeaderboardWithProfiles(profiles);
-    }
   };
 
   const fetchDiscussions = async () => {
@@ -262,19 +256,17 @@ const Discussions = () => {
     toast.success('Beliefs updated!');
     setIsEditBeliefsOpen(false);
     fetchProfiles();
-    fetchLeaderboard();
   };
 
   const handleBeliefClick = (beliefType: string, value: string) => {
     const beliefTag = `#${beliefType}: ${value}`;
     if (selectedBelief === beliefTag) {
-      setSelectedBelief(null); // Clear filter if clicking the same belief
+      setSelectedBelief(null);
     } else {
       setSelectedBelief(beliefTag);
     }
   };
 
-  // Get belief tags for a profile
   const getBeliefTags = (profile: Profile): Array<{type: string, value: string}> => {
     const tags: Array<{type: string, value: string}> = [];
     if (profile.religion) tags.push({ type: 'Religion', value: profile.religion });
@@ -283,7 +275,6 @@ const Discussions = () => {
     return tags;
   };
 
-  // Filter profiles based on selected belief
   const filteredProfiles = selectedBelief
     ? profiles.filter(profile => {
         const tags = getBeliefTags(profile);
@@ -291,375 +282,403 @@ const Discussions = () => {
       })
     : profiles;
 
+  const currentUserLeaderboardEntry = leaderboard.find(e => e.userId === user?.id);
+  const currentUserRank = leaderboard.findIndex(e => e.userId === user?.id) + 1;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
-          <div className="w-full sm:w-auto">
-            <h1 className="text-2xl md:text-4xl font-bold">My Discussions</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Start a discussion or continue an existing one</p>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">
+            {activeTab === 'home' && 'Discussions'}
+            {activeTab === 'leaderboard' && 'Leaderboard'}
+            {activeTab === 'members' && 'Members'}
+            {activeTab === 'profile' && 'Profile'}
+          </h1>
+          <div className="flex items-center gap-2">
             {isAdmin && (
-              <Button variant="secondary" size="sm" className="flex-1 sm:flex-none" onClick={() => navigate('/admin')}>
-                <Shield className="mr-2 h-4 w-4" />
-                Admin
+              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+                <Shield className="h-5 w-5" />
               </Button>
             )}
-            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
           </div>
         </div>
+      </header>
 
-        {/* Leaderboard */}
-        <Card className="mb-6 md:mb-8">
-          <CardHeader className="pb-3 md:pb-6">
-            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-              <Trophy className="h-5 w-5 md:h-6 md:w-6 text-yellow-500" />
-              Leaderboard
-            </CardTitle>
-            <CardDescription className="text-xs md:text-sm">Top debaters ranked by total points</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 md:space-y-3">
-              {leaderboard.slice(0, 10).map((entry, index) => (
-                <div 
-                  key={entry.userId}
-                  className={`flex items-center justify-between p-3 md:p-4 rounded-lg border transition-all ${
-                    entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-muted/30'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
-                    <div className={`text-lg md:text-2xl font-bold min-w-[1.5rem] md:min-w-[2rem] text-center flex-shrink-0 ${
-                      index === 0 ? 'text-yellow-500' :
-                      index === 1 ? 'text-gray-400' :
-                      index === 2 ? 'text-orange-600' :
-                      'text-muted-foreground'
-                    }`}>
-                      {index + 1}
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-4 pb-24">
+        {/* Home Tab - Active Discussions */}
+        {activeTab === 'home' && (
+          <div className="space-y-4">
+            {discussions.map((discussion) => {
+              const isDebater1 = discussion.debater1_id === user?.id;
+              const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
+              const yourScore = isDebater1 ? discussion.debater1_score : discussion.debater2_score;
+              const theirScore = isDebater1 ? discussion.debater2_score : discussion.debater1_score;
+              
+              return (
+                <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-start gap-2 text-sm">
+                      <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                      <span className="line-clamp-2">{discussion.topic}</span>
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      vs @{opponent?.username || 'Unknown'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-primary font-medium">You: {yourScore}</span>
+                      <span className="text-muted-foreground">Them: {theirScore}</span>
                     </div>
-                    <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
-                      <AvatarImage src={entry.avatar_url || undefined} alt={entry.username} />
-                      <AvatarFallback>
-                        <User className="h-4 w-4 md:h-5 md:w-5" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm md:text-base truncate">
-                        @{entry.username}
-                        {entry.userId === user?.id && (
-                          <span className="ml-1 md:ml-2 text-xs text-muted-foreground">(You)</span>
-                        )}
-                      </p>
-                      <p className="text-xs md:text-sm text-muted-foreground">
-                        {entry.debatesCount} {entry.debatesCount === 1 ? 'debate' : 'debates'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    <p className="text-lg md:text-2xl font-bold text-primary">{entry.totalPoints}</p>
-                    <p className="text-xs text-muted-foreground">pts</p>
-                  </div>
-                </div>
-              ))}
-              {leaderboard.length === 0 && (
-                <div className="text-center py-6 md:py-8 text-muted-foreground text-sm">
-                  No debates yet. Start one to earn points!
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          {/* Active Discussions */}
-          <div>
-            <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">Active Discussions</h2>
-            <div className="space-y-3 md:space-y-4">
-              {discussions.map((discussion) => {
-                const isDebater1 = discussion.debater1_id === user?.id;
-                const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
-                const yourScore = isDebater1 ? discussion.debater1_score : discussion.debater2_score;
-                const theirScore = isDebater1 ? discussion.debater2_score : discussion.debater1_score;
-                
-                return (
-                  <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
-                    <CardHeader className="pb-2 md:pb-4">
-                      <CardTitle className="flex items-start gap-2 text-sm md:text-base">
-                        <MessageSquare className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0 mt-0.5" />
-                        <span className="line-clamp-2">{discussion.topic}</span>
-                      </CardTitle>
-                      <CardDescription className="text-xs md:text-sm">
-                        With @{opponent?.username || 'Unknown'}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex justify-between text-xs md:text-sm">
-                        <span>Your score: {yourScore}</span>
-                        <span>Their score: {theirScore}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-              {discussions.length === 0 && (
-                <Card>
-                  <CardContent className="pt-6 text-center text-muted-foreground text-sm">
-                    No active discussions yet. Start one with a member!
                   </CardContent>
                 </Card>
-              )}
-            </div>
+              );
+            })}
+            {discussions.length === 0 && (
+              <Card>
+                <CardContent className="pt-8 pb-8 text-center">
+                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">No discussions yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Go to Members to start one!</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
+        )}
 
-          {/* Members List */}
-          <div>
-            <div className="flex items-center justify-between mb-3 md:mb-4">
-              <h2 className="text-xl md:text-2xl font-semibold">Members</h2>
-              {selectedBelief && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setSelectedBelief(null)}
-                  className="text-xs"
-                >
-                  Clear Filter
-                </Button>
-              )}
-            </div>
+        {/* Leaderboard Tab */}
+        {activeTab === 'leaderboard' && (
+          <div className="space-y-3">
+            {leaderboard.map((entry, index) => (
+              <div 
+                key={entry.userId}
+                className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                  entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-card'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className={`text-lg font-bold min-w-[1.5rem] text-center flex-shrink-0 ${
+                    index === 0 ? 'text-yellow-500' :
+                    index === 1 ? 'text-gray-400' :
+                    index === 2 ? 'text-orange-600' :
+                    'text-muted-foreground'
+                  }`}>
+                    {index + 1}
+                  </div>
+                  <Avatar className="h-10 w-10 flex-shrink-0">
+                    <AvatarImage src={entry.avatar_url || undefined} alt={entry.username} />
+                    <AvatarFallback>
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm truncate">
+                      @{entry.username}
+                      {entry.userId === user?.id && (
+                        <span className="ml-1 text-xs text-muted-foreground">(You)</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {entry.debatesCount} debates
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xl font-bold text-primary">{entry.totalPoints}</p>
+                  <p className="text-xs text-muted-foreground">pts</p>
+                </div>
+              </div>
+            ))}
+            {leaderboard.length === 0 && (
+              <Card>
+                <CardContent className="pt-8 pb-8 text-center">
+                  <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">No rankings yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Start debating to earn points!</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Members Tab */}
+        {activeTab === 'members' && (
+          <div className="space-y-3">
             {selectedBelief && (
-              <div className="mb-3 md:mb-4 p-2 md:p-3 bg-muted rounded-lg">
-                <p className="text-xs md:text-sm text-muted-foreground">
-                  Filtering: <Badge variant="secondary" className="text-xs">{selectedBelief}</Badge>
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg mb-3">
+                <p className="text-xs text-muted-foreground">
+                  Filter: <Badge variant="secondary" className="text-xs">{selectedBelief}</Badge>
                 </p>
+                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedBelief(null)}>
+                  Clear
+                </Button>
               </div>
             )}
-            <div className="space-y-3 md:space-y-4">
-              {filteredProfiles.map((profile) => (
-                <Card key={profile.id}>
-                  <CardContent className="pt-4 md:pt-6">
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-                          <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
-                            <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
-                            <AvatarFallback>
-                              <User className="h-4 w-4 md:h-5 md:w-5" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm md:text-base truncate">
-                              @{profile.username}
-                              {profile.id === user?.id && (
-                                <span className="ml-1 text-xs text-muted-foreground">(You)</span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        {profile.id === user?.id && (
-                          <div className="flex gap-1 md:gap-2 flex-shrink-0">
-                            <label htmlFor={`avatar-upload-${profile.id}`} className="cursor-pointer">
-                              <input
-                                id={`avatar-upload-${profile.id}`}
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleAvatarUpload(e, profile.id)}
-                                className="hidden"
-                              />
-                              <Button variant="outline" size="sm" className="text-xs" asChild>
-                                <span>Upload</span>
-                              </Button>
-                            </label>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="text-xs"
-                              onClick={() => handleEditBeliefs(profile)}
-                            >
-                              <Edit2 className="h-3 w-3 md:h-4 md:w-4" />
-                            </Button>
+            {filteredProfiles.filter(p => p.id !== user?.id).map((profile) => (
+              <Card key={profile.id}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
+                        <AvatarFallback>
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm truncate">@{profile.username}</p>
+                        {getBeliefTags(profile).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {getBeliefTags(profile).slice(0, 2).map((tag, index) => (
+                              <Badge 
+                                key={index} 
+                                variant={selectedBelief === `#${tag.type}: ${tag.value}` ? "default" : "secondary"} 
+                                className="text-[10px] cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleBeliefClick(tag.type, tag.value);
+                                }}
+                              >
+                                {tag.value}
+                              </Badge>
+                            ))}
                           </div>
                         )}
-                        {profile.id !== user?.id && (
-                          <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
-                            setIsDialogOpen(open);
-                            if (open) setSelectedMember(profile);
-                            else setSelectedMember(null);
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" className="flex-shrink-0 text-xs md:text-sm" onClick={() => setSelectedMember(profile)}>
-                                <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                                Discuss
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="mx-4 max-w-sm md:max-w-md">
-                              <DialogHeader>
-                                <DialogTitle className="text-base md:text-lg">Start a discussion with @{profile.username}</DialogTitle>
-                                <DialogDescription className="text-xs md:text-sm">
-                                  Choose a topic for your discussion
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 pt-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="topic">Discussion Topic</Label>
-                                <Input
-                                  id="topic"
-                                  placeholder="Enter the topic for discussion..."
-                                  value={topic}
-                                  onChange={(e) => setTopic(e.target.value)}
-                                />
-                              </div>
-                              <Button onClick={startDiscussion} className="w-full" disabled={!topic.trim()}>
-                                Start Discussion
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
-                    {getBeliefTags(profile).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {getBeliefTags(profile).map((tag, index) => {
-                          const tagString = `#${tag.type}: ${tag.value}`;
-                          return (
-                            <Badge 
-                              key={index} 
-                              variant={selectedBelief === tagString ? "default" : "secondary"} 
-                              className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
-                              onClick={() => handleBeliefClick(tag.type, tag.value)}
-                            >
-                              {tagString}
-                            </Badge>
-                          );
-                        })}
                       </div>
-                    )}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {filteredProfiles.length === 0 && profiles.length > 0 && (
-                <Card>
-                  <CardContent className="pt-6 text-center text-muted-foreground">
-                    No members found with belief: {selectedBelief}
-                  </CardContent>
-                </Card>
-              )}
-              {profiles.length === 0 && (
-                <Card>
-                  <CardContent className="pt-6 text-center text-muted-foreground">
-                    No other members yet. Invite friends to join!
-                  </CardContent>
-                </Card>
-              )}
+                    <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
+                      setIsDialogOpen(open);
+                      if (open) setSelectedMember(profile);
+                      else setSelectedMember(null);
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="flex-shrink-0" onClick={() => setSelectedMember(profile)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="mx-4 max-w-sm">
+                        <DialogHeader>
+                          <DialogTitle className="text-base">Debate @{profile.username}</DialogTitle>
+                          <DialogDescription className="text-xs">
+                            What topic do you want to discuss?
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="topic" className="text-sm">Topic</Label>
+                            <Input
+                              id="topic"
+                              placeholder="Enter your debate topic..."
+                              value={topic}
+                              onChange={(e) => setTopic(e.target.value)}
+                            />
+                          </div>
+                          <Button onClick={startDiscussion} className="w-full" disabled={!topic.trim()}>
+                            Start Discussion
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {filteredProfiles.filter(p => p.id !== user?.id).length === 0 && (
+              <Card>
+                <CardContent className="pt-8 pb-8 text-center">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">No members found</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Profile Tab */}
+        {activeTab === 'profile' && currentUserProfile && (
+          <div className="space-y-4">
+            {/* Profile Card */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <Avatar className="h-24 w-24 mb-4">
+                    <AvatarImage src={currentUserProfile.avatar_url || undefined} alt={currentUserProfile.username} />
+                    <AvatarFallback>
+                      <User className="h-12 w-12" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <h2 className="text-xl font-bold">@{currentUserProfile.username}</h2>
+                  
+                  {/* Stats */}
+                  <div className="flex gap-6 mt-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-primary">{currentUserLeaderboardEntry?.totalPoints || 0}</p>
+                      <p className="text-xs text-muted-foreground">Points</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">{currentUserLeaderboardEntry?.debatesCount || 0}</p>
+                      <p className="text-xs text-muted-foreground">Debates</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">#{currentUserRank || '-'}</p>
+                      <p className="text-xs text-muted-foreground">Rank</p>
+                    </div>
+                  </div>
+
+                  {/* Beliefs */}
+                  {getBeliefTags(currentUserProfile).length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 mt-4">
+                      {getBeliefTags(currentUserProfile).map((tag, index) => (
+                        <Badge key={index} variant="secondary">
+                          {tag.type}: {tag.value}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2 mt-6 w-full">
+                    <label htmlFor="avatar-upload" className="cursor-pointer w-full">
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleAvatarUpload(e, currentUserProfile.id)}
+                        className="hidden"
+                      />
+                      <Button variant="outline" className="w-full" asChild>
+                        <span>Change Photo</span>
+                      </Button>
+                    </label>
+                    <Button variant="outline" onClick={() => handleEditBeliefs(currentUserProfile)}>
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Edit Beliefs
+                    </Button>
+                    <Button variant="destructive" onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </main>
+
+      {/* Bottom Tab Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t safe-area-inset-bottom z-50">
+        <div className="flex items-center justify-around py-2">
+          <button
+            onClick={() => setActiveTab('home')}
+            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+              activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <Home className={`h-6 w-6 ${activeTab === 'home' ? 'fill-primary/20' : ''}`} />
+            <span className="text-xs mt-1">Home</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('leaderboard')}
+            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+              activeTab === 'leaderboard' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <Trophy className={`h-6 w-6 ${activeTab === 'leaderboard' ? 'fill-primary/20' : ''}`} />
+            <span className="text-xs mt-1">Ranks</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('members')}
+            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+              activeTab === 'members' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <Users className={`h-6 w-6 ${activeTab === 'members' ? 'fill-primary/20' : ''}`} />
+            <span className="text-xs mt-1">Members</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+              activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <User className={`h-6 w-6 ${activeTab === 'profile' ? 'fill-primary/20' : ''}`} />
+            <span className="text-xs mt-1">Profile</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Edit Beliefs Dialog */}
+      <Dialog open={isEditBeliefsOpen} onOpenChange={setIsEditBeliefsOpen}>
+        <DialogContent className="max-w-sm mx-4 max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Your Beliefs</DialogTitle>
+            <DialogDescription className="text-xs">
+              Share your beliefs to help others understand your perspective
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {/* Religion */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Religion</Label>
+              <RadioGroup value={religion} onValueChange={setReligion} className="grid grid-cols-2 gap-2">
+                {[
+                  'Christianity', 'Islam', 'Judaism', 'Hinduism',
+                  'Buddhism', 'Atheism', 'Agnosticism', 'Other'
+                ].map((option) => (
+                  <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
+                    <RadioGroupItem value={option} id={`religion-${option}`} />
+                    <Label htmlFor={`religion-${option}`} className="text-xs cursor-pointer">{option}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {/* Political View */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Political View</Label>
+              <RadioGroup value={politicalView} onValueChange={setPoliticalView} className="grid grid-cols-2 gap-2">
+                {[
+                  'Liberal', 'Conservative', 'Moderate', 'Libertarian',
+                  'Progressive', 'Socialist', 'Independent', 'Other'
+                ].map((option) => (
+                  <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
+                    <RadioGroupItem value={option} id={`political-${option}`} />
+                    <Label htmlFor={`political-${option}`} className="text-xs cursor-pointer">{option}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {/* University Degree */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Education</Label>
+              <RadioGroup value={universityDegree} onValueChange={setUniversityDegree} className="space-y-2">
+                {[
+                  'Yes - Completed', 'Currently enrolled', 'Some college', 'No'
+                ].map((option) => (
+                  <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
+                    <RadioGroupItem value={option} id={`university-${option}`} />
+                    <Label htmlFor={`university-${option}`} className="text-xs cursor-pointer">{option}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" onClick={() => setIsEditBeliefsOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleSaveBeliefs} className="flex-1">
+                Save
+              </Button>
             </div>
           </div>
-        </div>
-
-        {/* Edit Beliefs Dialog */}
-        <Dialog open={isEditBeliefsOpen} onOpenChange={setIsEditBeliefsOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Your Beliefs</DialogTitle>
-              <DialogDescription>
-                Share your beliefs to help others understand your perspective
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-6 pt-4">
-              {/* Religion */}
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">Religion</Label>
-                <RadioGroup value={religion} onValueChange={setReligion}>
-                  {[
-                    'Christianity',
-                    'Islam', 
-                    'Judaism',
-                    'Hinduism',
-                    'Buddhism',
-                    'Atheism',
-                    'Agnosticism',
-                    'Spiritual but not religious',
-                    'Other',
-                    'Prefer not to say'
-                  ].map((option) => (
-                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                      <RadioGroupItem value={option} id={`religion-${option}`} />
-                      <Label htmlFor={`religion-${option}`} className="flex-1 cursor-pointer">
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              {/* Political View */}
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">Political View</Label>
-                <RadioGroup value={politicalView} onValueChange={setPoliticalView}>
-                  {[
-                    'Liberal',
-                    'Conservative',
-                    'Moderate',
-                    'Libertarian',
-                    'Progressive',
-                    'Socialist',
-                    'Independent',
-                    'Apolitical',
-                    'Other',
-                    'Prefer not to say'
-                  ].map((option) => (
-                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                      <RadioGroupItem value={option} id={`political-${option}`} />
-                      <Label htmlFor={`political-${option}`} className="flex-1 cursor-pointer">
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              {/* University Degree */}
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">4-Year University Degree</Label>
-                <RadioGroup value={universityDegree} onValueChange={setUniversityDegree}>
-                  {[
-                    'Yes - Completed',
-                    'Currently enrolled',
-                    'Some college',
-                    'No',
-                    'Prefer not to say'
-                  ].map((option) => (
-                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                      <RadioGroupItem value={option} id={`university-${option}`} />
-                      <Label htmlFor={`university-${option}`} className="flex-1 cursor-pointer">
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsEditBeliefsOpen(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSaveBeliefs}
-                  className="flex-1"
-                >
-                  Save Beliefs
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
