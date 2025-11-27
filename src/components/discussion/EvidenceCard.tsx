@@ -1,9 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertTriangle, ExternalLink } from "lucide-react";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { ChallengeDialog } from "./ChallengeDialog";
+import { LinkPreview } from "./LinkPreview";
 
 interface Challenge {
   id: string;
@@ -97,15 +98,7 @@ export const EvidenceCard = ({
           </p>
 
           {evidence.sourceUrl && (
-            <a 
-              href={evidence.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-            >
-              View Source
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            <LinkPreview url={evidence.sourceUrl} className="mt-3 max-w-xs" />
           )}
         </div>
       </div>
@@ -179,15 +172,7 @@ export const EvidenceCard = ({
                   </Badge>
                 </div>
                 <p className="text-sm text-foreground">{challenge.content}</p>
-                <a 
-                  href={challenge.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  View Source
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                <LinkPreview url={challenge.sourceUrl} className="mt-2 max-w-xs" />
               </div>
             </Card>
           ))}
