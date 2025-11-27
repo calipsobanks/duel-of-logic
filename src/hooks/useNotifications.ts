@@ -71,7 +71,38 @@ export const useNotifications = () => {
     console.log('Setting up realtime notifications for user:', user.id);
 
     const channel = supabase
-      .channel('evidence-notifications')
+      .channel('app-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'debates',
+        },
+        async (payload) => {
+          console.log('New debate received:', payload);
+          
+          const newDebate = payload.new as any;
+
+          // Only notify if the current user is debater2 (the one being invited)
+          if (newDebate.debater2_id !== user.id) return;
+
+          // Get the initiator's profile
+          const { data: initiator } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', newDebate.debater1_id)
+            .single();
+
+          showNotification(
+            '🎯 New Discussion Invite!',
+            `@${initiator?.username || 'Someone'} wants to debate: "${newDebate.topic?.slice(0, 50)}..."`,
+            () => {
+              window.location.href = `/discussion/active?id=${newDebate.id}`;
+            }
+          );
+        }
+      )
       .on(
         'postgres_changes',
         {
