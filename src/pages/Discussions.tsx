@@ -292,21 +292,21 @@ const Discussions = () => {
     : profiles;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold">My Discussions</h1>
-            <p className="text-muted-foreground mt-2">Start a discussion or continue an existing one</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
+          <div className="w-full sm:w-auto">
+            <h1 className="text-2xl md:text-4xl font-bold">My Discussions</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Start a discussion or continue an existing one</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             {isAdmin && (
-              <Button variant="secondary" onClick={() => navigate('/admin')}>
+              <Button variant="secondary" size="sm" className="flex-1 sm:flex-none" onClick={() => navigate('/admin')}>
                 <Shield className="mr-2 h-4 w-4" />
                 Admin
               </Button>
             )}
-            <Button variant="outline" onClick={handleLogout}>
+            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
             </Button>
@@ -314,25 +314,25 @@ const Discussions = () => {
         </div>
 
         {/* Leaderboard */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-yellow-500" />
+        <Card className="mb-6 md:mb-8">
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+              <Trophy className="h-5 w-5 md:h-6 md:w-6 text-yellow-500" />
               Leaderboard
             </CardTitle>
-            <CardDescription>Top debaters ranked by total points</CardDescription>
+            <CardDescription className="text-xs md:text-sm">Top debaters ranked by total points</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {leaderboard.slice(0, 10).map((entry, index) => (
                 <div 
                   key={entry.userId}
-                  className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                  className={`flex items-center justify-between p-3 md:p-4 rounded-lg border transition-all ${
                     entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-muted/30'
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`text-2xl font-bold min-w-[2rem] text-center ${
+                  <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+                    <div className={`text-lg md:text-2xl font-bold min-w-[1.5rem] md:min-w-[2rem] text-center flex-shrink-0 ${
                       index === 0 ? 'text-yellow-500' :
                       index === 1 ? 'text-gray-400' :
                       index === 2 ? 'text-orange-600' :
@@ -340,32 +340,32 @@ const Discussions = () => {
                     }`}>
                       {index + 1}
                     </div>
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
                       <AvatarImage src={entry.avatar_url || undefined} alt={entry.username} />
                       <AvatarFallback>
-                        <User className="h-5 w-5" />
+                        <User className="h-4 w-4 md:h-5 md:w-5" />
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm md:text-base truncate">
                         @{entry.username}
                         {entry.userId === user?.id && (
-                          <span className="ml-2 text-xs text-muted-foreground">(You)</span>
+                          <span className="ml-1 md:ml-2 text-xs text-muted-foreground">(You)</span>
                         )}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {entry.debatesCount} {entry.debatesCount === 1 ? 'debate' : 'debates'}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">{entry.totalPoints}</p>
-                    <p className="text-xs text-muted-foreground">points</p>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <p className="text-lg md:text-2xl font-bold text-primary">{entry.totalPoints}</p>
+                    <p className="text-xs text-muted-foreground">pts</p>
                   </div>
                 </div>
               ))}
               {leaderboard.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-6 md:py-8 text-muted-foreground text-sm">
                   No debates yet. Start one to earn points!
                 </div>
               )}
@@ -373,11 +373,11 @@ const Discussions = () => {
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Active Discussions */}
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Active Discussions</h2>
-            <div className="space-y-4">
+            <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">Active Discussions</h2>
+            <div className="space-y-3 md:space-y-4">
               {discussions.map((discussion) => {
                 const isDebater1 = discussion.debater1_id === user?.id;
                 const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
@@ -386,17 +386,17 @@ const Discussions = () => {
                 
                 return (
                   <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5" />
-                        {discussion.topic}
+                    <CardHeader className="pb-2 md:pb-4">
+                      <CardTitle className="flex items-start gap-2 text-sm md:text-base">
+                        <MessageSquare className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{discussion.topic}</span>
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-xs md:text-sm">
                         With @{opponent?.username || 'Unknown'}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between text-sm">
+                    <CardContent className="pt-0">
+                      <div className="flex justify-between text-xs md:text-sm">
                         <span>Your score: {yourScore}</span>
                         <span>Their score: {theirScore}</span>
                       </div>
@@ -406,7 +406,7 @@ const Discussions = () => {
               })}
               {discussions.length === 0 && (
                 <Card>
-                  <CardContent className="pt-6 text-center text-muted-foreground">
+                  <CardContent className="pt-6 text-center text-muted-foreground text-sm">
                     No active discussions yet. Start one with a member!
                   </CardContent>
                 </Card>
@@ -416,8 +416,8 @@ const Discussions = () => {
 
           {/* Members List */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold">Members</h2>
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h2 className="text-xl md:text-2xl font-semibold">Members</h2>
               {selectedBelief && (
                 <Button 
                   variant="ghost" 
@@ -425,79 +425,80 @@ const Discussions = () => {
                   onClick={() => setSelectedBelief(null)}
                   className="text-xs"
                 >
-                  Clear Filter: {selectedBelief}
+                  Clear Filter
                 </Button>
               )}
             </div>
             {selectedBelief && (
-              <div className="mb-4 p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Showing members who believe in <Badge variant="secondary">{selectedBelief}</Badge>
+              <div className="mb-3 md:mb-4 p-2 md:p-3 bg-muted rounded-lg">
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  Filtering: <Badge variant="secondary" className="text-xs">{selectedBelief}</Badge>
                 </p>
               </div>
             )}
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {filteredProfiles.map((profile) => (
                 <Card key={profile.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
-                          <AvatarFallback>
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold">
-                            @{profile.username}
-                            {profile.id === user?.id && (
-                              <span className="ml-2 text-xs text-muted-foreground">(You)</span>
-                            )}
-                          </p>
+                  <CardContent className="pt-4 md:pt-6">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                          <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
+                            <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
+                            <AvatarFallback>
+                              <User className="h-4 w-4 md:h-5 md:w-5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm md:text-base truncate">
+                              @{profile.username}
+                              {profile.id === user?.id && (
+                                <span className="ml-1 text-xs text-muted-foreground">(You)</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      {profile.id === user?.id && (
-                        <div className="flex gap-2">
-                          <label htmlFor={`avatar-upload-${profile.id}`} className="cursor-pointer">
-                            <input
-                              id={`avatar-upload-${profile.id}`}
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleAvatarUpload(e, profile.id)}
-                              className="hidden"
-                            />
-                            <Button variant="outline" size="sm" asChild>
-                              <span>Upload Picture</span>
+                        {profile.id === user?.id && (
+                          <div className="flex gap-1 md:gap-2 flex-shrink-0">
+                            <label htmlFor={`avatar-upload-${profile.id}`} className="cursor-pointer">
+                              <input
+                                id={`avatar-upload-${profile.id}`}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleAvatarUpload(e, profile.id)}
+                                className="hidden"
+                              />
+                              <Button variant="outline" size="sm" className="text-xs" asChild>
+                                <span>Upload</span>
+                              </Button>
+                            </label>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-xs"
+                              onClick={() => handleEditBeliefs(profile)}
+                            >
+                              <Edit2 className="h-3 w-3 md:h-4 md:w-4" />
                             </Button>
-                          </label>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleEditBeliefs(profile)}
-                          >
-                            <Edit2 className="h-4 w-4 mr-2" />
-                            Edit Beliefs
-                          </Button>
-                        </div>
-                      )}
-                      {profile.id !== user?.id && (
-                        <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
-                          setIsDialogOpen(open);
-                          if (open) setSelectedMember(profile);
-                          else setSelectedMember(null);
-                        }}>
-                          <DialogTrigger asChild>
-                            <Button size="sm" onClick={() => setSelectedMember(profile)}>
-                              <Plus className="mr-2 h-4 w-4" />
-                              Start Discussion
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Start a discussion with @{profile.username}</DialogTitle>
-                              <DialogDescription>
-                                Choose a topic for your discussion
+                          </div>
+                        )}
+                        {profile.id !== user?.id && (
+                          <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
+                            setIsDialogOpen(open);
+                            if (open) setSelectedMember(profile);
+                            else setSelectedMember(null);
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" className="flex-shrink-0 text-xs md:text-sm" onClick={() => setSelectedMember(profile)}>
+                                <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                                Discuss
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="mx-4 max-w-sm md:max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="text-base md:text-lg">Start a discussion with @{profile.username}</DialogTitle>
+                                <DialogDescription className="text-xs md:text-sm">
+                                  Choose a topic for your discussion
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 pt-4">
@@ -519,7 +520,7 @@ const Discussions = () => {
                       )}
                     </div>
                     {getBeliefTags(profile).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-3">
+                      <div className="flex flex-wrap gap-1 mt-2">
                         {getBeliefTags(profile).map((tag, index) => {
                           const tagString = `#${tag.type}: ${tag.value}`;
                           return (
@@ -535,6 +536,7 @@ const Discussions = () => {
                         })}
                       </div>
                     )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
