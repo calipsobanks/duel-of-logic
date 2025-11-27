@@ -147,10 +147,7 @@ export default function PublicDiscussion() {
                 <div className="flex items-start gap-2">
                   <Lock className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Sign in to participate</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      This discussion is only accessible to its participants. Sign in and join debates to see the evidence and arguments.
-                    </p>
+                    <p className="text-sm font-medium">Sign in to join the discussion</p>
                   </div>
                 </div>
               </CardContent>
