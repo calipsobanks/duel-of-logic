@@ -8,12 +8,13 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, EyeOff, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useHiddenDiscussions } from '@/hooks/useHiddenDiscussions';
 
 interface Profile {
   id: string;
@@ -61,11 +62,18 @@ const Discussions = () => {
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [showHidden, setShowHidden] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { permission, requestPermission } = useNotifications();
+  const { hideDiscussion, unhideDiscussion, isHidden, hiddenCount } = useHiddenDiscussions();
 
   const currentUserProfile = profiles.find(p => p.id === user?.id);
+  
+  // Filter discussions based on hidden state
+  const visibleDiscussions = showHidden 
+    ? discussions.filter(d => isHidden(d.id))
+    : discussions.filter(d => !isHidden(d.id));
 
   useEffect(() => {
     if (!user) {
@@ -315,24 +323,73 @@ const Discussions = () => {
         {/* Home Tab - Active Discussions */}
         {activeTab === 'home' && (
           <div className="space-y-4">
-            {discussions.map((discussion) => {
+            {/* Toggle for hidden discussions */}
+            {hiddenCount > 0 && (
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  {showHidden ? 'Showing hidden discussions' : `${hiddenCount} hidden discussion${hiddenCount > 1 ? 's' : ''}`}
+                </p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs h-7 gap-1"
+                  onClick={() => setShowHidden(!showHidden)}
+                >
+                  {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                  {showHidden ? 'Show Active' : 'Show Hidden'}
+                </Button>
+              </div>
+            )}
+            
+            {visibleDiscussions.map((discussion) => {
               const isDebater1 = discussion.debater1_id === user?.id;
               const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
               const yourScore = isDebater1 ? discussion.debater1_score : discussion.debater2_score;
               const theirScore = isDebater1 ? discussion.debater2_score : discussion.debater1_score;
+              const discussionHidden = isHidden(discussion.id);
               
               return (
-                <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
+                <Card key={discussion.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
-                    <CardTitle className="flex items-start gap-2 text-sm">
-                      <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                      <span className="line-clamp-2">{discussion.topic}</span>
-                    </CardTitle>
-                    <CardDescription className="text-xs">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle 
+                        className="flex items-start gap-2 text-sm cursor-pointer flex-1"
+                        onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
+                      >
+                        <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{discussion.topic}</span>
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (discussionHidden) {
+                            unhideDiscussion(discussion.id);
+                          } else {
+                            hideDiscussion(discussion.id);
+                          }
+                        }}
+                      >
+                        {discussionHidden ? (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                    <CardDescription 
+                      className="text-xs cursor-pointer"
+                      onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
+                    >
                       vs @{opponent?.username || 'Unknown'}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-0">
+                  <CardContent 
+                    className="pt-0 cursor-pointer"
+                    onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
+                  >
                     <div className="flex justify-between text-xs">
                       <span className="text-primary font-medium">You: {yourScore}</span>
                       <span className="text-muted-foreground">Them: {theirScore}</span>
@@ -341,12 +398,20 @@ const Discussions = () => {
                 </Card>
               );
             })}
-            {discussions.length === 0 && (
+            {visibleDiscussions.length === 0 && !showHidden && (
               <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground text-sm">No discussions yet</p>
                   <p className="text-xs text-muted-foreground mt-1">Go to Members to start one!</p>
+                </CardContent>
+              </Card>
+            )}
+            {visibleDiscussions.length === 0 && showHidden && (
+              <Card>
+                <CardContent className="pt-8 pb-8 text-center">
+                  <EyeOff className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">No hidden discussions</p>
                 </CardContent>
               </Card>
             )}

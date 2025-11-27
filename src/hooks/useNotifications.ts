@@ -1,15 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+// Notification sound URL (free sound effect)
+const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
+
 export const useNotifications = () => {
   const { user } = useAuth();
   const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [hasNewNotification, setHasNewNotification] = useState(false);
 
   useEffect(() => {
     if ('Notification' in window) {
       setPermission(Notification.permission);
+    }
+  }, []);
+
+  const playNotificationSound = useCallback(() => {
+    try {
+      const audio = new Audio(NOTIFICATION_SOUND_URL);
+      audio.volume = 0.5;
+      audio.play().catch(err => {
+        console.log('Could not play notification sound:', err);
+      });
+    } catch (error) {
+      console.error('Error playing notification sound:', error);
     }
   }, []);
 
@@ -35,7 +51,17 @@ export const useNotifications = () => {
     }
   };
 
-  const showNotification = (title: string, body: string, onClick?: () => void) => {
+  const clearNewNotification = useCallback(() => {
+    setHasNewNotification(false);
+  }, []);
+
+  const showNotification = useCallback((title: string, body: string, onClick?: () => void) => {
+    // Play sound for all notifications
+    playNotificationSound();
+    
+    // Set badge indicator
+    setHasNewNotification(true);
+
     if (permission !== 'granted') {
       // Fallback to toast if no permission
       toast(title, { description: body });
@@ -63,7 +89,7 @@ export const useNotifications = () => {
       console.error('Error showing notification:', error);
       toast(title, { description: body });
     }
-  };
+  }, [permission, playNotificationSound]);
 
   useEffect(() => {
     if (!user) return;
@@ -168,12 +194,14 @@ export const useNotifications = () => {
       console.log('Cleaning up notification channel');
       supabase.removeChannel(channel);
     };
-  }, [user, permission]);
+  }, [user, showNotification]);
 
   return {
     permission,
     requestPermission,
     showNotification,
     isSupported: 'Notification' in window,
+    hasNewNotification,
+    clearNewNotification,
   };
 };
