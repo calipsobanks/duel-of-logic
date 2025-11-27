@@ -27,7 +27,7 @@ export const NotificationsDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const { permission, requestPermission } = useNotifications();
+  const { permission, requestPermission, hasNewNotification, clearNewNotification } = useNotifications();
   const navigate = useNavigate();
 
   const fetchNotifications = async () => {
@@ -121,8 +121,10 @@ export const NotificationsDropdown = () => {
   useEffect(() => {
     if (isOpen && user) {
       fetchNotifications();
+      // Clear the new notification indicator when opening
+      clearNewNotification();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, clearNewNotification]);
 
   const getIcon = (type: Notification['type']) => {
     switch (type) {
@@ -150,6 +152,10 @@ export const NotificationsDropdown = () => {
             <Bell className="h-5 w-5 text-primary" />
           ) : (
             <BellOff className="h-5 w-5 text-muted-foreground" />
+          )}
+          {/* Red notification badge */}
+          {hasNewNotification && (
+            <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
           )}
         </Button>
       </PopoverTrigger>
