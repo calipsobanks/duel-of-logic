@@ -299,6 +299,18 @@ const Discussions = () => {
             {activeTab === 'profile' && 'Profile'}
           </h1>
           <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={permission === 'granted' ? undefined : requestPermission}
+              className="relative"
+            >
+              {permission === 'granted' ? (
+                <Bell className="h-5 w-5 text-primary" />
+              ) : (
+                <BellOff className="h-5 w-5 text-muted-foreground" />
+              )}
+            </Button>
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
                 <Shield className="h-5 w-5" />
