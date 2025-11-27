@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lightbulb } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
-import { SwipeableEvidenceCard } from "@/components/discussion/SwipeableEvidenceCard";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSwipeable } from "react-swipeable";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +50,9 @@ const ActiveDiscussion = () => {
   const [isAddingEvidence, setIsAddingEvidence] = useState(false);
   const [currentParticipant, setCurrentParticipant] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(true);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -160,7 +162,6 @@ const ActiveDiscussion = () => {
       return;
     }
 
-    // Award points
     const hasSource = !!evidence.source_url;
     const basePoints = 1;
     const sourceBonus = hasSource ? 2 : 0;
@@ -178,6 +179,7 @@ const ActiveDiscussion = () => {
 
     loadDiscussion();
     loadEvidence();
+    moveToNextCard();
 
     toast({
       title: "Evidence Accepted",
@@ -205,7 +207,6 @@ const ActiveDiscussion = () => {
       return;
     }
 
-    // Award points
     const hasSource = !!evidence.source_url;
     const basePoints = 2;
     const sourceBonus = hasSource ? 2 : 0;
@@ -223,6 +224,7 @@ const ActiveDiscussion = () => {
 
     loadDiscussion();
     loadEvidence();
+    moveToNextCard();
 
     toast({
       title: "Evidence Validated",
@@ -248,16 +250,64 @@ const ActiveDiscussion = () => {
     }
 
     loadEvidence();
+    moveToNextCard();
     toast({
       title: "Evidence Challenged",
       description: "You can now add counter-evidence to disprove the claim.",
     });
   };
 
+  const moveToNextCard = () => {
+    if (currentCardIndex < evidenceList.length - 1) {
+      setCurrentCardIndex(prev => prev + 1);
+    }
+  };
+
+  const moveToPrevCard = () => {
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(prev => prev - 1);
+    }
+  };
+
+  const currentEvidence = evidenceList[currentCardIndex];
+  const canSwipe = currentEvidence?.status === "pending" && currentEvidence?.debater_id !== user?.id;
+  const canValidate = currentEvidence?.status === "challenged" && currentEvidence?.debater_id === user?.id;
+
+  const swipeHandlers = useSwipeable({
+    onSwiping: (e) => {
+      if (!canSwipe) return;
+      setIsSwiping(true);
+      setSwipeOffset(e.deltaX);
+    },
+    onSwipedRight: () => {
+      if (!canSwipe || !currentEvidence) return;
+      if (swipeOffset > 100) {
+        handleAgree(currentEvidence.id);
+      }
+      setSwipeOffset(0);
+      setIsSwiping(false);
+    },
+    onSwipedLeft: () => {
+      if (!canSwipe || !currentEvidence) return;
+      if (swipeOffset < -100) {
+        handleChallenge(currentEvidence.id);
+      }
+      setSwipeOffset(0);
+      setIsSwiping(false);
+    },
+    onTouchEndOrOnMouseUp: () => {
+      setSwipeOffset(0);
+      setIsSwiping(false);
+    },
+    trackMouse: true,
+    trackTouch: true,
+    preventScrollOnSwipe: true,
+  });
+
   if (loading || !discussion) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading discussion...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/20 to-background">
+        <div className="animate-pulse text-lg">Loading discussion...</div>
       </div>
     );
   }
@@ -269,200 +319,271 @@ const ActiveDiscussion = () => {
     (lastEvidence?.status === "challenged" && lastEvidence?.debater_id !== user?.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-discussion-blue-light py-8">
-      <div className="container mx-auto px-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/discussions')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Discussions
-        </Button>
-
-        {/* Header */}
-        <Card className="p-6 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                {discussion.topic}
-              </h1>
-              <div className="flex items-center gap-4 flex-wrap">
-                <span className="text-muted-foreground">
-                  {discussion.debater1.username} vs {discussion.debater2.username}
-                </span>
-              </div>
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 via-background to-background flex flex-col">
+      {/* Compact Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b">
+        <div className="flex items-center justify-between px-4 py-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/discussions')}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          
+          {/* Score Display */}
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">{discussion.debater1.username}</div>
+              <div className="text-xl font-bold text-primary">{discussion.debater1_score}</div>
             </div>
-
-            {/* Score Display */}
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">{discussion.debater1.username}</div>
-                <div className="text-3xl font-bold text-discussion-blue">{discussion.debater1_score}</div>
-              </div>
-              <div className="text-2xl font-bold text-muted-foreground">-</div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">{discussion.debater2.username}</div>
-                <div className="text-3xl font-bold text-discussion-amber">{discussion.debater2_score}</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="lg">
-                    <Lightbulb className="w-4 h-4 mr-2" />
-                    Debate Tips
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-primary" />
-                      How to Debate Effectively
-                    </DialogTitle>
-                    <DialogDescription>
-                      Use these reasoning techniques to strengthen your arguments.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                      <h4 className="font-semibold text-foreground mb-2">🔽 Deductive Reasoning</h4>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Start with a general statement and reach a specific conclusion.
-                      </p>
-                      <div className="text-sm bg-background p-3 rounded border border-border/50">
-                        <p className="font-medium text-foreground">Example:</p>
-                        <p className="text-muted-foreground italic">
-                          "All mammals are warm-blooded. Dogs are mammals. Therefore, dogs are warm-blooded."
-                        </p>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                      <h4 className="font-semibold text-foreground mb-2">🔼 Inductive Reasoning</h4>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Start with specific observations and reach a general conclusion.
-                      </p>
-                      <div className="text-sm bg-background p-3 rounded border border-border/50">
-                        <p className="font-medium text-foreground">Example:</p>
-                        <p className="text-muted-foreground italic">
-                          "Every swan I've seen is white. Therefore, all swans are probably white."
-                        </p>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-                      <p className="text-sm text-foreground">
-                        <span className="font-semibold">💡 Pro Tip:</span> Always back your arguments with credible sources to earn bonus points!
-                      </p>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              
-              <Button
-                size="lg"
-                onClick={() => setIsAddingEvidence(true)}
-                disabled={!canAddEvidence}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Evidence
-              </Button>
+            <div className="text-lg font-bold text-muted-foreground">vs</div>
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">{discussion.debater2.username}</div>
+              <div className="text-xl font-bold text-destructive">{discussion.debater2_score}</div>
             </div>
           </div>
 
-          {/* Leading Indicator */}
-          {discussion.debater1_score !== discussion.debater2_score && evidenceList.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-sm text-center text-muted-foreground">
-                <span className="font-semibold text-foreground">
-                  {discussion.debater1_score > discussion.debater2_score ? discussion.debater1.username : discussion.debater2.username}
-                </span>
-                {" "}is currently leading by{" "}
-                <span className="font-semibold text-foreground">
-                  {Math.abs(discussion.debater1_score - discussion.debater2_score)} point{Math.abs(discussion.debater1_score - discussion.debater2_score) !== 1 ? 's' : ''}
-                </span>
-              </p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Lightbulb className="w-5 h-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm mx-4">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Lightbulb className="w-5 h-5 text-primary" />
+                  Debate Tips
+                </DialogTitle>
+                <DialogDescription>
+                  Strengthen your arguments with these techniques.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 mt-2">
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <h4 className="font-semibold text-sm mb-1">🔽 Deductive</h4>
+                  <p className="text-xs text-muted-foreground">
+                    General → Specific: "All mammals are warm-blooded. Dogs are mammals. Therefore, dogs are warm-blooded."
+                  </p>
+                </div>
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <h4 className="font-semibold text-sm mb-1">🔼 Inductive</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Specific → General: "Every swan I've seen is white. Therefore, all swans are probably white."
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        {/* Topic */}
+        <div className="px-4 pb-3">
+          <h1 className="text-sm font-medium text-foreground line-clamp-2">
+            {discussion.topic}
+          </h1>
+        </div>
+      </header>
+
+      {/* Main Card Area */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-hidden">
+        {evidenceList.length === 0 ? (
+          <div className="text-center space-y-4">
+            <div className="w-24 h-24 mx-auto bg-muted rounded-full flex items-center justify-center">
+              <Plus className="w-12 h-12 text-muted-foreground" />
             </div>
-          )}
-        </Card>
+            <p className="text-muted-foreground">No evidence yet</p>
+            <Button onClick={() => setIsAddingEvidence(true)}>
+              Add First Evidence
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Card Navigation */}
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={moveToPrevCard}
+                disabled={currentCardIndex === 0}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {currentCardIndex + 1} / {evidenceList.length}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={moveToNextCard}
+                disabled={currentCardIndex === evidenceList.length - 1}
+                className="h-8 w-8"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
 
-        {/* Evidence List */}
-        <div className="space-y-6 max-w-4xl mx-auto">
-          {evidenceList.length === 0 ? (
-            <Card className="p-12 text-center">
-              <p className="text-lg text-muted-foreground">
-                No evidence submitted yet. Click "Add Evidence" to begin the discussion.
-              </p>
-            </Card>
-          ) : (
-            evidenceList.map((evidence, index) => {
-              const canSwipe = evidence.status === "pending" && evidence.debater_id !== user?.id;
-              
-              return (
-                <SwipeableEvidenceCard
-                  key={evidence.id}
-                  canSwipe={canSwipe}
-                  onSwipeRight={() => handleAgree(evidence.id)}
-                  onSwipeLeft={() => handleChallenge(evidence.id)}
-                >
-                  <Card className="p-6">
-                    <div className="space-y-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">#{index + 1}</Badge>
-                          <span className="text-sm text-muted-foreground">
-                            by {evidence.debater_id === discussion.debater1_id ? discussion.debater1.username : discussion.debater2.username}
-                          </span>
-                          {evidence.source_type && (
-                            <Badge variant={evidence.source_type === "factual" ? "default" : "secondary"}>
-                              {evidence.source_type}
-                            </Badge>
-                          )}
-                        </div>
-                        <Badge variant={
-                          evidence.status === "agreed" ? "default" :
-                          evidence.status === "validated" ? "default" :
-                          evidence.status === "challenged" ? "destructive" :
-                          "secondary"
-                        }>
-                          {evidence.status}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-foreground">{evidence.claim}</p>
-                      
-                      {evidence.source_url && (
-                        <a 
-                          href={evidence.source_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline block"
-                        >
-                          View Source →
-                        </a>
-                      )}
+            {/* Swipeable Card */}
+            <div
+              {...(canSwipe ? swipeHandlers : {})}
+              className="relative w-full max-w-sm"
+              style={{
+                transform: canSwipe ? `translateX(${swipeOffset * 0.5}px) rotate(${swipeOffset * 0.02}deg)` : 'none',
+                transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+              }}
+            >
+              {/* Swipe Indicators */}
+              {canSwipe && isSwiping && (
+                <>
+                  <div 
+                    className="absolute -left-2 top-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground rounded-full p-3 z-10 transition-opacity"
+                    style={{ opacity: swipeOffset < -30 ? Math.min(Math.abs(swipeOffset) / 100, 1) : 0 }}
+                  >
+                    <X className="w-8 h-8" />
+                  </div>
+                  <div 
+                    className="absolute -right-2 top-1/2 -translate-y-1/2 bg-green-500 text-white rounded-full p-3 z-10 transition-opacity"
+                    style={{ opacity: swipeOffset > 30 ? Math.min(swipeOffset / 100, 1) : 0 }}
+                  >
+                    <Check className="w-8 h-8" />
+                  </div>
+                </>
+              )}
 
-                      {evidence.status === "challenged" && evidence.debater_id === user?.id && (
-                        <Button onClick={() => handleValidate(evidence.id)} size="sm">
-                          Validate
-                        </Button>
-                      )}
+              {/* Evidence Card */}
+              <div className={`bg-card rounded-3xl shadow-2xl overflow-hidden border-2 ${
+                canSwipe ? 'cursor-grab active:cursor-grabbing border-primary/20' : 'border-border'
+              }`}>
+                {/* Card Header */}
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        #{currentCardIndex + 1}
+                      </Badge>
+                      <span className="text-sm font-medium">
+                        {currentEvidence?.debater_id === discussion.debater1_id 
+                          ? discussion.debater1.username 
+                          : discussion.debater2.username}
+                      </span>
                     </div>
-                  </Card>
-                </SwipeableEvidenceCard>
-              );
-            })
+                    <Badge variant={
+                      currentEvidence?.status === "agreed" ? "default" :
+                      currentEvidence?.status === "validated" ? "default" :
+                      currentEvidence?.status === "challenged" ? "destructive" :
+                      "secondary"
+                    } className="text-xs">
+                      {currentEvidence?.status}
+                    </Badge>
+                  </div>
+                  {currentEvidence?.source_type && (
+                    <Badge 
+                      variant={currentEvidence.source_type === "factual" ? "default" : "secondary"}
+                      className="mt-2 text-xs"
+                    >
+                      {currentEvidence.source_type === "factual" ? "📊 Factual" : "💭 Opinion"}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Card Content */}
+                <div className="p-6 min-h-[200px] flex flex-col justify-center">
+                  <p className="text-lg leading-relaxed text-foreground">
+                    {currentEvidence?.claim}
+                  </p>
+                  
+                  {currentEvidence?.source_url && (
+                    <a 
+                      href={currentEvidence.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 mt-4 text-sm text-primary hover:underline"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      View Source
+                    </a>
+                  )}
+                </div>
+
+                {/* Swipe Hint */}
+                {canSwipe && !isSwiping && (
+                  <div className="px-6 pb-4">
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-full py-2 px-4">
+                      <X className="w-3 h-3 text-destructive" />
+                      <span>Swipe to respond</span>
+                      <Check className="w-3 h-3 text-green-500" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Bottom Action Bar */}
+      <div className="sticky bottom-0 bg-background/80 backdrop-blur-lg border-t safe-area-inset-bottom">
+        <div className="flex items-center justify-center gap-4 p-4">
+          {canSwipe && currentEvidence && (
+            <>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-16 w-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all shadow-lg"
+                onClick={() => handleChallenge(currentEvidence.id)}
+              >
+                <X className="w-8 h-8" />
+              </Button>
+              
+              <Button
+                size="lg"
+                className="h-16 w-16 rounded-full bg-green-500 hover:bg-green-600 text-white transition-all shadow-lg"
+                onClick={() => handleAgree(currentEvidence.id)}
+              >
+                <Check className="w-8 h-8" />
+              </Button>
+            </>
+          )}
+
+          {canValidate && currentEvidence && (
+            <Button
+              size="lg"
+              className="h-16 px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-lg"
+              onClick={() => handleValidate(currentEvidence.id)}
+            >
+              <Shield className="w-5 h-5 mr-2" />
+              Validate
+            </Button>
+          )}
+
+          {!canSwipe && !canValidate && canAddEvidence && (
+            <Button
+              size="lg"
+              className="h-14 px-8 rounded-full shadow-lg"
+              onClick={() => setIsAddingEvidence(true)}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Evidence
+            </Button>
+          )}
+
+          {!canSwipe && !canValidate && !canAddEvidence && (
+            <p className="text-sm text-muted-foreground text-center">
+              Waiting for opponent's response...
+            </p>
           )}
         </div>
-
-        {/* Add Evidence Dialog */}
-        <AddEvidenceDialog
-          open={isAddingEvidence}
-          onOpenChange={setIsAddingEvidence}
-          onSubmit={handleAddEvidence}
-          currentParticipantName={currentParticipant === 1 ? discussion.debater1.username : discussion.debater2.username}
-        />
       </div>
+
+      {/* Add Evidence Dialog */}
+      <AddEvidenceDialog
+        open={isAddingEvidence}
+        onOpenChange={setIsAddingEvidence}
+        onSubmit={handleAddEvidence}
+        currentParticipantName={currentParticipant === 1 ? discussion.debater1.username : discussion.debater2.username}
+      />
     </div>
   );
 };
