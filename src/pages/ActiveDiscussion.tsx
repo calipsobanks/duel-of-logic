@@ -452,7 +452,7 @@ const ActiveDiscussion = () => {
                 {/* Premise/Topic */}
                 <div className="bg-gradient-to-r from-primary/20 to-primary/10 px-4 py-3 border-b border-border/50">
                   <p className="text-xs text-muted-foreground mb-1">Premise</p>
-                  <p className="text-sm font-medium text-foreground leading-snug">
+                  <p className="text-base font-bold text-foreground leading-snug">
                     {discussion.topic}
                   </p>
                 </div>
