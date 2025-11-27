@@ -21,6 +21,8 @@ export type Database = {
           debater1_score: number
           debater2_id: string
           debater2_score: number
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           status: string
           topic: string
@@ -32,6 +34,8 @@ export type Database = {
           debater1_score?: number
           debater2_id: string
           debater2_score?: number
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           status?: string
           topic: string
@@ -43,6 +47,8 @@ export type Database = {
           debater1_score?: number
           debater2_id?: string
           debater2_score?: number
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           status?: string
           topic?: string

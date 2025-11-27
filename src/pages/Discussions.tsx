@@ -8,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, EyeOff, Eye } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Eye, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useHiddenDiscussions } from '@/hooks/useHiddenDiscussions';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface Profile {
   id: string;
@@ -63,18 +63,11 @@ const Discussions = () => {
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('home');
-  const [showHidden, setShowHidden] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { permission, requestPermission } = useNotifications();
-  const { hideDiscussion, unhideDiscussion, isHidden, hiddenCount } = useHiddenDiscussions();
 
   const currentUserProfile = profiles.find(p => p.id === user?.id);
-  
-  // Filter discussions based on hidden state
-  const visibleDiscussions = showHidden 
-    ? discussions.filter(d => isHidden(d.id))
-    : discussions.filter(d => !isHidden(d.id));
 
   useEffect(() => {
     if (!user) {
@@ -168,6 +161,7 @@ const Discussions = () => {
         debater2:profiles!debates_debater2_id_fkey(id, username)
       `)
       .or(`debater1_id.eq.${user?.id},debater2_id.eq.${user?.id}`)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -186,6 +180,7 @@ const Discussions = () => {
         debater1:profiles!debates_debater1_id_fkey(id, username),
         debater2:profiles!debates_debater2_id_fkey(id, username)
       `)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -194,6 +189,25 @@ const Discussions = () => {
     }
 
     setAllDiscussions(data || []);
+  };
+
+  const deleteDiscussion = async (discussionId: string) => {
+    const { error } = await supabase
+      .from('debates')
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        deleted_by: user?.id 
+      })
+      .eq('id', discussionId);
+
+    if (error) {
+      toast.error('Failed to delete discussion');
+      return;
+    }
+
+    toast.success('Discussion deleted (points preserved)');
+    fetchDiscussions();
+    fetchAllDiscussions();
   };
 
   const startDiscussion = async () => {
@@ -343,30 +357,11 @@ const Discussions = () => {
         {/* Home Tab - Active Discussions */}
         {activeTab === 'home' && (
           <div className="space-y-4">
-            {/* Toggle for hidden discussions */}
-            {hiddenCount > 0 && (
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground">
-                  {showHidden ? 'Showing hidden discussions' : `${hiddenCount} hidden discussion${hiddenCount > 1 ? 's' : ''}`}
-                </p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-xs h-7 gap-1"
-                  onClick={() => setShowHidden(!showHidden)}
-                >
-                  {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                  {showHidden ? 'Show Active' : 'Show Hidden'}
-                </Button>
-              </div>
-            )}
-            
-            {visibleDiscussions.map((discussion) => {
+            {discussions.map((discussion) => {
               const isDebater1 = discussion.debater1_id === user?.id;
               const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
               const yourScore = isDebater1 ? discussion.debater1_score : discussion.debater2_score;
               const theirScore = isDebater1 ? discussion.debater2_score : discussion.debater1_score;
-              const discussionHidden = isHidden(discussion.id);
               
               return (
                 <Card key={discussion.id} className="hover:shadow-lg transition-shadow">
@@ -379,25 +374,32 @@ const Discussions = () => {
                         <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
                         <span className="line-clamp-2">{discussion.topic}</span>
                       </CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (discussionHidden) {
-                            unhideDiscussion(discussion.id);
-                          } else {
-                            hideDiscussion(discussion.id);
-                          }
-                        }}
-                      >
-                        {discussionHidden ? (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 flex-shrink-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="mx-4 max-w-sm">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Discussion?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will remove the discussion from your list. All points earned will be preserved on the leaderboard.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteDiscussion(discussion.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                     <CardDescription 
                       className="text-xs cursor-pointer"
@@ -418,20 +420,12 @@ const Discussions = () => {
                 </Card>
               );
             })}
-            {visibleDiscussions.length === 0 && !showHidden && (
+            {discussions.length === 0 && (
               <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground text-sm">No discussions yet</p>
                   <p className="text-xs text-muted-foreground mt-1">Go to Members to start one!</p>
-                </CardContent>
-              </Card>
-            )}
-            {visibleDiscussions.length === 0 && showHidden && (
-              <Card>
-                <CardContent className="pt-8 pb-8 text-center">
-                  <EyeOff className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground text-sm">No hidden discussions</p>
                 </CardContent>
               </Card>
             )}
