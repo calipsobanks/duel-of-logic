@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2 } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -345,38 +345,70 @@ const ActiveDiscussion = () => {
             </div>
           </div>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Lightbulb className="w-5 h-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-sm mx-4">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5 text-primary" />
-                  Debate Tips
-                </DialogTitle>
-                <DialogDescription>
-                  Strengthen your arguments with these techniques.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3 mt-2">
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <h4 className="font-semibold text-sm mb-1">🔽 Deductive</h4>
-                  <p className="text-xs text-muted-foreground">
-                    General → Specific: "All mammals are warm-blooded. Dogs are mammals. Therefore, dogs are warm-blooded."
-                  </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                const shareUrl = `${window.location.origin}/discussion/public?id=${discussionId}`;
+                
+                if (navigator.share) {
+                  try {
+                    await navigator.share({
+                      title: discussion.topic,
+                      text: `Join this debate: ${discussion.topic}`,
+                      url: shareUrl,
+                    });
+                  } catch (err) {
+                    if ((err as Error).name !== 'AbortError') {
+                      console.error('Error sharing:', err);
+                    }
+                  }
+                } else {
+                  await navigator.clipboard.writeText(shareUrl);
+                  toast({
+                    title: "Link Copied!",
+                    description: "Share this discussion with others",
+                  });
+                }
+              }}
+            >
+              <Share2 className="w-5 h-5" />
+            </Button>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Lightbulb className="w-5 h-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm mx-4">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-primary" />
+                    Debate Tips
+                  </DialogTitle>
+                  <DialogDescription>
+                    Strengthen your arguments with these techniques.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 mt-2">
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <h4 className="font-semibold text-sm mb-1">🔽 Deductive</h4>
+                    <p className="text-xs text-muted-foreground">
+                      General → Specific: "All mammals are warm-blooded. Dogs are mammals. Therefore, dogs are warm-blooded."
+                    </p>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <h4 className="font-semibold text-sm mb-1">🔼 Inductive</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Specific → General: "Every swan I've seen is white. Therefore, all swans are probably white."
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <h4 className="font-semibold text-sm mb-1">🔼 Inductive</h4>
-                  <p className="text-xs text-muted-foreground">
-                    Specific → General: "Every swan I've seen is white. Therefore, all swans are probably white."
-                  </p>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </header>
 
