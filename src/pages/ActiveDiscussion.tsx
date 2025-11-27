@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -540,23 +540,33 @@ const ActiveDiscussion = () => {
               
               <Button
                 size="lg"
-                className="h-16 w-16 rounded-full bg-green-500 hover:bg-green-600 text-white transition-all shadow-lg"
+                className="h-16 w-16 rounded-full bg-pink-500 hover:bg-pink-600 text-white transition-all shadow-lg"
                 onClick={() => handleAgree(currentEvidence.id)}
               >
-                <Check className="w-8 h-8" />
+                <Heart className="w-8 h-8 fill-current" />
               </Button>
             </>
           )}
 
           {canValidate && currentEvidence && (
-            <Button
-              size="lg"
-              className="h-16 px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-lg"
-              onClick={() => handleValidate(currentEvidence.id)}
-            >
-              <Shield className="w-5 h-5 mr-2" />
-              Validate
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-16 w-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all shadow-lg"
+                onClick={() => setIsAddingEvidence(true)}
+              >
+                <X className="w-8 h-8" />
+              </Button>
+              
+              <Button
+                size="lg"
+                className="h-16 w-16 rounded-full bg-pink-500 hover:bg-pink-600 text-white transition-all shadow-lg"
+                onClick={() => handleValidate(currentEvidence.id)}
+              >
+                <Heart className="w-8 h-8 fill-current" />
+              </Button>
+            </>
           )}
 
           {!canSwipe && !canValidate && canAddEvidence && (
