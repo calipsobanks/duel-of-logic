@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Eye, Trash2 } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Eye, Trash2, Share2, ExternalLink } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -374,32 +374,58 @@ const Discussions = () => {
                         <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
                         <span className="line-clamp-2">{discussion.topic}</span>
                       </CardTitle>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 flex-shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="mx-4 max-w-sm">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Discussion?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will remove the discussion from your list. All points earned will be preserved on the leaderboard.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteDiscussion(discussion.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const shareUrl = `${window.location.origin}/discussion/public?id=${discussion.id}`;
+                            if (navigator.share) {
+                              navigator.share({
+                                title: discussion.topic,
+                                text: `Check out this debate: ${discussion.topic}`,
+                                url: shareUrl
+                              }).catch(() => {
+                                navigator.clipboard.writeText(shareUrl);
+                                toast.success('Link copied to clipboard!');
+                              });
+                            } else {
+                              navigator.clipboard.writeText(shareUrl);
+                              toast.success('Link copied to clipboard!');
+                            }
+                          }}
+                        >
+                          <Share2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="mx-4 max-w-sm">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Discussion?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove the discussion from your list. All points earned will be preserved on the leaderboard.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteDiscussion(discussion.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                     <CardDescription 
                       className="text-xs cursor-pointer"
