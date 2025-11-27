@@ -272,6 +272,7 @@ const ActiveDiscussion = () => {
   const currentEvidence = evidenceList[currentCardIndex];
   const canSwipe = currentEvidence?.status === "pending" && currentEvidence?.debater_id !== user?.id;
   const canValidate = currentEvidence?.status === "challenged" && currentEvidence?.debater_id === user?.id;
+  const canRespondToChallenge = currentEvidence?.status === "challenged" && currentEvidence?.debater_id !== user?.id;
 
   const swipeHandlers = useSwipeable({
     onSwiping: (e) => {
@@ -569,7 +570,28 @@ const ActiveDiscussion = () => {
             </>
           )}
 
-          {!canSwipe && !canValidate && canAddEvidence && (
+          {canRespondToChallenge && currentEvidence && (
+            <>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-16 w-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all shadow-lg"
+                onClick={() => setIsAddingEvidence(true)}
+              >
+                <X className="w-8 h-8" />
+              </Button>
+              
+              <Button
+                size="lg"
+                className="h-16 w-16 rounded-full bg-pink-500 hover:bg-pink-600 text-white transition-all shadow-lg"
+                onClick={() => handleAgree(currentEvidence.id)}
+              >
+                <Heart className="w-8 h-8 fill-current" />
+              </Button>
+            </>
+          )}
+
+          {!canSwipe && !canValidate && !canRespondToChallenge && canAddEvidence && (
             <Button
               size="lg"
               className="h-14 px-8 rounded-full shadow-lg"
@@ -580,7 +602,7 @@ const ActiveDiscussion = () => {
             </Button>
           )}
 
-          {!canSwipe && !canValidate && !canAddEvidence && (
+          {!canSwipe && !canValidate && !canRespondToChallenge && !canAddEvidence && (
             <p className="text-sm text-muted-foreground text-center">
               Waiting for opponent's response...
             </p>
