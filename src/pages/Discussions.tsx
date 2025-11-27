@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface Profile {
   id: string;
@@ -61,6 +62,7 @@ const Discussions = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { permission, requestPermission } = useNotifications();
 
   const currentUserProfile = profiles.find(p => p.id === user?.id);
 
@@ -541,6 +543,25 @@ const Discussions = () => {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-2 mt-6 w-full">
+                    {/* Notifications */}
+                    <Button 
+                      variant={permission === 'granted' ? 'secondary' : 'outline'} 
+                      onClick={requestPermission}
+                      disabled={permission === 'granted'}
+                      className="w-full"
+                    >
+                      {permission === 'granted' ? (
+                        <>
+                          <Bell className="h-4 w-4 mr-2" />
+                          Notifications Enabled
+                        </>
+                      ) : (
+                        <>
+                          <BellOff className="h-4 w-4 mr-2" />
+                          Enable Notifications
+                        </>
+                      )}
+                    </Button>
                     <label htmlFor="avatar-upload" className="cursor-pointer w-full">
                       <input
                         id="avatar-upload"
