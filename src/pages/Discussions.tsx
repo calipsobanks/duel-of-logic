@@ -12,6 +12,7 @@ import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { useNotifications } from '@/hooks/useNotifications';
 
 interface Profile {
@@ -299,18 +300,7 @@ const Discussions = () => {
             {activeTab === 'profile' && 'Profile'}
           </h1>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={permission === 'granted' ? undefined : requestPermission}
-              className="relative"
-            >
-              {permission === 'granted' ? (
-                <Bell className="h-5 w-5 text-primary" />
-              ) : (
-                <BellOff className="h-5 w-5 text-muted-foreground" />
-              )}
-            </Button>
+            <NotificationsDropdown />
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
                 <Shield className="h-5 w-5" />
