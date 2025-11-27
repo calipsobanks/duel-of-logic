@@ -377,13 +377,6 @@ const ActiveDiscussion = () => {
             </DialogContent>
           </Dialog>
         </div>
-        
-        {/* Topic */}
-        <div className="px-4 pb-3">
-          <h1 className="text-sm font-medium text-foreground line-clamp-2">
-            {discussion.topic}
-          </h1>
-        </div>
       </header>
 
       {/* Main Card Area */}
@@ -456,6 +449,14 @@ const ActiveDiscussion = () => {
               <div className={`bg-card rounded-3xl shadow-2xl overflow-hidden border-2 ${
                 canSwipe ? 'cursor-grab active:cursor-grabbing border-primary/20' : 'border-border'
               }`}>
+                {/* Premise/Topic */}
+                <div className="bg-gradient-to-r from-primary/20 to-primary/10 px-4 py-3 border-b border-border/50">
+                  <p className="text-xs text-muted-foreground mb-1">Premise</p>
+                  <p className="text-sm font-medium text-foreground leading-snug">
+                    {discussion.topic}
+                  </p>
+                </div>
+
                 {/* Card Header */}
                 <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4">
                   <div className="flex items-center justify-between">
