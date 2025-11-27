@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, Lightbulb } from "lucide-react";
-import { EvidenceCard } from "@/components/discussion/EvidenceCard";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
+import { SwipeableEvidenceCard } from "@/components/discussion/SwipeableEvidenceCard";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -395,67 +395,63 @@ const ActiveDiscussion = () => {
               </p>
             </Card>
           ) : (
-            evidenceList.map((evidence, index) => (
-              <Card key={evidence.id} className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline">#{index + 1}</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        by {evidence.debater_id === discussion.debater1_id ? discussion.debater1.username : discussion.debater2.username}
-                      </span>
-                      {evidence.source_type && (
-                        <Badge variant={evidence.source_type === "factual" ? "default" : "secondary"}>
-                          {evidence.source_type}
+            evidenceList.map((evidence, index) => {
+              const canSwipe = evidence.status === "pending" && evidence.debater_id !== user?.id;
+              
+              return (
+                <SwipeableEvidenceCard
+                  key={evidence.id}
+                  canSwipe={canSwipe}
+                  onSwipeRight={() => handleAgree(evidence.id)}
+                  onSwipeLeft={() => handleChallenge(evidence.id)}
+                >
+                  <Card className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">#{index + 1}</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            by {evidence.debater_id === discussion.debater1_id ? discussion.debater1.username : discussion.debater2.username}
+                          </span>
+                          {evidence.source_type && (
+                            <Badge variant={evidence.source_type === "factual" ? "default" : "secondary"}>
+                              {evidence.source_type}
+                            </Badge>
+                          )}
+                        </div>
+                        <Badge variant={
+                          evidence.status === "agreed" ? "default" :
+                          evidence.status === "validated" ? "default" :
+                          evidence.status === "challenged" ? "destructive" :
+                          "secondary"
+                        }>
+                          {evidence.status}
                         </Badge>
+                      </div>
+                      
+                      <p className="text-foreground">{evidence.claim}</p>
+                      
+                      {evidence.source_url && (
+                        <a 
+                          href={evidence.source_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline block"
+                        >
+                          View Source →
+                        </a>
+                      )}
+
+                      {evidence.status === "challenged" && evidence.debater_id === user?.id && (
+                        <Button onClick={() => handleValidate(evidence.id)} size="sm">
+                          Validate
+                        </Button>
                       )}
                     </div>
-                    <Badge variant={
-                      evidence.status === "agreed" ? "default" :
-                      evidence.status === "validated" ? "default" :
-                      evidence.status === "challenged" ? "destructive" :
-                      "secondary"
-                    }>
-                      {evidence.status}
-                    </Badge>
-                  </div>
-                  
-                  <p className="text-foreground">{evidence.claim}</p>
-                  
-                  {evidence.source_url && (
-                    <a 
-                      href={evidence.source_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline block"
-                    >
-                      View Source →
-                    </a>
-                  )}
-
-                  {evidence.status === "pending" && evidence.debater_id !== user?.id && (
-                    <div className="flex gap-2">
-                      <Button onClick={() => handleAgree(evidence.id)} size="sm">
-                        Agree
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => handleChallenge(evidence.id)} 
-                        size="sm"
-                      >
-                        Challenge
-                      </Button>
-                    </div>
-                  )}
-
-                  {evidence.status === "challenged" && evidence.debater_id === user?.id && (
-                    <Button onClick={() => handleValidate(evidence.id)} size="sm">
-                      Validate
-                    </Button>
-                  )}
-                </div>
-              </Card>
-            ))
+                  </Card>
+                </SwipeableEvidenceCard>
+              );
+            })
           )}
         </div>
 
