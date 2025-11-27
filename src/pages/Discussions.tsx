@@ -46,11 +46,12 @@ interface LeaderboardEntry {
   debatesCount: number;
 }
 
-type TabType = 'home' | 'leaderboard' | 'members' | 'profile';
+type TabType = 'home' | 'leaderboard' | 'members' | 'spectate' | 'profile';
 
 const Discussions = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
+  const [allDiscussions, setAllDiscussions] = useState<Discussion[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [topic, setTopic] = useState('');
@@ -83,6 +84,7 @@ const Discussions = () => {
 
     fetchProfiles();
     fetchDiscussions();
+    fetchAllDiscussions();
     checkAdminStatus();
   }, [user, navigate]);
 
@@ -174,6 +176,24 @@ const Discussions = () => {
     }
 
     setDiscussions(data || []);
+  };
+
+  const fetchAllDiscussions = async () => {
+    const { data, error } = await supabase
+      .from('debates')
+      .select(`
+        *,
+        debater1:profiles!debates_debater1_id_fkey(id, username),
+        debater2:profiles!debates_debater2_id_fkey(id, username)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load all discussions:', error);
+      return;
+    }
+
+    setAllDiscussions(data || []);
   };
 
   const startDiscussion = async () => {
@@ -566,6 +586,60 @@ const Discussions = () => {
           </div>
         )}
 
+        {/* Spectate Tab - View All Discussions */}
+        {activeTab === 'spectate' && (
+          <div className="space-y-4">
+            {allDiscussions.length === 0 ? (
+              <Card>
+                <CardContent className="pt-8 pb-8 text-center">
+                  <Eye className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">No discussions to spectate</p>
+                  <p className="text-xs text-muted-foreground mt-1">Check back later!</p>
+                </CardContent>
+              </Card>
+            ) : (
+              allDiscussions.map((discussion) => {
+                const isParticipant = discussion.debater1_id === user?.id || discussion.debater2_id === user?.id;
+                
+                return (
+                  <Card 
+                    key={discussion.id} 
+                    className="hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="flex items-start gap-2 text-sm flex-1">
+                          <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{discussion.topic}</span>
+                        </CardTitle>
+                        {isParticipant && (
+                          <Badge variant="secondary" className="text-[10px] flex-shrink-0">
+                            You
+                          </Badge>
+                        )}
+                      </div>
+                      <CardDescription className="text-xs">
+                        @{discussion.debater1?.username || 'Unknown'} vs @{discussion.debater2?.username || 'Unknown'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          {discussion.debater1?.username}: {discussion.debater1_score}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {discussion.debater2?.username}: {discussion.debater2_score}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        )}
+
         {/* Profile Tab */}
         {activeTab === 'profile' && currentUserProfile && (
           <div className="space-y-4">
@@ -662,39 +736,48 @@ const Discussions = () => {
         <div className="flex items-center justify-around py-2">
           <button
             onClick={() => setActiveTab('home')}
-            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
-            <Home className={`h-6 w-6 ${activeTab === 'home' ? 'fill-primary/20' : ''}`} />
-            <span className="text-xs mt-1">Home</span>
+            <Home className={`h-5 w-5 ${activeTab === 'home' ? 'fill-primary/20' : ''}`} />
+            <span className="text-[10px] mt-1">Home</span>
           </button>
           <button
             onClick={() => setActiveTab('leaderboard')}
-            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'leaderboard' ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
-            <Trophy className={`h-6 w-6 ${activeTab === 'leaderboard' ? 'fill-primary/20' : ''}`} />
-            <span className="text-xs mt-1">Ranks</span>
+            <Trophy className={`h-5 w-5 ${activeTab === 'leaderboard' ? 'fill-primary/20' : ''}`} />
+            <span className="text-[10px] mt-1">Ranks</span>
           </button>
           <button
             onClick={() => setActiveTab('members')}
-            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'members' ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
-            <Users className={`h-6 w-6 ${activeTab === 'members' ? 'fill-primary/20' : ''}`} />
-            <span className="text-xs mt-1">Members</span>
+            <Users className={`h-5 w-5 ${activeTab === 'members' ? 'fill-primary/20' : ''}`} />
+            <span className="text-[10px] mt-1">Members</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('spectate')}
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              activeTab === 'spectate' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <Eye className={`h-5 w-5 ${activeTab === 'spectate' ? 'fill-primary/20' : ''}`} />
+            <span className="text-[10px] mt-1">Spectate</span>
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
-            <User className={`h-6 w-6 ${activeTab === 'profile' ? 'fill-primary/20' : ''}`} />
-            <span className="text-xs mt-1">Profile</span>
+            <User className={`h-5 w-5 ${activeTab === 'profile' ? 'fill-primary/20' : ''}`} />
+            <span className="text-[10px] mt-1">Profile</span>
           </button>
         </div>
       </nav>
