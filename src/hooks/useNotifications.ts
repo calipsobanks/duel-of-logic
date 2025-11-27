@@ -29,6 +29,18 @@ export const useNotifications = () => {
     }
   }, []);
 
+  const triggerVibration = useCallback(() => {
+    try {
+      // Check if Vibration API is supported
+      if ('vibrate' in navigator) {
+        // Vibration pattern: vibrate 200ms, pause 100ms, vibrate 200ms
+        navigator.vibrate([200, 100, 200]);
+      }
+    } catch (error) {
+      console.log('Vibration not supported:', error);
+    }
+  }, []);
+
   const requestPermission = async () => {
     if (!('Notification' in window)) {
       toast.error('This browser does not support notifications');
@@ -58,6 +70,9 @@ export const useNotifications = () => {
   const showNotification = useCallback((title: string, body: string, onClick?: () => void) => {
     // Play sound for all notifications
     playNotificationSound();
+    
+    // Trigger vibration on mobile devices
+    triggerVibration();
     
     // Set badge indicator
     setHasNewNotification(true);
@@ -89,7 +104,7 @@ export const useNotifications = () => {
       console.error('Error showing notification:', error);
       toast(title, { description: body });
     }
-  }, [permission, playNotificationSound]);
+  }, [permission, playNotificationSound, triggerVibration]);
 
   useEffect(() => {
     if (!user) return;
