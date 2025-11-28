@@ -125,7 +125,7 @@ export const EvidenceCard = ({
                     ))}
                   </div>
                   <span className="text-sm font-medium">
-                    {evidence.sourceRating}/5
+                    {evidence.sourceRating} out of 5
                   </span>
                   {evidence.sourceReasoning && (
                     <Button
@@ -135,7 +135,7 @@ export const EvidenceCard = ({
                       className="h-6 px-2 text-xs"
                     >
                       <Info className="w-3 h-3 mr-1" />
-                      Learn more
+                      Why this rating?
                     </Button>
                   )}
                 </div>
@@ -234,9 +234,9 @@ export const EvidenceCard = ({
       <Dialog open={showRatingDetails} onOpenChange={setShowRatingDetails}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Source Credibility Rating</DialogTitle>
+            <DialogTitle>Why This Rating?</DialogTitle>
             <DialogDescription>
-              AI-generated assessment of this source's reliability
+              AI analyzed this source and here's what it found (explained simply)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -254,7 +254,7 @@ export const EvidenceCard = ({
                 ))}
               </div>
               <span className="text-lg font-semibold">
-                {evidence.sourceRating}/5
+                {evidence.sourceRating} out of 5
               </span>
             </div>
             {evidence.sourceReasoning && (
