@@ -143,6 +143,64 @@ const ActiveDiscussion = () => {
   };
 
   const handleAddEvidence = async (evidenceData: { content: string; sourceUrl?: string; sourceType?: "factual" | "opinionated" }) => {
+    // Check if we're updating evidence_requested evidence
+    const isUpdatingRequestedEvidence = needsSourceEvidence && currentEvidence;
+    
+    if (isUpdatingRequestedEvidence) {
+      // Update existing evidence with source
+      const { error } = await supabase
+        .from('evidence')
+        .update({
+          source_url: evidenceData.sourceUrl,
+          source_type: evidenceData.sourceType,
+          status: 'pending' // Reset to pending after adding source
+        })
+        .eq('id', currentEvidence.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update evidence",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Rate the source if URL is provided
+      if (evidenceData.sourceUrl) {
+        try {
+          const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
+            body: {
+              sourceUrl: evidenceData.sourceUrl,
+              evidenceDescription: currentEvidence.claim
+            }
+          });
+
+          if (!ratingError && ratingData) {
+            await supabase
+              .from('evidence')
+              .update({
+                source_rating: ratingData.rating,
+                source_reasoning: JSON.stringify(ratingData.reasoning)
+              })
+              .eq('id', currentEvidence.id);
+          }
+        } catch (error) {
+          console.error('Failed to rate source:', error);
+        }
+      }
+
+      setIsAddingEvidence(false);
+      loadEvidence();
+      
+      toast({
+        title: "Source Added",
+        description: "Your evidence has been updated with a source and is now pending review.",
+      });
+      return;
+    }
+
+    // Normal new evidence flow
     const { data: insertedEvidence, error } = await supabase
       .from('evidence')
       .insert({
@@ -404,6 +462,7 @@ const ActiveDiscussion = () => {
   const canSwipe = currentEvidence?.status === "pending" && currentEvidence?.debater_id !== user?.id;
   const canValidate = currentEvidence?.status === "challenged" && currentEvidence?.debater_id === user?.id;
   const canRespondToChallenge = currentEvidence?.status === "challenged" && currentEvidence?.debater_id !== user?.id;
+  const needsSourceEvidence = currentEvidence?.status === "evidence_requested" && currentEvidence?.debater_id === user?.id;
 
   const swipeHandlers = useSwipeable({
     onSwiping: (e) => {
@@ -841,7 +900,27 @@ const ActiveDiscussion = () => {
             </>
           )}
 
-          {!canSwipe && !canValidate && !canRespondToChallenge && canAddEvidence && (
+          {needsSourceEvidence && currentEvidence && (
+            <div className="flex flex-col items-center gap-3 py-2">
+              <div className="flex items-center gap-2 text-yellow-600">
+                <AlertTriangle className="w-5 h-5" />
+                <span className="font-semibold">Source Required</span>
+              </div>
+              <p className="text-sm text-muted-foreground text-center max-w-xs">
+                Your opponent has requested evidence for this claim. Please add a source to continue.
+              </p>
+              <Button
+                size="lg"
+                className="h-14 px-8 rounded-full shadow-lg bg-yellow-500 hover:bg-yellow-600"
+                onClick={() => setIsAddingEvidence(true)}
+              >
+                <Shield className="w-5 h-5 mr-2" />
+                Add Source Now
+              </Button>
+            </div>
+          )}
+
+          {!canSwipe && !canValidate && !canRespondToChallenge && !needsSourceEvidence && canAddEvidence && (
             <Button
               size="lg"
               className="h-14 px-8 rounded-full shadow-lg"
@@ -852,7 +931,7 @@ const ActiveDiscussion = () => {
             </Button>
           )}
 
-          {!canSwipe && !canValidate && !canRespondToChallenge && !canAddEvidence && (
+          {!canSwipe && !canValidate && !canRespondToChallenge && !needsSourceEvidence && !canAddEvidence && (
             <p className="text-sm text-muted-foreground text-center">
               Waiting for opponent's response...
             </p>
@@ -866,6 +945,8 @@ const ActiveDiscussion = () => {
         onOpenChange={setIsAddingEvidence}
         onSubmit={handleAddEvidence}
         currentParticipantName={currentParticipant === 1 ? discussion.debater1.username : discussion.debater2.username}
+        existingClaim={needsSourceEvidence ? currentEvidence?.claim : undefined}
+        isUpdatingSource={needsSourceEvidence}
       />
     </div>
   );

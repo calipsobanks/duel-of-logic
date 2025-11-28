@@ -18,13 +18,17 @@ interface AddEvidenceDialogProps {
     sourceType?: "factual" | "opinionated";
   }) => void;
   currentParticipantName: string;
+  existingClaim?: string; // For evidence_requested flow
+  isUpdatingSource?: boolean; // Flag for updating vs. adding new
 }
 
 export const AddEvidenceDialog = ({
   open,
   onOpenChange,
   onSubmit,
-  currentParticipantName
+  currentParticipantName,
+  existingClaim,
+  isUpdatingSource = false
 }: AddEvidenceDialogProps) => {
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
@@ -51,10 +55,17 @@ export const AddEvidenceDialog = ({
       cancelRecording();
     }
     
-    if (content) {
+    // When updating source, we need the source URL
+    if (isUpdatingSource && !sourceUrl) {
+      return;
+    }
+    
+    const evidenceContent = isUpdatingSource ? (existingClaim || "") : content;
+    
+    if (evidenceContent) {
       const evidenceData = {
         submittedBy: currentParticipantName,
-        content,
+        content: evidenceContent,
         ...(sourceUrl && { sourceUrl, sourceType })
       };
 
@@ -71,60 +82,75 @@ export const AddEvidenceDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Add Evidence</DialogTitle>
+          <DialogTitle className="text-2xl">
+            {isUpdatingSource ? "Add Source to Evidence" : "Add Evidence"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="content" className="text-base">
-                Evidence Description
-              </Label>
-              <Button
-                type="button"
-                variant={isRecording ? "destructive" : "outline"}
-                size="sm"
-                onClick={handleVoiceToggle}
-                disabled={isTranscribing}
-                className="gap-2"
-              >
-                {isTranscribing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Transcribing...
-                  </>
-                ) : isRecording ? (
-                  <>
-                    <MicOff className="w-4 h-4" />
-                    Stop Recording
-                  </>
-                ) : (
-                  <>
-                    <Mic className="w-4 h-4" />
-                    Voice Input
-                  </>
-                )}
-              </Button>
-            </div>
-            <Textarea
-              id="content"
-              placeholder="Describe your evidence and how it supports your argument..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[120px]"
-              required
-              disabled={isTranscribing}
-            />
-            {isRecording && (
-              <p className="text-sm text-destructive animate-pulse">
-                🔴 Recording... Click "Stop Recording" when done
+          {isUpdatingSource ? (
+            <div className="space-y-2">
+              <Label className="text-base">Your Claim</Label>
+              <div className="p-4 bg-muted/50 rounded-lg border">
+                <p className="text-foreground">{existingClaim}</p>
+              </div>
+              <p className="text-sm text-yellow-600 flex items-center gap-2">
+                <span>⚠️</span>
+                Your opponent requested a source for this claim. Please provide one below.
               </p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="content" className="text-base">
+                  Evidence Description
+                </Label>
+                <Button
+                  type="button"
+                  variant={isRecording ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={handleVoiceToggle}
+                  disabled={isTranscribing}
+                  className="gap-2"
+                >
+                  {isTranscribing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Transcribing...
+                    </>
+                  ) : isRecording ? (
+                    <>
+                      <MicOff className="w-4 h-4" />
+                      Stop Recording
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4" />
+                      Voice Input
+                    </>
+                  )}
+                </Button>
+              </div>
+              <Textarea
+                id="content"
+                placeholder="Describe your evidence and how it supports your argument..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="min-h-[120px]"
+                required
+                disabled={isTranscribing}
+              />
+              {isRecording && (
+                <p className="text-sm text-destructive animate-pulse">
+                  🔴 Recording... Click "Stop Recording" when done
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="sourceUrl" className="text-base">
-              Source URL <span className="text-muted-foreground text-sm">(Optional - Bonus points if provided)</span>
+              Source URL {isUpdatingSource ? <span className="text-destructive">(Required)</span> : <span className="text-muted-foreground text-sm">(Optional - Bonus points if provided)</span>}
             </Label>
             <Input
               id="sourceUrl"
@@ -132,6 +158,7 @@ export const AddEvidenceDialog = ({
               placeholder="https://example.com/source"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
+              required={isUpdatingSource}
             />
           </div>
 
@@ -177,9 +204,9 @@ export const AddEvidenceDialog = ({
             <Button
               type="submit"
               className="flex-1"
-              disabled={!content}
+              disabled={isUpdatingSource ? !sourceUrl : !content}
             >
-              Submit Evidence
+              {isUpdatingSource ? "Add Source" : "Submit Evidence"}
             </Button>
           </div>
         </form>
