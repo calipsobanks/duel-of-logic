@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2, Clock, Star, Info, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2, Clock, Star, Info, AlertTriangle, RefreshCw } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +59,7 @@ const ActiveDiscussion = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [isReratingSource, setIsReratingSource] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
 
   useEffect(() => {
@@ -417,6 +418,68 @@ const ActiveDiscussion = () => {
       title: "Evidence Challenged",
       description: "You can now add counter-evidence to disprove the claim.",
     });
+  };
+
+  const handleRerateSource = async (evidenceId: string) => {
+    const evidence = evidenceList.find(e => e.id === evidenceId);
+    if (!evidence?.source_url) {
+      toast({
+        title: "No Source",
+        description: "This evidence doesn't have a source to rate.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsReratingSource(true);
+
+    try {
+      const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
+        body: {
+          sourceUrl: evidence.source_url,
+          evidenceDescription: evidence.claim
+        }
+      });
+
+      if (ratingError) {
+        toast({
+          title: "Rating Failed",
+          description: "Failed to rate source. Please try again.",
+          variant: "destructive",
+        });
+        setIsReratingSource(false);
+        return;
+      }
+
+      if (ratingData) {
+        await supabase
+          .from('evidence')
+          .update({
+            source_rating: ratingData.rating,
+            source_reasoning: JSON.stringify(ratingData.reasoning),
+            source_confidence: ratingData.confidence,
+            content_analyzed: ratingData.contentAnalyzed,
+            source_warning: ratingData.warning
+          })
+          .eq('id', evidenceId);
+
+        await loadEvidence();
+        
+        toast({
+          title: "Source Re-rated",
+          description: `Updated rating: ${ratingData.rating}/5 with ${ratingData.confidence} confidence`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to re-rate source:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while re-rating the source.",
+        variant: "destructive",
+      });
+    }
+
+    setIsReratingSource(false);
   };
 
   const handleRequestEvidence = async (evidenceId: string) => {
@@ -792,17 +855,28 @@ const ActiveDiscussion = () => {
                               </Badge>
                             )}
                             {currentEvidence.source_reasoning && (
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-2 text-xs"
-                                  >
-                                    <Info className="w-3 h-3 mr-1" />
-                                    Why this rating?
-                                  </Button>
-                                </DialogTrigger>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRerateSource(currentEvidence.id)}
+                                  disabled={isReratingSource}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  <RefreshCw className={`w-3 h-3 mr-1 ${isReratingSource ? 'animate-spin' : ''}`} />
+                                  Re-rate
+                                </Button>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                    >
+                                      <Info className="w-3 h-3 mr-1" />
+                                      Why this rating?
+                                    </Button>
+                                  </DialogTrigger>
                                 <DialogContent>
                                   <DialogHeader>
                                     <DialogTitle>Source Credibility Analysis</DialogTitle>
@@ -880,6 +954,7 @@ const ActiveDiscussion = () => {
                                   </div>
                                 </DialogContent>
                               </Dialog>
+                              </>
                             )}
                           </div>
                           {currentEvidence.source_warning && (
