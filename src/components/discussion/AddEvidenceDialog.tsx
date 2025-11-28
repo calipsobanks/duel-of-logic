@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Mic, MicOff, Loader2 } from "lucide-react";
+import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 
 interface AddEvidenceDialogProps {
   open: boolean;
@@ -27,9 +29,27 @@ export const AddEvidenceDialog = ({
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceType, setSourceType] = useState<"factual" | "opinionated">("factual");
+  const { isRecording, isTranscribing, startRecording, stopRecording, cancelRecording } = useVoiceRecording();
+
+  const handleVoiceToggle = async () => {
+    if (isRecording) {
+      try {
+        const transcribedText = await stopRecording();
+        setContent(prev => prev ? `${prev} ${transcribedText}` : transcribedText);
+      } catch (error) {
+        console.error('Failed to stop recording:', error);
+      }
+    } else {
+      await startRecording();
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isRecording) {
+      cancelRecording();
+    }
     
     if (content) {
       onSubmit({
@@ -54,9 +74,36 @@ export const AddEvidenceDialog = ({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="content" className="text-base">
-              Evidence Description
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="content" className="text-base">
+                Evidence Description
+              </Label>
+              <Button
+                type="button"
+                variant={isRecording ? "destructive" : "outline"}
+                size="sm"
+                onClick={handleVoiceToggle}
+                disabled={isTranscribing}
+                className="gap-2"
+              >
+                {isTranscribing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Transcribing...
+                  </>
+                ) : isRecording ? (
+                  <>
+                    <MicOff className="w-4 h-4" />
+                    Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4" />
+                    Voice Input
+                  </>
+                )}
+              </Button>
+            </div>
             <Textarea
               id="content"
               placeholder="Describe your evidence and how it supports your argument..."
@@ -64,7 +111,13 @@ export const AddEvidenceDialog = ({
               onChange={(e) => setContent(e.target.value)}
               className="min-h-[120px]"
               required
+              disabled={isTranscribing}
             />
+            {isRecording && (
+              <p className="text-sm text-destructive animate-pulse">
+                🔴 Recording... Click "Stop Recording" when done
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
