@@ -32,6 +32,9 @@ interface Evidence {
   sourceConfidence?: "high" | "medium" | "low";
   contentAnalyzed?: boolean;
   sourceWarning?: string;
+  claimEvaluation?: "factual" | "plausible" | "misleading" | "wrong";
+  suggestedCorrection?: string;
+  quoteExample?: string;
   status: "pending" | "agreed" | "challenged" | "validated";
   participant1Agreed: boolean;
   participant2Agreed: boolean;
@@ -167,12 +170,47 @@ export const EvidenceCard = ({
                         <Info className="w-3 h-3 mr-1" />
                         Why this rating?
                       </Button>
-                    )}
+                     )}
                   </div>
+                  {evidence.claimEvaluation && (
+                    <div className="mt-2">
+                      <Badge 
+                        variant="outline"
+                        className={`text-xs ${
+                          evidence.claimEvaluation === "factual"
+                            ? "border-green-500/50 text-green-600 bg-green-500/10"
+                            : evidence.claimEvaluation === "plausible"
+                            ? "border-blue-500/50 text-blue-600 bg-blue-500/10"
+                            : evidence.claimEvaluation === "misleading"
+                            ? "border-orange-500/50 text-orange-600 bg-orange-500/10"
+                            : "border-red-500/50 text-red-600 bg-red-500/10"
+                        }`}
+                      >
+                        Claim: {evidence.claimEvaluation}
+                      </Badge>
+                    </div>
+                  )}
                   {evidence.sourceWarning && (
-                    <div className="flex items-start gap-2 p-2 bg-orange-500/10 border border-orange-500/20 rounded-md">
+                    <div className="flex items-start gap-2 p-2 bg-orange-500/10 border border-orange-500/20 rounded-md mt-2">
                       <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-orange-600">{evidence.sourceWarning}</p>
+                    </div>
+                  )}
+                  {(evidence.claimEvaluation === "misleading" || evidence.claimEvaluation === "wrong") && evidence.suggestedCorrection && (
+                    <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="space-y-1 flex-1">
+                          <p className="text-xs font-medium text-blue-600">Suggested Factual Statement:</p>
+                          <p className="text-xs text-blue-600/90">{evidence.suggestedCorrection}</p>
+                        </div>
+                      </div>
+                      {evidence.quoteExample && (
+                        <div className="pl-6 space-y-1">
+                          <p className="text-xs font-medium text-blue-600">Example Quote:</p>
+                          <p className="text-xs text-blue-600/90 italic">{evidence.quoteExample}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -323,6 +361,29 @@ export const EvidenceCard = ({
               </div>
             )}
 
+            {evidence.claimEvaluation && (
+              <div className="p-3 bg-muted/50 rounded-md border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Claim Evaluation</span>
+                </div>
+                <Badge 
+                  variant="outline"
+                  className={`text-sm ${
+                    evidence.claimEvaluation === "factual"
+                      ? "border-green-500/50 text-green-600 bg-green-500/10"
+                      : evidence.claimEvaluation === "plausible"
+                      ? "border-blue-500/50 text-blue-600 bg-blue-500/10"
+                      : evidence.claimEvaluation === "misleading"
+                      ? "border-orange-500/50 text-orange-600 bg-orange-500/10"
+                      : "border-red-500/50 text-red-600 bg-red-500/10"
+                  }`}
+                >
+                  {evidence.claimEvaluation.charAt(0).toUpperCase() + evidence.claimEvaluation.slice(1)}
+                </Badge>
+              </div>
+            )}
+
             {evidence.sourceWarning && (
               <div className="flex items-start gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-md">
                 <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
@@ -343,6 +404,21 @@ export const EvidenceCard = ({
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {(evidence.claimEvaluation === "misleading" || evidence.claimEvaluation === "wrong") && evidence.suggestedCorrection && (
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-blue-600 mb-1">Suggested Factual Statement</p>
+                  <p className="text-sm text-blue-600/90">{evidence.suggestedCorrection}</p>
+                </div>
+                {evidence.quoteExample && (
+                  <div>
+                    <p className="text-sm font-medium text-blue-600 mb-1">Example How to Quote Properly</p>
+                    <p className="text-sm text-blue-600/90 italic">{evidence.quoteExample}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

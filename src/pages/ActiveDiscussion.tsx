@@ -41,6 +41,9 @@ interface Evidence {
   source_confidence?: string | null;
   content_analyzed?: boolean | null;
   source_warning?: string | null;
+  claim_evaluation?: string | null;
+  suggested_correction?: string | null;
+  quote_example?: string | null;
   status: string;
   created_at: string;
 }
@@ -249,7 +252,10 @@ const ActiveDiscussion = () => {
               source_reasoning: JSON.stringify(ratingData.reasoning),
               source_confidence: ratingData.confidence,
               content_analyzed: ratingData.contentAnalyzed,
-              source_warning: ratingData.warning
+              source_warning: ratingData.warning,
+              claim_evaluation: ratingData.claimEvaluation,
+              suggested_correction: ratingData.suggestedCorrection,
+              quote_example: ratingData.quoteExample
             })
             .eq('id', insertedEvidence.id);
         }
@@ -459,7 +465,10 @@ const ActiveDiscussion = () => {
             source_reasoning: JSON.stringify(ratingData.reasoning),
             source_confidence: ratingData.confidence,
             content_analyzed: ratingData.contentAnalyzed,
-            source_warning: ratingData.warning
+            source_warning: ratingData.warning,
+            claim_evaluation: ratingData.claimEvaluation,
+            suggested_correction: ratingData.suggestedCorrection,
+            quote_example: ratingData.quoteExample
           })
           .eq('id', evidenceId);
 
