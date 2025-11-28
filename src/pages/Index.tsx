@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Brain, Scale, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { ControversialTopics } from "@/components/ControversialTopics";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -151,6 +152,13 @@ const Index = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Controversial Topics Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-6xl mx-auto">
+          <ControversialTopics />
         </div>
       </section>
 

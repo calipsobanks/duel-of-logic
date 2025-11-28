@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.rate-source]
 verify_jwt = true
+
+[functions.get-controversial-topics]
+verify_jwt = false
