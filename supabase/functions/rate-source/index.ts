@@ -35,7 +35,7 @@ Based on your knowledge, analyze this claim and source.`;
       },
       body: JSON.stringify({
         model: 'gpt-5-2025-08-07',
-        max_completion_tokens: 1000,
+        max_completion_tokens: 3000,
         messages: [
           {
             role: 'system',
