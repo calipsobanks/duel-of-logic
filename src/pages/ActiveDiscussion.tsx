@@ -649,7 +649,7 @@ const ActiveDiscussion = () => {
                             ))}
                           </div>
                           <span className="text-sm font-medium">
-                            {currentEvidence.source_rating}/5 credibility
+                            {currentEvidence.source_rating} out of 5
                           </span>
                           {currentEvidence.source_reasoning && (
                             <Dialog>
@@ -660,14 +660,14 @@ const ActiveDiscussion = () => {
                                   className="h-6 px-2 text-xs"
                                 >
                                   <Info className="w-3 h-3 mr-1" />
-                                  Learn more
+                                  Why this rating?
                                 </Button>
                               </DialogTrigger>
                               <DialogContent>
                                 <DialogHeader>
-                                  <DialogTitle>Source Credibility Rating</DialogTitle>
+                                  <DialogTitle>Why This Rating?</DialogTitle>
                                   <DialogDescription>
-                                    AI-generated assessment of this source's reliability
+                                    AI analyzed this source and here's what it found (explained simply)
                                   </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4">
@@ -685,7 +685,7 @@ const ActiveDiscussion = () => {
                                       ))}
                                     </div>
                                     <span className="text-lg font-semibold">
-                                      {currentEvidence.source_rating}/5
+                                      {currentEvidence.source_rating} out of 5
                                     </span>
                                   </div>
                                   <ul className="space-y-2 list-disc list-inside text-sm">
