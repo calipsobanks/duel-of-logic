@@ -232,6 +232,14 @@ const ActiveDiscussion = () => {
       .update(isDebater1 ? { debater1_score: newScore } : { debater2_score: newScore })
       .eq('id', discussionId);
 
+    // Notify the evidence creator that their evidence was agreed upon
+    supabase.functions.invoke('notify-debate-action', {
+      body: {
+        targetUserId: evidence.debater_id,
+        action: 'agreed'
+      }
+    }).catch(err => console.error('Failed to send notification:', err));
+
     loadDiscussion();
     loadEvidence();
     moveToNextCard();
@@ -277,6 +285,18 @@ const ActiveDiscussion = () => {
       .update(isDebater1 ? { debater1_score: newScore } : { debater2_score: newScore })
       .eq('id', discussionId);
 
+    // Notify the challenger that evidence was validated (response to their challenge)
+    const challengerId = evidence.debater_id === discussion?.debater1_id 
+      ? discussion.debater2_id 
+      : discussion.debater1_id;
+    
+    supabase.functions.invoke('notify-debate-action', {
+      body: {
+        targetUserId: challengerId,
+        action: 'validated'
+      }
+    }).catch(err => console.error('Failed to send notification:', err));
+
     loadDiscussion();
     loadEvidence();
     moveToNextCard();
@@ -290,6 +310,9 @@ const ActiveDiscussion = () => {
   };
 
   const handleChallenge = async (evidenceId: string) => {
+    const evidence = evidenceList.find(e => e.id === evidenceId);
+    if (!evidence) return;
+
     const { error } = await supabase
       .from('evidence')
       .update({ status: 'challenged' })
@@ -303,6 +326,14 @@ const ActiveDiscussion = () => {
       });
       return;
     }
+
+    // Notify the evidence creator that their evidence was challenged
+    supabase.functions.invoke('notify-debate-action', {
+      body: {
+        targetUserId: evidence.debater_id,
+        action: 'challenged'
+      }
+    }).catch(err => console.error('Failed to send notification:', err));
 
     loadEvidence();
     moveToNextCard();
