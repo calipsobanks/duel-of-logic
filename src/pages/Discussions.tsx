@@ -59,6 +59,7 @@ const Discussions = () => {
   const [topic, setTopic] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditBeliefsOpen, setIsEditBeliefsOpen] = useState(false);
+  const [isEditPhoneOpen, setIsEditPhoneOpen] = useState(false);
   const [religion, setReligion] = useState('');
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
@@ -305,8 +306,7 @@ const Discussions = () => {
       .update({ 
         religion: religion || null,
         political_view: politicalView || null,
-        university_degree: universityDegree || null,
-        phone_number: phoneNumber || null
+        university_degree: universityDegree || null
       })
       .eq('id', user.id);
 
@@ -315,8 +315,28 @@ const Discussions = () => {
       return;
     }
 
-    toast.success('Profile updated!');
+    toast.success('Beliefs updated!');
     setIsEditBeliefsOpen(false);
+    fetchProfiles();
+  };
+
+  const handleSavePhoneNumber = async () => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        phone_number: phoneNumber || null
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      toast.error('Failed to update phone number');
+      return;
+    }
+
+    toast.success('Phone number updated!');
+    setIsEditPhoneOpen(false);
     fetchProfiles();
   };
 
@@ -757,6 +777,17 @@ const Discussions = () => {
                         <span>Change Photo</span>
                       </Button>
                     </label>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setPhoneNumber(currentUserProfile.phone_number || '');
+                        setIsEditPhoneOpen(true);
+                      }}
+                      className="w-full"
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Edit Phone Number
+                    </Button>
                     <Button variant="outline" onClick={() => handleEditBeliefs(currentUserProfile)}>
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Beliefs
@@ -881,26 +912,47 @@ const Discussions = () => {
               </RadioGroup>
             </div>
 
-            {/* Phone Number */}
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" onClick={() => setIsEditBeliefsOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleSaveBeliefs} className="flex-1">
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Phone Number Dialog */}
+      <Dialog open={isEditPhoneOpen} onOpenChange={setIsEditPhoneOpen}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader>
+            <DialogTitle>Edit Phone Number</DialogTitle>
+            <DialogDescription className="text-xs">
+              Get notified when someone challenges or responds to you
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="phone-number" className="text-sm font-semibold">Phone Number</Label>
+              <Label htmlFor="phone-number-edit" className="text-sm font-semibold">Phone Number</Label>
               <Input
-                id="phone-number"
+                id="phone-number-edit"
                 type="tel"
                 placeholder="+1234567890"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Get notified when someone challenges or responds to you
+                Include country code (e.g., +1 for US)
               </p>
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" onClick={() => setIsEditBeliefsOpen(false)} className="flex-1">
+              <Button variant="outline" onClick={() => setIsEditPhoneOpen(false)} className="flex-1">
                 Cancel
               </Button>
-              <Button onClick={handleSaveBeliefs} className="flex-1">
+              <Button onClick={handleSavePhoneNumber} className="flex-1">
                 Save
               </Button>
             </div>
