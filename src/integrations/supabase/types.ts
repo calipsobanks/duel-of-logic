@@ -81,6 +81,8 @@ export type Database = {
           debate_id: string
           debater_id: string
           id: string
+          source_rating: number | null
+          source_reasoning: string | null
           source_type: string | null
           source_url: string | null
           status: string
@@ -91,6 +93,8 @@ export type Database = {
           debate_id: string
           debater_id: string
           id?: string
+          source_rating?: number | null
+          source_reasoning?: string | null
           source_type?: string | null
           source_url?: string | null
           status?: string
@@ -101,6 +105,8 @@ export type Database = {
           debate_id?: string
           debater_id?: string
           id?: string
+          source_rating?: number | null
+          source_reasoning?: string | null
           source_type?: string | null
           source_url?: string | null
           status?: string
