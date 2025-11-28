@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      controversial_topics: {
+        Row: {
+          category: string
+          controversy: string
+          created_at: string
+          description: string
+          id: string
+          title: string
+          week_start: string
+        }
+        Insert: {
+          category: string
+          controversy: string
+          created_at?: string
+          description: string
+          id?: string
+          title: string
+          week_start?: string
+        }
+        Update: {
+          category?: string
+          controversy?: string
+          created_at?: string
+          description?: string
+          id?: string
+          title?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       debates: {
         Row: {
           created_at: string
