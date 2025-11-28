@@ -29,6 +29,9 @@ interface Evidence {
   sourceType?: "factual" | "opinionated";
   sourceRating?: number;
   sourceReasoning?: string[];
+  sourceConfidence?: "high" | "medium" | "low";
+  contentAnalyzed?: boolean;
+  sourceWarning?: string;
   status: "pending" | "agreed" | "challenged" | "validated";
   participant1Agreed: boolean;
   participant2Agreed: boolean;
@@ -111,32 +114,66 @@ export const EvidenceCard = ({
             <div className="mt-3 space-y-2">
               <LinkPreview url={evidence.sourceUrl} className="max-w-xs" />
               {evidence.sourceRating && (
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${
-                          star <= evidence.sourceRating!
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-muted"
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${
+                            star <= evidence.sourceRating!
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-muted"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium">
+                      {evidence.sourceRating} out of 5
+                    </span>
+                    {evidence.sourceConfidence && (
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${
+                          evidence.sourceConfidence === "high" 
+                            ? "border-green-500/50 text-green-600" 
+                            : evidence.sourceConfidence === "medium"
+                            ? "border-yellow-500/50 text-yellow-600"
+                            : "border-red-500/50 text-red-600"
                         }`}
-                      />
-                    ))}
+                      >
+                        {evidence.sourceConfidence} confidence
+                      </Badge>
+                    )}
+                    {evidence.contentAnalyzed !== undefined && (
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${
+                          evidence.contentAnalyzed 
+                            ? "border-blue-500/50 text-blue-600" 
+                            : "border-orange-500/50 text-orange-600"
+                        }`}
+                      >
+                        {evidence.contentAnalyzed ? "Content analyzed" : "URL only"}
+                      </Badge>
+                    )}
+                    {evidence.sourceReasoning && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowRatingDetails(true)}
+                        className="h-6 px-2 text-xs"
+                      >
+                        <Info className="w-3 h-3 mr-1" />
+                        Why this rating?
+                      </Button>
+                    )}
                   </div>
-                  <span className="text-sm font-medium">
-                    {evidence.sourceRating} out of 5
-                  </span>
-                  {evidence.sourceReasoning && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowRatingDetails(true)}
-                      className="h-6 px-2 text-xs"
-                    >
-                      <Info className="w-3 h-3 mr-1" />
-                      Why this rating?
-                    </Button>
+                  {evidence.sourceWarning && (
+                    <div className="flex items-start gap-2 p-2 bg-orange-500/10 border border-orange-500/20 rounded-md">
+                      <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-orange-600">{evidence.sourceWarning}</p>
+                    </div>
                   )}
                 </div>
               )}
@@ -234,13 +271,13 @@ export const EvidenceCard = ({
       <Dialog open={showRatingDetails} onOpenChange={setShowRatingDetails}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Why This Rating?</DialogTitle>
+            <DialogTitle>Source Credibility Analysis</DialogTitle>
             <DialogDescription>
-              AI analyzed this source and here's what it found (explained simply)
+              GPT-5 analyzed this source {evidence.contentAnalyzed ? "by fetching and analyzing the actual website content" : "based on the URL structure only"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
@@ -256,15 +293,57 @@ export const EvidenceCard = ({
               <span className="text-lg font-semibold">
                 {evidence.sourceRating} out of 5
               </span>
+              {evidence.sourceConfidence && (
+                <Badge 
+                  variant="outline" 
+                  className={
+                    evidence.sourceConfidence === "high" 
+                      ? "border-green-500/50 text-green-600" 
+                      : evidence.sourceConfidence === "medium"
+                      ? "border-yellow-500/50 text-yellow-600"
+                      : "border-red-500/50 text-red-600"
+                  }
+                >
+                  {evidence.sourceConfidence} confidence
+                </Badge>
+              )}
             </div>
+            
+            {evidence.contentAnalyzed !== undefined && (
+              <div className="p-3 bg-muted/50 rounded-md border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Analysis Method</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {evidence.contentAnalyzed 
+                    ? "AI successfully fetched and analyzed the actual webpage content including text, title, and metadata."
+                    : "AI was unable to access the webpage content and based this rating on URL structure and domain only."}
+                </p>
+              </div>
+            )}
+
+            {evidence.sourceWarning && (
+              <div className="flex items-start gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-md">
+                <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-orange-600">Warning</p>
+                  <p className="text-sm text-orange-600/90">{evidence.sourceWarning}</p>
+                </div>
+              </div>
+            )}
+            
             {evidence.sourceReasoning && (
-              <ul className="space-y-2 list-disc list-inside text-sm">
-                {evidence.sourceReasoning.map((reason, idx) => (
-                  <li key={idx} className="text-muted-foreground leading-relaxed">
-                    {reason}
-                  </li>
-                ))}
-              </ul>
+              <div>
+                <h4 className="text-sm font-medium mb-2">Reasoning</h4>
+                <ul className="space-y-2 list-disc list-inside text-sm">
+                  {evidence.sourceReasoning.map((reason, idx) => (
+                    <li key={idx} className="text-muted-foreground leading-relaxed">
+                      {reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </DialogContent>
