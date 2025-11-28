@@ -1,10 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, AlertTriangle, Star, Info } from "lucide-react";
 import { useState } from "react";
 import { ChallengeDialog } from "./ChallengeDialog";
 import { LinkPreview } from "./LinkPreview";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Challenge {
   id: string;
@@ -20,6 +27,8 @@ interface Evidence {
   content: string;
   sourceUrl?: string;
   sourceType?: "factual" | "opinionated";
+  sourceRating?: number;
+  sourceReasoning?: string[];
   status: "pending" | "agreed" | "challenged" | "validated";
   participant1Agreed: boolean;
   participant2Agreed: boolean;
@@ -48,6 +57,7 @@ export const EvidenceCard = ({
   onValidate
 }: EvidenceCardProps) => {
   const [isChallenging, setIsChallenging] = useState(false);
+  const [showRatingDetails, setShowRatingDetails] = useState(false);
   
   const isParticipant1 = currentParticipant === 1;
   const currentParticipantName = isParticipant1 ? participant1Name : participant2Name;
@@ -98,7 +108,39 @@ export const EvidenceCard = ({
           </p>
 
           {evidence.sourceUrl && (
-            <LinkPreview url={evidence.sourceUrl} className="mt-3 max-w-xs" />
+            <div className="mt-3 space-y-2">
+              <LinkPreview url={evidence.sourceUrl} className="max-w-xs" />
+              {evidence.sourceRating && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${
+                          star <= evidence.sourceRating!
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium">
+                    {evidence.sourceRating}/5
+                  </span>
+                  {evidence.sourceReasoning && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowRatingDetails(true)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <Info className="w-3 h-3 mr-1" />
+                      Learn more
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -188,6 +230,45 @@ export const EvidenceCard = ({
         }}
         currentParticipantName={currentParticipantName}
       />
+
+      <Dialog open={showRatingDetails} onOpenChange={setShowRatingDetails}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Source Credibility Rating</DialogTitle>
+            <DialogDescription>
+              AI-generated assessment of this source's reliability
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-5 h-5 ${
+                      star <= (evidence.sourceRating || 0)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-muted"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-lg font-semibold">
+                {evidence.sourceRating}/5
+              </span>
+            </div>
+            {evidence.sourceReasoning && (
+              <ul className="space-y-2 list-disc list-inside text-sm">
+                {evidence.sourceReasoning.map((reason, idx) => (
+                  <li key={idx} className="text-muted-foreground leading-relaxed">
+                    {reason}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

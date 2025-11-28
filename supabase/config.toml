@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.transcribe-audio]
 verify_jwt = true
+
+[functions.rate-source]
+verify_jwt = true

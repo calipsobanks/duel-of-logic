@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2, Clock, Star, Info } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,8 @@ interface Evidence {
   claim: string;
   source_url?: string | null;
   source_type?: string | null;
+  source_rating?: number | null;
+  source_reasoning?: string | null;
   status: string;
   created_at: string;
 }
@@ -138,7 +140,7 @@ const ActiveDiscussion = () => {
   };
 
   const handleAddEvidence = async (evidenceData: { content: string; sourceUrl?: string; sourceType?: "factual" | "opinionated" }) => {
-    const { error } = await supabase
+    const { data: insertedEvidence, error } = await supabase
       .from('evidence')
       .insert({
         debate_id: discussionId,
@@ -147,7 +149,9 @@ const ActiveDiscussion = () => {
         source_url: evidenceData.sourceUrl,
         source_type: evidenceData.sourceType,
         status: 'pending'
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       toast({
@@ -158,12 +162,40 @@ const ActiveDiscussion = () => {
       return;
     }
 
+    // Rate the source if URL is provided
+    if (evidenceData.sourceUrl && insertedEvidence) {
+      try {
+        const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
+          body: {
+            sourceUrl: evidenceData.sourceUrl,
+            evidenceDescription: evidenceData.content
+          }
+        });
+
+        if (!ratingError && ratingData) {
+          // Update evidence with rating and reasoning
+          await supabase
+            .from('evidence')
+            .update({
+              source_rating: ratingData.rating,
+              source_reasoning: JSON.stringify(ratingData.reasoning)
+            })
+            .eq('id', insertedEvidence.id);
+        }
+      } catch (error) {
+        console.error('Failed to rate source:', error);
+        // Don't fail the entire operation if rating fails
+      }
+    }
+
     setIsAddingEvidence(false);
     loadEvidence();
     
     toast({
       title: "Evidence Added",
-      description: "Waiting for both participants to review and agree.",
+      description: evidenceData.sourceUrl 
+        ? "Evidence added and source rated by AI"
+        : "Waiting for both participants to review and agree.",
     });
   };
 
@@ -560,15 +592,85 @@ const ActiveDiscussion = () => {
                   </p>
                   
                   {currentEvidence?.source_url && (
-                    <a 
-                      href={currentEvidence.source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 mt-4 text-sm text-primary hover:underline"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      View Source
-                    </a>
+                    <div className="mt-4 space-y-2">
+                      <a 
+                        href={currentEvidence.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View Source
+                      </a>
+                      
+                      {currentEvidence.source_rating && (
+                        <div className="flex items-center gap-2 pt-2">
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= currentEvidence.source_rating!
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-medium">
+                            {currentEvidence.source_rating}/5 credibility
+                          </span>
+                          {currentEvidence.source_reasoning && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  <Info className="w-3 h-3 mr-1" />
+                                  Learn more
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Source Credibility Rating</DialogTitle>
+                                  <DialogDescription>
+                                    AI-generated assessment of this source's reliability
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                          key={star}
+                                          className={`w-5 h-5 ${
+                                            star <= (currentEvidence.source_rating || 0)
+                                              ? "fill-yellow-400 text-yellow-400"
+                                              : "text-muted"
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-lg font-semibold">
+                                      {currentEvidence.source_rating}/5
+                                    </span>
+                                  </div>
+                                  <ul className="space-y-2 list-disc list-inside text-sm">
+                                    {JSON.parse(currentEvidence.source_reasoning).map((reason: string, idx: number) => (
+                                      <li key={idx} className="text-muted-foreground leading-relaxed">
+                                        {reason}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
 

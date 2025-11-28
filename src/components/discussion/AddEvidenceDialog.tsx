@@ -44,7 +44,7 @@ export const AddEvidenceDialog = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isRecording) {
@@ -52,11 +52,13 @@ export const AddEvidenceDialog = ({
     }
     
     if (content) {
-      onSubmit({
+      const evidenceData = {
         submittedBy: currentParticipantName,
         content,
         ...(sourceUrl && { sourceUrl, sourceType })
-      });
+      };
+
+      onSubmit(evidenceData);
       
       // Reset form
       setContent("");
