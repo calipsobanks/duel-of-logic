@@ -135,17 +135,52 @@ Format your response as JSON:
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+      console.error('Invalid OpenAI response structure:', JSON.stringify(data));
+      throw new Error('Invalid response structure from OpenAI');
+    }
+    
     let content = data.choices[0].message.content;
+    
+    console.log('Raw AI response:', content);
     
     // Remove markdown code blocks if present
     content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
+    // Try to extract JSON if there's extra text around it
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      content = jsonMatch[0];
+    }
+    
+    console.log('Cleaned content:', content);
+    
+    if (!content) {
+      throw new Error('AI returned empty response');
+    }
+    
     // Parse the JSON response from the AI
-    const result = JSON.parse(content);
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse AI response. Raw response length:', content.length);
+      console.error('First 500 chars:', content.substring(0, 500));
+      console.error('Last 500 chars:', content.substring(Math.max(0, content.length - 500)));
+      console.error('Parse error:', parseError);
+      throw new Error(`Invalid JSON from AI: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+    }
+    
+    // Validate the result has required fields
+    if (!result.rating || !result.reasoning || !result.confidence) {
+      console.error('Invalid result structure:', result);
+      throw new Error('AI response missing required fields (rating, reasoning, confidence)');
+    }
     
     // Add metadata about content analysis
     result.contentAnalyzed = websiteContent.success;
