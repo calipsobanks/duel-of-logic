@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { useNotifications } from '@/hooks/useNotifications';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ControversialTopics } from '@/components/ControversialTopics';
 
 interface Profile {
   id: string;
@@ -456,6 +457,11 @@ const Discussions = () => {
                 </CardContent>
               </Card>
             )}
+            
+            {/* Controversial Topics Section */}
+            <div className="pt-4">
+              <ControversialTopics />
+            </div>
           </div>
         )}
 
