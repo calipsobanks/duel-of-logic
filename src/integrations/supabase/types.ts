@@ -110,38 +110,47 @@ export type Database = {
       evidence: {
         Row: {
           claim: string
+          content_analyzed: boolean | null
           created_at: string
           debate_id: string
           debater_id: string
           id: string
+          source_confidence: string | null
           source_rating: number | null
           source_reasoning: string | null
           source_type: string | null
           source_url: string | null
+          source_warning: string | null
           status: string
         }
         Insert: {
           claim: string
+          content_analyzed?: boolean | null
           created_at?: string
           debate_id: string
           debater_id: string
           id?: string
+          source_confidence?: string | null
           source_rating?: number | null
           source_reasoning?: string | null
           source_type?: string | null
           source_url?: string | null
+          source_warning?: string | null
           status?: string
         }
         Update: {
           claim?: string
+          content_analyzed?: boolean | null
           created_at?: string
           debate_id?: string
           debater_id?: string
           id?: string
+          source_confidence?: string | null
           source_rating?: number | null
           source_reasoning?: string | null
           source_type?: string | null
           source_url?: string | null
+          source_warning?: string | null
           status?: string
         }
         Relationships: [
