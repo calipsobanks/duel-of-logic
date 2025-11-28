@@ -25,6 +25,7 @@ export type Database = {
           deleted_by: string | null
           id: string
           status: string
+          timer_expires_at: string | null
           topic: string
           updated_at: string
         }
@@ -38,6 +39,7 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           status?: string
+          timer_expires_at?: string | null
           topic: string
           updated_at?: string
         }
@@ -51,6 +53,7 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           status?: string
+          timer_expires_at?: string | null
           topic?: string
           updated_at?: string
         }
