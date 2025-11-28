@@ -17,6 +17,3 @@ verify_jwt = true
 
 [functions.get-controversial-topics]
 verify_jwt = false
-
-[functions.update-weekly-topics]
-verify_jwt = false
