@@ -38,6 +38,9 @@ interface Evidence {
   source_type?: string | null;
   source_rating?: number | null;
   source_reasoning?: string | null;
+  source_confidence?: string | null;
+  content_analyzed?: boolean | null;
+  source_warning?: string | null;
   status: string;
   created_at: string;
 }
@@ -181,7 +184,10 @@ const ActiveDiscussion = () => {
               .from('evidence')
               .update({
                 source_rating: ratingData.rating,
-                source_reasoning: JSON.stringify(ratingData.reasoning)
+                source_reasoning: JSON.stringify(ratingData.reasoning),
+                source_confidence: ratingData.confidence,
+                content_analyzed: ratingData.contentAnalyzed,
+                source_warning: ratingData.warning
               })
               .eq('id', currentEvidence.id);
           }
@@ -239,7 +245,10 @@ const ActiveDiscussion = () => {
             .from('evidence')
             .update({
               source_rating: ratingData.rating,
-              source_reasoning: JSON.stringify(ratingData.reasoning)
+              source_reasoning: JSON.stringify(ratingData.reasoning),
+              source_confidence: ratingData.confidence,
+              content_analyzed: ratingData.contentAnalyzed,
+              source_warning: ratingData.warning
             })
             .eq('id', insertedEvidence.id);
         }
@@ -739,69 +748,145 @@ const ActiveDiscussion = () => {
                       </a>
                       
                       {currentEvidence.source_rating && (
-                        <div className="flex items-center gap-2 pt-2">
-                          <div className="flex items-center gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-4 h-4 ${
-                                  star <= currentEvidence.source_rating!
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-muted"
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= currentEvidence.source_rating!
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm font-medium">
+                              {currentEvidence.source_rating} out of 5
+                            </span>
+                            {currentEvidence.source_confidence && (
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs ${
+                                  currentEvidence.source_confidence === "high" 
+                                    ? "border-green-500/50 text-green-600" 
+                                    : currentEvidence.source_confidence === "medium"
+                                    ? "border-yellow-500/50 text-yellow-600"
+                                    : "border-red-500/50 text-red-600"
                                 }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm font-medium">
-                            {currentEvidence.source_rating} out of 5
-                          </span>
-                          {currentEvidence.source_reasoning && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 px-2 text-xs"
-                                >
-                                  <Info className="w-3 h-3 mr-1" />
-                                  Why this rating?
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Why This Rating?</DialogTitle>
-                                  <DialogDescription>
-                                    AI analyzed this source and here's what it found (explained simply)
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <Star
-                                          key={star}
-                                          className={`w-5 h-5 ${
-                                            star <= (currentEvidence.source_rating || 0)
-                                              ? "fill-yellow-400 text-yellow-400"
-                                              : "text-muted"
-                                          }`}
-                                        />
-                                      ))}
+                              >
+                                {currentEvidence.source_confidence} confidence
+                              </Badge>
+                            )}
+                            {currentEvidence.content_analyzed !== undefined && (
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs ${
+                                  currentEvidence.content_analyzed 
+                                    ? "border-blue-500/50 text-blue-600" 
+                                    : "border-orange-500/50 text-orange-600"
+                                }`}
+                              >
+                                {currentEvidence.content_analyzed ? "Content analyzed" : "URL only"}
+                              </Badge>
+                            )}
+                            {currentEvidence.source_reasoning && (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs"
+                                  >
+                                    <Info className="w-3 h-3 mr-1" />
+                                    Why this rating?
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Source Credibility Analysis</DialogTitle>
+                                    <DialogDescription>
+                                      GPT-5 analyzed this source {currentEvidence.content_analyzed ? "by fetching and analyzing the actual website content" : "based on the URL structure only"}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                      <div className="flex items-center gap-1">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <Star
+                                            key={star}
+                                            className={`w-5 h-5 ${
+                                              star <= (currentEvidence.source_rating || 0)
+                                                ? "fill-yellow-400 text-yellow-400"
+                                                : "text-muted"
+                                            }`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-lg font-semibold">
+                                        {currentEvidence.source_rating} out of 5
+                                      </span>
+                                      {currentEvidence.source_confidence && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className={
+                                            currentEvidence.source_confidence === "high" 
+                                              ? "border-green-500/50 text-green-600" 
+                                              : currentEvidence.source_confidence === "medium"
+                                              ? "border-yellow-500/50 text-yellow-600"
+                                              : "border-red-500/50 text-red-600"
+                                          }
+                                        >
+                                          {currentEvidence.source_confidence} confidence
+                                        </Badge>
+                                      )}
                                     </div>
-                                    <span className="text-lg font-semibold">
-                                      {currentEvidence.source_rating} out of 5
-                                    </span>
+                                    
+                                    {currentEvidence.content_analyzed !== undefined && (
+                                      <div className="p-3 bg-muted/50 rounded-md border">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Info className="w-4 h-4 text-muted-foreground" />
+                                          <span className="text-sm font-medium">Analysis Method</span>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">
+                                          {currentEvidence.content_analyzed 
+                                            ? "AI successfully fetched and analyzed the actual webpage content including text, title, and metadata."
+                                            : "AI was unable to access the webpage content and based this rating on URL structure and domain only."}
+                                        </p>
+                                      </div>
+                                    )}
+
+                                    {currentEvidence.source_warning && (
+                                      <div className="flex items-start gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-md">
+                                        <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                          <p className="text-sm font-medium text-orange-600">Warning</p>
+                                          <p className="text-sm text-orange-600/90">{currentEvidence.source_warning}</p>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    <div>
+                                      <h4 className="text-sm font-medium mb-2">Reasoning</h4>
+                                      <ul className="space-y-2 list-disc list-inside text-sm">
+                                        {JSON.parse(currentEvidence.source_reasoning).map((reason: string, idx: number) => (
+                                          <li key={idx} className="text-muted-foreground leading-relaxed">
+                                            {reason}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
                                   </div>
-                                  <ul className="space-y-2 list-disc list-inside text-sm">
-                                    {JSON.parse(currentEvidence.source_reasoning).map((reason: string, idx: number) => (
-                                      <li key={idx} className="text-muted-foreground leading-relaxed">
-                                        {reason}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </div>
+                          {currentEvidence.source_warning && (
+                            <div className="flex items-start gap-2 p-2 bg-orange-500/10 border border-orange-500/20 rounded-md">
+                              <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                              <p className="text-xs text-orange-600">{currentEvidence.source_warning}</p>
+                            </div>
                           )}
                         </div>
                       )}
