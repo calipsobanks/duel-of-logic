@@ -218,7 +218,8 @@ const Discussions = () => {
       .insert({
         topic: topic.trim(),
         debater1_id: user?.id,
-        debater2_id: selectedMember.id
+        debater2_id: selectedMember.id,
+        timer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       })
       .select()
       .single();
