@@ -39,15 +39,17 @@ serve(async (req) => {
 Your response must be a JSON object with this exact structure:
 {
   "topics": [
-    {"category": "Politics", "title": "string", "description": "string", "controversy": "string"},
-    {"category": "Religion", "title": "string", "description": "string", "controversy": "string"},
-    {"category": "Finance", "title": "string", "description": "string", "controversy": "string"}
+    {"category": "Politics", "title": "string", "question": "string", "description": "string", "controversy": "string"},
+    {"category": "Religion", "title": "string", "question": "string", "description": "string", "controversy": "string"},
+    {"category": "Finance", "title": "string", "question": "string", "description": "string", "controversy": "string"}
   ]
 }
 
 Rules:
 - Return exactly 3 topics (one from each category)
 - category must be exactly "Politics", "Religion", or "Finance"
+- question should be a clear, thought-provoking question that captures the debate
+- title is a brief topic statement
 - Focus on current week's most debated topics
 - Each field should be concise but informative`
           },
@@ -111,6 +113,7 @@ Rules:
     const topicsToInsert = result.topics.map((topic: any) => ({
       category: topic.category,
       title: topic.title,
+      question: topic.question || topic.title,
       description: topic.description,
       controversy: topic.controversy,
       week_start: weekStartStr

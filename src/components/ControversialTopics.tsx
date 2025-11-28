@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 interface Topic {
   category: "Politics" | "Religion" | "Finance";
   title: string;
+  question: string;
   description: string;
   controversy: string;
 }
@@ -51,6 +52,7 @@ export const ControversialTopics = () => {
         const mappedTopics: Topic[] = data.map(t => ({
           category: t.category as "Politics" | "Religion" | "Finance",
           title: t.title,
+          question: t.question || t.title,
           description: t.description,
           controversy: t.controversy
         }));
@@ -103,18 +105,19 @@ export const ControversialTopics = () => {
               className="p-5 space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2"
               onClick={() => navigate('/auth')}
             >
-              <h3 className="text-lg font-bold text-foreground leading-tight">
-                {topic.title}
-              </h3>
-
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className={`${categoryColors[topic.category]} font-semibold text-xs`}
-                >
-                  {categoryIcons[topic.category]} {topic.category}
-                </Badge>
-                <Flame className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <div>
+                <h3 className="text-xl font-bold text-foreground leading-tight mb-2">
+                  {topic.question}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={`${categoryColors[topic.category]} font-semibold text-xs`}
+                  >
+                    {categoryIcons[topic.category]} {topic.category}
+                  </Badge>
+                  <Flame className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                </div>
               </div>
 
               <p className="text-sm text-muted-foreground leading-relaxed">
