@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2, Clock, Star, Info } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2, Clock, Star, Info, AlertTriangle } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -349,6 +349,42 @@ const ActiveDiscussion = () => {
     toast({
       title: "Evidence Challenged",
       description: "You can now add counter-evidence to disprove the claim.",
+    });
+  };
+
+  const handleRequestEvidence = async (evidenceId: string) => {
+    const evidence = evidenceList.find(e => e.id === evidenceId);
+    if (!evidence) return;
+
+    const { error } = await supabase
+      .from('evidence')
+      .update({ status: 'evidence_requested' })
+      .eq('id', evidenceId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to request evidence",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Notify the evidence creator that evidence is requested
+    supabase.functions.invoke('notify-debate-action', {
+      body: {
+        targetUserId: evidence.debater_id,
+        action: 'evidence_requested',
+        actorId: user?.id,
+        message: evidence.claim
+      }
+    }).catch(err => console.error('Failed to send notification:', err));
+
+    loadEvidence();
+    moveToNextCard();
+    toast({
+      title: "Evidence Requested",
+      description: "The participant must provide a source to validate their claim.",
     });
   };
 
@@ -742,6 +778,15 @@ const ActiveDiscussion = () => {
                 onClick={() => handleChallenge(currentEvidence.id)}
               >
                 <X className="w-8 h-8" />
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-16 w-16 rounded-full border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-white transition-all shadow-lg"
+                onClick={() => handleRequestEvidence(currentEvidence.id)}
+              >
+                <AlertTriangle className="w-8 h-8" />
               </Button>
               
               <Button
