@@ -80,6 +80,17 @@ const Discussions = () => {
     fetchDiscussions();
     fetchAllDiscussions();
     checkAdminStatus();
+
+    // Listen for tab change events from ControversialTopics component
+    const handleTabChange = (event: CustomEvent) => {
+      setActiveTab(event.detail as TabType);
+    };
+
+    window.addEventListener('change-tab', handleTabChange as EventListener);
+
+    return () => {
+      window.removeEventListener('change-tab', handleTabChange as EventListener);
+    };
   }, [user, navigate]);
 
   const checkAdminStatus = async () => {
