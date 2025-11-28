@@ -68,7 +68,7 @@ export const ControversialTopics = () => {
       <Card className="p-8 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-purple-500/5 border-2 border-orange-500/20">
         <div className="flex items-center justify-center gap-3">
           <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
-          <p className="text-muted-foreground">Loading weekly controversial topics...</p>
+          <p className="text-muted-foreground">Loading this week's hot topics...</p>
         </div>
       </Card>
     );
@@ -87,11 +87,11 @@ export const ControversialTopics = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              This Week's Hot Topics
+              Hot Topics This Week
               <TrendingUp className="w-5 h-5 text-orange-500" />
             </h2>
             <p className="text-sm text-muted-foreground">
-              AI-curated controversial discussions worth debating
+              Big questions everyone is talking about
             </p>
           </div>
         </div>
@@ -142,7 +142,7 @@ export const ControversialTopics = () => {
             }}
             className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
           >
-            Start Debate
+            Join the Conversation
           </Button>
         </div>
       </div>
