@@ -5,55 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Function to fetch and extract website content
-async function fetchWebsiteContent(url: string): Promise<{ success: boolean; title?: string; description?: string; text?: string; error?: string }> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; SourceRatingBot/1.0)',
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return { success: false, error: `HTTP ${response.status}` };
-    }
-
-    const html = await response.text();
-    
-    // Extract title
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : '';
-    
-    // Extract meta description
-    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
-    const description = descMatch ? descMatch[1].trim() : '';
-    
-    // Extract main text content (remove HTML tags and scripts)
-    let text = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    // Limit text to ~4000 characters
-    if (text.length > 4000) {
-      text = text.substring(0, 4000) + '...';
-    }
-    
-    return { success: true, title, description, text };
-  } catch (error) {
-    console.error('Error fetching website:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -69,22 +20,12 @@ serve(async (req) => {
 
     console.log('Rating source:', sourceUrl);
 
-    // Attempt to fetch website content
-    const websiteContent = await fetchWebsiteContent(sourceUrl);
-    console.log('Website fetch result:', websiteContent.success ? 'Success' : `Failed: ${websiteContent.error}`);
+    const userPrompt = `Evaluate this claim and source:
 
-    // Build the prompt based on whether we got content
-    let userPrompt = `Rate this source URL: ${sourceUrl}\n\nContext/Claim: ${evidenceDescription}`;
-    
-    if (websiteContent.success) {
-      userPrompt += `\n\nACTUAL WEBSITE CONTENT EXTRACTED:\n`;
-      if (websiteContent.title) userPrompt += `Title: ${websiteContent.title}\n`;
-      if (websiteContent.description) userPrompt += `Description: ${websiteContent.description}\n`;
-      if (websiteContent.text) userPrompt += `Content: ${websiteContent.text}\n`;
-      userPrompt += `\nIMPORTANT: Base your rating ONLY on this actual content. Do not make assumptions.`;
-    } else {
-      userPrompt += `\n\nWARNING: Could not fetch website content (${websiteContent.error}). Rate based on URL structure and domain only. Be conservative with rating.`;
-    }
+Claim: "${evidenceDescription}"
+Source URL: ${sourceUrl}
+
+Based on your knowledge, analyze this claim and source.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -98,30 +39,31 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an unbiased fact-checker evaluating source credibility. Rate sources from 1-5 based on:
-- Authority and expertise of the source
-- Verification and evidence quality
-- Bias and objectivity
-- Relevance to the claim
+            content: `You are an unbiased fact-checker. Evaluate claims based on your knowledge.
 
-CRITICAL INSTRUCTIONS:
-- If website content is provided, analyze ONLY that content
-- Do NOT make assumptions about what might be on the website
-- If content is unavailable, clearly state this affects your rating
-- If you cannot verify information, explicitly say "Unable to verify"
+INSTRUCTIONS:
+1. Rate the source credibility (1-5, where 5 is most credible) based on:
+   - Domain authority and reputation
+   - Known bias or objectivity
+   - Typical reliability of this source type
 
-Provide:
-1. A rating (1-5, where 5 is most credible)
-2. Exactly 3-5 concise bullet points explaining the rating
-3. A confidence level: "high", "medium", or "low"
-4. Optional warning if there are concerns
+2. Evaluate the claim as: "factual", "plausible", "misleading", or "wrong"
+
+3. Provide 3-5 concise bullet points explaining your evaluation
+
+4. If the claim is "misleading" or "wrong", provide:
+   - A suggested factual statement that corrects the claim
+   - An example showing how to quote the source properly
 
 Format your response as JSON:
 {
   "rating": <number 1-5>,
+  "claimEvaluation": "factual" | "plausible" | "misleading" | "wrong",
   "reasoning": ["bullet point 1", "bullet point 2", "bullet point 3"],
   "confidence": "high" | "medium" | "low",
-  "warning": "optional warning message or null"
+  "warning": "optional warning message or null",
+  "suggestedCorrection": "factual statement (only if misleading/wrong)" | null,
+  "quoteExample": "example of how to properly quote the source (only if misleading/wrong)" | null
 }`
           },
           {
@@ -177,13 +119,13 @@ Format your response as JSON:
     }
     
     // Validate the result has required fields
-    if (!result.rating || !result.reasoning || !result.confidence) {
+    if (!result.rating || !result.reasoning || !result.confidence || !result.claimEvaluation) {
       console.error('Invalid result structure:', result);
-      throw new Error('AI response missing required fields (rating, reasoning, confidence)');
+      throw new Error('AI response missing required fields (rating, reasoning, confidence, claimEvaluation)');
     }
     
-    // Add metadata about content analysis
-    result.contentAnalyzed = websiteContent.success;
+    // Mark as knowledge-based (not content scraped)
+    result.contentAnalyzed = false;
     
     console.log('Rating result:', result);
 
