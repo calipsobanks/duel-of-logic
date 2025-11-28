@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2 } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, X, Check, ChevronLeft, ChevronRight, ExternalLink, Shield, Heart, Share2, Clock } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSwipeable } from "react-swipeable";
+import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ interface DiscussionData {
   debater2_id: string;
   debater1_score: number;
   debater2_score: number;
+  timer_expires_at: string | null;
   debater1: { username: string };
   debater2: { username: string };
 }
@@ -53,6 +55,7 @@ const ActiveDiscussion = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
 
   useEffect(() => {
     if (!user) {
@@ -68,6 +71,26 @@ const ActiveDiscussion = () => {
     loadDiscussion();
     loadEvidence();
   }, [discussionId, user, navigate]);
+
+  useEffect(() => {
+    if (!discussion?.timer_expires_at) return;
+
+    const updateTimer = () => {
+      const expiresAt = new Date(discussion.timer_expires_at!);
+      const now = new Date();
+      
+      if (now >= expiresAt) {
+        setTimeRemaining("Time's up!");
+      } else {
+        setTimeRemaining(formatDistanceToNow(expiresAt, { addSuffix: true }));
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [discussion?.timer_expires_at]);
 
   const loadDiscussion = async () => {
     const { data, error } = await supabase
@@ -332,17 +355,25 @@ const ActiveDiscussion = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           
-          {/* Score Display */}
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">{discussion.debater1.username}</div>
-              <div className="text-xl font-bold text-primary">{discussion.debater1_score}</div>
+          {/* Score Display & Timer */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">{discussion.debater1.username}</div>
+                <div className="text-xl font-bold text-primary">{discussion.debater1_score}</div>
+              </div>
+              <div className="text-lg font-bold text-muted-foreground">vs</div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">{discussion.debater2.username}</div>
+                <div className="text-xl font-bold text-destructive">{discussion.debater2_score}</div>
+              </div>
             </div>
-            <div className="text-lg font-bold text-muted-foreground">vs</div>
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">{discussion.debater2.username}</div>
-              <div className="text-xl font-bold text-destructive">{discussion.debater2_score}</div>
-            </div>
+            {timeRemaining && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>{timeRemaining}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
