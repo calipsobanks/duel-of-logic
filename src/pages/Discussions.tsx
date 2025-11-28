@@ -16,7 +16,6 @@ import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { useNotifications } from '@/hooks/useNotifications';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ControversialTopics } from '@/components/ControversialTopics';
-
 interface Profile {
   id: string;
   username: string;
@@ -26,7 +25,6 @@ interface Profile {
   university_degree?: string | null;
   phone_number?: string | null;
 }
-
 interface Discussion {
   id: string;
   topic: string;
@@ -36,10 +34,15 @@ interface Discussion {
   debater2_score: number;
   status: string;
   created_at: string;
-  debater1: { id: string; username: string } | null;
-  debater2: { id: string; username: string } | null;
+  debater1: {
+    id: string;
+    username: string;
+  } | null;
+  debater2: {
+    id: string;
+    username: string;
+  } | null;
 }
-
 interface LeaderboardEntry {
   userId: string;
   username: string;
@@ -47,9 +50,7 @@ interface LeaderboardEntry {
   totalPoints: number;
   debatesCount: number;
 }
-
 type TabType = 'home' | 'leaderboard' | 'members' | 'spectate' | 'profile';
-
 const Discussions = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
@@ -67,18 +68,21 @@ const Discussions = () => {
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('home');
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut
+  } = useAuth();
   const navigate = useNavigate();
-  const { permission, requestPermission } = useNotifications();
-
+  const {
+    permission,
+    requestPermission
+  } = useNotifications();
   const currentUserProfile = profiles.find(p => p.id === user?.id);
-
   useEffect(() => {
     if (!user) {
       navigate('/auth');
       return;
     }
-
     fetchProfiles();
     fetchDiscussions();
     fetchAllDiscussions();
@@ -88,192 +92,169 @@ const Discussions = () => {
     const handleTabChange = (event: CustomEvent) => {
       setActiveTab(event.detail as TabType);
     };
-
     window.addEventListener('change-tab', handleTabChange as EventListener);
-
     return () => {
       window.removeEventListener('change-tab', handleTabChange as EventListener);
     };
   }, [user, navigate]);
-
   const checkAdminStatus = async () => {
     if (!user) return;
-
-    const { data } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-
+    const {
+      data
+    } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
     setIsAdmin(!!data);
   };
-
   const fetchProfiles = async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('username', { ascending: true });
-
+    const {
+      data,
+      error
+    } = await supabase.from('profiles').select('*').order('username', {
+      ascending: true
+    });
     if (error) {
       toast.error('Failed to load members');
       return;
     }
-
     setProfiles(data || []);
-    
     if (data && data.length > 0) {
       await fetchLeaderboardWithProfiles(data);
     }
   };
-
   const fetchLeaderboardWithProfiles = async (profilesData: Profile[]) => {
-    const { data: debates, error } = await supabase
-      .from('debates')
-      .select('*');
-
+    const {
+      data: debates,
+      error
+    } = await supabase.from('debates').select('*');
     if (error) {
       toast.error('Failed to load leaderboard');
       return;
     }
-
-    const scoreMap = new Map<string, { totalPoints: number; debatesCount: number }>();
-    
+    const scoreMap = new Map<string, {
+      totalPoints: number;
+      debatesCount: number;
+    }>();
     debates?.forEach(debate => {
-      const debater1Stats = scoreMap.get(debate.debater1_id) || { totalPoints: 0, debatesCount: 0 };
+      const debater1Stats = scoreMap.get(debate.debater1_id) || {
+        totalPoints: 0,
+        debatesCount: 0
+      };
       debater1Stats.totalPoints += debate.debater1_score;
       debater1Stats.debatesCount += 1;
       scoreMap.set(debate.debater1_id, debater1Stats);
-
-      const debater2Stats = scoreMap.get(debate.debater2_id) || { totalPoints: 0, debatesCount: 0 };
+      const debater2Stats = scoreMap.get(debate.debater2_id) || {
+        totalPoints: 0,
+        debatesCount: 0
+      };
       debater2Stats.totalPoints += debate.debater2_score;
       debater2Stats.debatesCount += 1;
       scoreMap.set(debate.debater2_id, debater2Stats);
     });
-
-    const leaderboardData: LeaderboardEntry[] = profilesData
-      .map(profile => {
-        const stats = scoreMap.get(profile.id) || { totalPoints: 0, debatesCount: 0 };
-        return {
-          userId: profile.id,
-          username: profile.username,
-          avatar_url: profile.avatar_url,
-          totalPoints: stats.totalPoints,
-          debatesCount: stats.debatesCount
-        };
-      })
-      .sort((a, b) => b.totalPoints - a.totalPoints);
-
+    const leaderboardData: LeaderboardEntry[] = profilesData.map(profile => {
+      const stats = scoreMap.get(profile.id) || {
+        totalPoints: 0,
+        debatesCount: 0
+      };
+      return {
+        userId: profile.id,
+        username: profile.username,
+        avatar_url: profile.avatar_url,
+        totalPoints: stats.totalPoints,
+        debatesCount: stats.debatesCount
+      };
+    }).sort((a, b) => b.totalPoints - a.totalPoints);
     setLeaderboard(leaderboardData);
   };
-
   const fetchDiscussions = async () => {
-    const { data, error } = await supabase
-      .from('debates')
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from('debates').select(`
         *,
         debater1:profiles!debates_debater1_id_fkey(id, username),
         debater2:profiles!debates_debater2_id_fkey(id, username)
-      `)
-      .or(`debater1_id.eq.${user?.id},debater2_id.eq.${user?.id}`)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
-
+      `).or(`debater1_id.eq.${user?.id},debater2_id.eq.${user?.id}`).is('deleted_at', null).order('created_at', {
+      ascending: false
+    });
     if (error) {
       toast.error('Failed to load discussions');
       return;
     }
-
     setDiscussions(data || []);
   };
-
   const fetchAllDiscussions = async () => {
-    const { data, error } = await supabase
-      .from('debates')
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from('debates').select(`
         *,
         debater1:profiles!debates_debater1_id_fkey(id, username),
         debater2:profiles!debates_debater2_id_fkey(id, username)
-      `)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
-
+      `).is('deleted_at', null).order('created_at', {
+      ascending: false
+    });
     if (error) {
       console.error('Failed to load all discussions:', error);
       return;
     }
-
     setAllDiscussions(data || []);
   };
-
   const deleteDiscussion = async (discussionId: string) => {
-    const { error } = await supabase
-      .from('debates')
-      .update({ 
-        deleted_at: new Date().toISOString(),
-        deleted_by: user?.id 
-      })
-      .eq('id', discussionId);
-
+    const {
+      error
+    } = await supabase.from('debates').update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: user?.id
+    }).eq('id', discussionId);
     if (error) {
       toast.error('Failed to delete discussion');
       return;
     }
-
     toast.success('Discussion deleted (points preserved)');
     fetchDiscussions();
     fetchAllDiscussions();
   };
-
   const startDiscussion = async () => {
     if (!selectedMember || !topic.trim()) return;
-
-    const { data, error } = await supabase
-      .from('debates')
-      .insert({
-        topic: topic.trim(),
-        debater1_id: user?.id,
-        debater2_id: selectedMember.id,
-        timer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      })
-      .select()
-      .single();
-
+    const {
+      data,
+      error
+    } = await supabase.from('debates').insert({
+      topic: topic.trim(),
+      debater1_id: user?.id,
+      debater2_id: selectedMember.id,
+      timer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    }).select().single();
     if (error) {
       toast.error('Failed to create discussion');
       return;
     }
-
     toast.success('Discussion started!');
     setIsDialogOpen(false);
     setTopic('');
     setSelectedMember(null);
     navigate(`/discussion/active?id=${data.id}`);
   };
-
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>, userId: string) => {
     try {
       if (!event.target.files || event.target.files.length === 0) return;
-
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}/${Math.random()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(fileName, file, {
+        upsert: true
+      });
       if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: data.publicUrl })
-        .eq('id', userId);
-
+      const {
+        data
+      } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const {
+        error: updateError
+      } = await supabase.from('profiles').update({
+        avatar_url: data.publicUrl
+      }).eq('id', userId);
       if (updateError) throw updateError;
-
       toast.success('Profile picture updated!');
       fetchProfiles();
     } catch (error) {
@@ -281,7 +262,6 @@ const Discussions = () => {
       toast.error('Failed to upload profile picture');
     }
   };
-
   const handleLogout = async () => {
     try {
       await signOut();
@@ -289,7 +269,6 @@ const Discussions = () => {
       console.error('Logout error:', error);
     }
   };
-
   const handleEditBeliefs = (profile: Profile) => {
     setReligion(profile.religion || '');
     setPoliticalView(profile.political_view || '');
@@ -297,49 +276,38 @@ const Discussions = () => {
     setPhoneNumber(profile.phone_number || '');
     setIsEditBeliefsOpen(true);
   };
-
   const handleSaveBeliefs = async () => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ 
-        religion: religion || null,
-        political_view: politicalView || null,
-        university_degree: universityDegree || null
-      })
-      .eq('id', user.id);
-
+    const {
+      error
+    } = await supabase.from('profiles').update({
+      religion: religion || null,
+      political_view: politicalView || null,
+      university_degree: universityDegree || null
+    }).eq('id', user.id);
     if (error) {
       toast.error('Failed to update beliefs');
       return;
     }
-
     toast.success('Beliefs updated!');
     setIsEditBeliefsOpen(false);
     fetchProfiles();
   };
-
   const handleSavePhoneNumber = async () => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ 
-        phone_number: phoneNumber || null
-      })
-      .eq('id', user.id);
-
+    const {
+      error
+    } = await supabase.from('profiles').update({
+      phone_number: phoneNumber || null
+    }).eq('id', user.id);
     if (error) {
       toast.error('Failed to update phone number');
       return;
     }
-
     toast.success('Phone number updated!');
     setIsEditPhoneOpen(false);
     fetchProfiles();
   };
-
   const handleBeliefClick = (beliefType: string, value: string) => {
     const beliefTag = `#${beliefType}: ${value}`;
     if (selectedBelief === beliefTag) {
@@ -348,27 +316,35 @@ const Discussions = () => {
       setSelectedBelief(beliefTag);
     }
   };
-
-  const getBeliefTags = (profile: Profile): Array<{type: string, value: string}> => {
-    const tags: Array<{type: string, value: string}> = [];
-    if (profile.religion) tags.push({ type: 'Religion', value: profile.religion });
-    if (profile.political_view) tags.push({ type: 'Politics', value: profile.political_view });
-    if (profile.university_degree) tags.push({ type: 'Education', value: profile.university_degree });
+  const getBeliefTags = (profile: Profile): Array<{
+    type: string;
+    value: string;
+  }> => {
+    const tags: Array<{
+      type: string;
+      value: string;
+    }> = [];
+    if (profile.religion) tags.push({
+      type: 'Religion',
+      value: profile.religion
+    });
+    if (profile.political_view) tags.push({
+      type: 'Politics',
+      value: profile.political_view
+    });
+    if (profile.university_degree) tags.push({
+      type: 'Education',
+      value: profile.university_degree
+    });
     return tags;
   };
-
-  const filteredProfiles = selectedBelief
-    ? profiles.filter(profile => {
-        const tags = getBeliefTags(profile);
-        return tags.some(tag => `#${tag.type}: ${tag.value}` === selectedBelief);
-      })
-    : profiles;
-
+  const filteredProfiles = selectedBelief ? profiles.filter(profile => {
+    const tags = getBeliefTags(profile);
+    return tags.some(tag => `#${tag.type}: ${tag.value}` === selectedBelief);
+  }) : profiles;
   const currentUserLeaderboardEntry = leaderboard.find(e => e.userId === user?.id);
   const currentUserRank = leaderboard.findIndex(e => e.userId === user?.id) + 1;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex flex-col">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b px-4 py-3">
         <div className="flex items-center justify-between">
@@ -380,11 +356,9 @@ const Discussions = () => {
           </h1>
           <div className="flex items-center gap-2">
             <NotificationsDropdown />
-            {isAdmin && (
-              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            {isAdmin && <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
                 <Shield className="h-5 w-5" />
-              </Button>
-            )}
+              </Button>}
           </div>
         </div>
       </header>
@@ -392,58 +366,42 @@ const Discussions = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 pb-24">
         {/* Home Tab - Active Discussions */}
-        {activeTab === 'home' && (
-          <div className="space-y-4">
-            {discussions.map((discussion) => {
-              const isDebater1 = discussion.debater1_id === user?.id;
-              const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
-              const yourScore = isDebater1 ? discussion.debater1_score : discussion.debater2_score;
-              const theirScore = isDebater1 ? discussion.debater2_score : discussion.debater1_score;
-              
-              return (
-                <Card key={discussion.id} className="hover:shadow-lg transition-shadow">
+        {activeTab === 'home' && <div className="space-y-4">
+            {discussions.map(discussion => {
+          const isDebater1 = discussion.debater1_id === user?.id;
+          const opponent = isDebater1 ? discussion.debater2 : discussion.debater1;
+          const yourScore = isDebater1 ? discussion.debater1_score : discussion.debater2_score;
+          const theirScore = isDebater1 ? discussion.debater2_score : discussion.debater1_score;
+          return <Card key={discussion.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle 
-                        className="flex items-start gap-2 text-sm cursor-pointer flex-1"
-                        onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
-                      >
+                      <CardTitle className="flex items-start gap-2 text-sm cursor-pointer flex-1" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
                         <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
                         <span className="line-clamp-2">{discussion.topic}</span>
                       </CardTitle>
                       <div className="flex gap-1 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const shareUrl = `${window.location.origin}/discussion/public?id=${discussion.id}`;
-                            if (navigator.share) {
-                              navigator.share({
-                                title: discussion.topic,
-                                text: `Check out this debate: ${discussion.topic}`,
-                                url: shareUrl
-                              }).catch(() => {
-                                navigator.clipboard.writeText(shareUrl);
-                                toast.success('Link copied to clipboard!');
-                              });
-                            } else {
-                              navigator.clipboard.writeText(shareUrl);
-                              toast.success('Link copied to clipboard!');
-                            }
-                          }}
-                        >
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => {
+                    e.stopPropagation();
+                    const shareUrl = `${window.location.origin}/discussion/public?id=${discussion.id}`;
+                    if (navigator.share) {
+                      navigator.share({
+                        title: discussion.topic,
+                        text: `Check out this debate: ${discussion.topic}`,
+                        url: shareUrl
+                      }).catch(() => {
+                        navigator.clipboard.writeText(shareUrl);
+                        toast.success('Link copied to clipboard!');
+                      });
+                    } else {
+                      navigator.clipboard.writeText(shareUrl);
+                      toast.success('Link copied to clipboard!');
+                    }
+                  }}>
                           <Share2 className="h-4 w-4 text-muted-foreground" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={(e) => e.stopPropagation()}
-                            >
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => e.stopPropagation()}>
                               <Trash2 className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </AlertDialogTrigger>
@@ -464,59 +422,37 @@ const Discussions = () => {
                         </AlertDialog>
                       </div>
                     </div>
-                    <CardDescription 
-                      className="text-xs cursor-pointer"
-                      onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
-                    >
+                    <CardDescription className="text-xs cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
                       vs @{opponent?.username || 'Unknown'}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent 
-                    className="pt-0 cursor-pointer"
-                    onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
-                  >
+                  <CardContent className="pt-0 cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
                     <div className="flex justify-between text-xs">
                       <span className="text-primary font-medium">You: {yourScore}</span>
                       <span className="text-muted-foreground">Them: {theirScore}</span>
                     </div>
                   </CardContent>
-                </Card>
-              );
-            })}
-            {discussions.length === 0 && (
-              <Card>
+                </Card>;
+        })}
+            {discussions.length === 0 && <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground text-sm">No discussions yet</p>
                   <p className="text-xs text-muted-foreground mt-1">Go to Members to start one!</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
             
             {/* Controversial Topics Section */}
             <div className="pt-4">
               <ControversialTopics />
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Leaderboard Tab */}
-        {activeTab === 'leaderboard' && (
-          <div className="space-y-3">
-            {leaderboard.map((entry, index) => (
-              <div 
-                key={entry.userId}
-                className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                  entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-card'
-                }`}
-              >
+        {activeTab === 'leaderboard' && <div className="space-y-3">
+            {leaderboard.map((entry, index) => <div key={entry.userId} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className={`text-lg font-bold min-w-[1.5rem] text-center flex-shrink-0 ${
-                    index === 0 ? 'text-yellow-500' :
-                    index === 1 ? 'text-gray-400' :
-                    index === 2 ? 'text-orange-600' :
-                    'text-muted-foreground'
-                  }`}>
+                  <div className={`text-lg font-bold min-w-[1.5rem] text-center flex-shrink-0 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-600' : 'text-muted-foreground'}`}>
                     {index + 1}
                   </div>
                   <Avatar className="h-10 w-10 flex-shrink-0">
@@ -528,9 +464,7 @@ const Discussions = () => {
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-sm truncate">
                       @{entry.username}
-                      {entry.userId === user?.id && (
-                        <span className="ml-1 text-xs text-muted-foreground">(You)</span>
-                      )}
+                      {entry.userId === user?.id && <span className="ml-1 text-xs text-muted-foreground">(You)</span>}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {entry.debatesCount} debates
@@ -541,35 +475,27 @@ const Discussions = () => {
                   <p className="text-xl font-bold text-primary">{entry.totalPoints}</p>
                   <p className="text-xs text-muted-foreground">pts</p>
                 </div>
-              </div>
-            ))}
-            {leaderboard.length === 0 && (
-              <Card>
+              </div>)}
+            {leaderboard.length === 0 && <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground text-sm">No rankings yet</p>
                   <p className="text-xs text-muted-foreground mt-1">Start debating to earn points!</p>
                 </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
+              </Card>}
+          </div>}
 
         {/* Members Tab */}
-        {activeTab === 'members' && (
-          <div className="space-y-3">
-            {selectedBelief && (
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg mb-3">
+        {activeTab === 'members' && <div className="space-y-3">
+            {selectedBelief && <div className="flex items-center justify-between p-2 bg-muted rounded-lg mb-3">
                 <p className="text-xs text-muted-foreground">
                   Filter: <Badge variant="secondary" className="text-xs">{selectedBelief}</Badge>
                 </p>
                 <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedBelief(null)}>
                   Clear
                 </Button>
-              </div>
-            )}
-            {filteredProfiles.filter(p => p.id !== user?.id).map((profile) => (
-              <Card key={profile.id}>
+              </div>}
+            {filteredProfiles.filter(p => p.id !== user?.id).map(profile => <Card key={profile.id}>
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -581,30 +507,20 @@ const Discussions = () => {
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-sm truncate">@{profile.username}</p>
-                        {getBeliefTags(profile).length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {getBeliefTags(profile).slice(0, 2).map((tag, index) => (
-                              <Badge 
-                                key={index} 
-                                variant={selectedBelief === `#${tag.type}: ${tag.value}` ? "default" : "secondary"} 
-                                className="text-[10px] cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleBeliefClick(tag.type, tag.value);
-                                }}
-                              >
+                        {getBeliefTags(profile).length > 0 && <div className="flex flex-wrap gap-1 mt-1">
+                            {getBeliefTags(profile).slice(0, 2).map((tag, index) => <Badge key={index} variant={selectedBelief === `#${tag.type}: ${tag.value}` ? "default" : "secondary"} className="text-[10px] cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      handleBeliefClick(tag.type, tag.value);
+                    }}>
                                 {tag.value}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                              </Badge>)}
+                          </div>}
                       </div>
                     </div>
-                    <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={(open) => {
-                      setIsDialogOpen(open);
-                      if (open) setSelectedMember(profile);
-                      else setSelectedMember(null);
-                    }}>
+                    <Dialog open={isDialogOpen && selectedMember?.id === profile.id} onOpenChange={open => {
+                setIsDialogOpen(open);
+                if (open) setSelectedMember(profile);else setSelectedMember(null);
+              }}>
                       <DialogTrigger asChild>
                         <Button size="sm" className="flex-shrink-0" onClick={() => setSelectedMember(profile)}>
                           <Plus className="h-4 w-4" />
@@ -620,12 +536,7 @@ const Discussions = () => {
                         <div className="space-y-4 pt-2">
                           <div className="space-y-2">
                             <Label htmlFor="topic" className="text-sm">Topic</Label>
-                            <Input
-                              id="topic"
-                              placeholder="Enter your debate topic..."
-                              value={topic}
-                              onChange={(e) => setTopic(e.target.value)}
-                            />
+                            <Input id="topic" placeholder="Enter your debate topic..." value={topic} onChange={e => setTopic(e.target.value)} />
                           </div>
                           <Button onClick={startDiscussion} className="w-full" disabled={!topic.trim()}>
                             Start Discussion
@@ -635,51 +546,35 @@ const Discussions = () => {
                     </Dialog>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-            {filteredProfiles.filter(p => p.id !== user?.id).length === 0 && (
-              <Card>
+              </Card>)}
+            {filteredProfiles.filter(p => p.id !== user?.id).length === 0 && <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground text-sm">No members found</p>
                 </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
+              </Card>}
+          </div>}
 
         {/* Spectate Tab - View All Discussions */}
-        {activeTab === 'spectate' && (
-          <div className="space-y-4">
-            {allDiscussions.length === 0 ? (
-              <Card>
+        {activeTab === 'spectate' && <div className="space-y-4">
+            {allDiscussions.length === 0 ? <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <Eye className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground text-sm">No discussions to spectate</p>
                   <p className="text-xs text-muted-foreground mt-1">Check back later!</p>
                 </CardContent>
-              </Card>
-            ) : (
-              allDiscussions.map((discussion) => {
-                const isParticipant = discussion.debater1_id === user?.id || discussion.debater2_id === user?.id;
-                
-                return (
-                  <Card 
-                    key={discussion.id} 
-                    className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}
-                  >
+              </Card> : allDiscussions.map(discussion => {
+          const isParticipant = discussion.debater1_id === user?.id || discussion.debater2_id === user?.id;
+          return <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between gap-2">
                         <CardTitle className="flex items-start gap-2 text-sm flex-1">
                           <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
                           <span className="line-clamp-2">{discussion.topic}</span>
                         </CardTitle>
-                        {isParticipant && (
-                          <Badge variant="secondary" className="text-[10px] flex-shrink-0">
+                        {isParticipant && <Badge variant="secondary" className="text-[10px] flex-shrink-0">
                             You
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
                       <CardDescription className="text-xs">
                         @{discussion.debater1?.username || 'Unknown'} vs @{discussion.debater2?.username || 'Unknown'}
@@ -695,16 +590,12 @@ const Discussions = () => {
                         </span>
                       </div>
                     </CardContent>
-                  </Card>
-                );
-              })
-            )}
-          </div>
-        )}
+                  </Card>;
+        })}
+          </div>}
 
         {/* Profile Tab */}
-        {activeTab === 'profile' && currentUserProfile && (
-          <div className="space-y-4">
+        {activeTab === 'profile' && currentUserProfile && <div className="space-y-4">
             {/* Profile Card */}
             <Card>
               <CardContent className="pt-6">
@@ -734,57 +625,34 @@ const Discussions = () => {
                   </div>
 
                   {/* Beliefs */}
-                  {getBeliefTags(currentUserProfile).length > 0 && (
-                    <div className="flex flex-wrap justify-center gap-2 mt-4">
-                      {getBeliefTags(currentUserProfile).map((tag, index) => (
-                        <Badge key={index} variant="secondary">
+                  {getBeliefTags(currentUserProfile).length > 0 && <div className="flex flex-wrap justify-center gap-2 mt-4">
+                      {getBeliefTags(currentUserProfile).map((tag, index) => <Badge key={index} variant="secondary">
                           {tag.type}: {tag.value}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                        </Badge>)}
+                    </div>}
 
                   {/* Actions */}
                   <div className="flex flex-col gap-2 mt-6 w-full">
                     {/* Notifications */}
-                    <Button 
-                      variant={permission === 'granted' ? 'secondary' : 'outline'} 
-                      onClick={requestPermission}
-                      disabled={permission === 'granted'}
-                      className="w-full"
-                    >
-                      {permission === 'granted' ? (
-                        <>
+                    <Button variant={permission === 'granted' ? 'secondary' : 'outline'} onClick={requestPermission} disabled={permission === 'granted'} className="w-full">
+                      {permission === 'granted' ? <>
                           <Bell className="h-4 w-4 mr-2" />
                           Notifications Enabled
-                        </>
-                      ) : (
-                        <>
+                        </> : <>
                           <BellOff className="h-4 w-4 mr-2" />
                           Enable Notifications
-                        </>
-                      )}
+                        </>}
                     </Button>
                     <label htmlFor="avatar-upload" className="cursor-pointer w-full">
-                      <input
-                        id="avatar-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleAvatarUpload(e, currentUserProfile.id)}
-                        className="hidden"
-                      />
+                      <input id="avatar-upload" type="file" accept="image/*" onChange={e => handleAvatarUpload(e, currentUserProfile.id)} className="hidden" />
                       <Button variant="outline" className="w-full" asChild>
                         <span>Change Photo</span>
                       </Button>
                     </label>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setPhoneNumber(currentUserProfile.phone_number || '');
-                        setIsEditPhoneOpen(true);
-                      }}
-                      className="w-full"
-                    >
+                    <Button variant="outline" onClick={() => {
+                  setPhoneNumber(currentUserProfile.phone_number || '');
+                  setIsEditPhoneOpen(true);
+                }} className="w-full">
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Phone Number
                     </Button>
@@ -800,58 +668,32 @@ const Discussions = () => {
                 </div>
               </CardContent>
               <div className="px-6 pb-4 text-center">
-                <p className="text-xs text-muted-foreground">v0.0.2</p>
+                <p className="text-xs text-muted-foreground">v0.0.3</p>
               </div>
             </Card>
-          </div>
-        )}
+          </div>}
       </main>
 
       {/* Bottom Tab Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t safe-area-inset-bottom z-50">
         <div className="flex items-center justify-around py-2">
-          <button
-            onClick={() => setActiveTab('home')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-              activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
+          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'}`}>
             <Home className={`h-5 w-5 ${activeTab === 'home' ? 'fill-primary/20' : ''}`} />
             <span className="text-[10px] mt-1">Home</span>
           </button>
-          <button
-            onClick={() => setActiveTab('leaderboard')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-              activeTab === 'leaderboard' ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
+          <button onClick={() => setActiveTab('leaderboard')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'leaderboard' ? 'text-primary' : 'text-muted-foreground'}`}>
             <Trophy className={`h-5 w-5 ${activeTab === 'leaderboard' ? 'fill-primary/20' : ''}`} />
             <span className="text-[10px] mt-1">Ranks</span>
           </button>
-          <button
-            onClick={() => setActiveTab('members')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-              activeTab === 'members' ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
+          <button onClick={() => setActiveTab('members')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'members' ? 'text-primary' : 'text-muted-foreground'}`}>
             <Users className={`h-5 w-5 ${activeTab === 'members' ? 'fill-primary/20' : ''}`} />
             <span className="text-[10px] mt-1">Members</span>
           </button>
-          <button
-            onClick={() => setActiveTab('spectate')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-              activeTab === 'spectate' ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
+          <button onClick={() => setActiveTab('spectate')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'spectate' ? 'text-primary' : 'text-muted-foreground'}`}>
             <Eye className={`h-5 w-5 ${activeTab === 'spectate' ? 'fill-primary/20' : ''}`} />
             <span className="text-[10px] mt-1">Spectate</span>
           </button>
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-              activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
+          <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'}`}>
             <User className={`h-5 w-5 ${activeTab === 'profile' ? 'fill-primary/20' : ''}`} />
             <span className="text-[10px] mt-1">Profile</span>
           </button>
@@ -872,15 +714,10 @@ const Discussions = () => {
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Religion</Label>
               <RadioGroup value={religion} onValueChange={setReligion} className="grid grid-cols-2 gap-2">
-                {[
-                  'Christianity', 'Islam', 'Judaism', 'Hinduism',
-                  'Buddhism', 'Atheism', 'Agnosticism', 'Other'
-                ].map((option) => (
-                  <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
+                {['Christianity', 'Islam', 'Judaism', 'Hinduism', 'Buddhism', 'Atheism', 'Agnosticism', 'Other'].map(option => <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
                     <RadioGroupItem value={option} id={`religion-${option}`} />
                     <Label htmlFor={`religion-${option}`} className="text-xs cursor-pointer">{option}</Label>
-                  </div>
-                ))}
+                  </div>)}
               </RadioGroup>
             </div>
 
@@ -888,15 +725,10 @@ const Discussions = () => {
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Political View</Label>
               <RadioGroup value={politicalView} onValueChange={setPoliticalView} className="grid grid-cols-2 gap-2">
-                {[
-                  'Liberal', 'Conservative', 'Moderate', 'Libertarian',
-                  'Progressive', 'Socialist', 'Independent', 'Other'
-                ].map((option) => (
-                  <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
+                {['Liberal', 'Conservative', 'Moderate', 'Libertarian', 'Progressive', 'Socialist', 'Independent', 'Other'].map(option => <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
                     <RadioGroupItem value={option} id={`political-${option}`} />
                     <Label htmlFor={`political-${option}`} className="text-xs cursor-pointer">{option}</Label>
-                  </div>
-                ))}
+                  </div>)}
               </RadioGroup>
             </div>
 
@@ -904,14 +736,10 @@ const Discussions = () => {
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Education</Label>
               <RadioGroup value={universityDegree} onValueChange={setUniversityDegree} className="space-y-2">
-                {[
-                  'Yes - Completed', 'Currently enrolled', 'Some college', 'No'
-                ].map((option) => (
-                  <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
+                {['Yes - Completed', 'Currently enrolled', 'Some college', 'No'].map(option => <div key={option} className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50">
                     <RadioGroupItem value={option} id={`university-${option}`} />
                     <Label htmlFor={`university-${option}`} className="text-xs cursor-pointer">{option}</Label>
-                  </div>
-                ))}
+                  </div>)}
               </RadioGroup>
             </div>
 
@@ -939,13 +767,7 @@ const Discussions = () => {
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label htmlFor="phone-number-edit" className="text-sm font-semibold">Phone Number</Label>
-              <Input
-                id="phone-number-edit"
-                type="tel"
-                placeholder="+1234567890"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
+              <Input id="phone-number-edit" type="tel" placeholder="+1234567890" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} />
               <p className="text-xs text-muted-foreground">
                 Include country code (e.g., +1 for US)
               </p>
@@ -962,8 +784,6 @@ const Discussions = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default Discussions;
