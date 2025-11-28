@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.fix-user-password]
 verify_jwt = false
+
+[functions.transcribe-audio]
+verify_jwt = true
