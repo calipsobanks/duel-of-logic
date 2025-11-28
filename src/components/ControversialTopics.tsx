@@ -6,6 +6,8 @@ import { Flame, TrendingUp, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
+console.log('🔥 ControversialTopics.tsx file loaded');
+
 interface Topic {
   category: "Politics" | "Religion" | "Finance";
   title: string;
@@ -31,20 +33,27 @@ export const ControversialTopics = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('🔥 ControversialTopics component mounted');
     loadTopics();
   }, []);
 
   const loadTopics = async () => {
     try {
+      console.log('🔥 Starting to load controversial topics...');
       const { data, error } = await supabase.functions.invoke('get-controversial-topics');
+      
+      console.log('🔥 Response received:', { data, error });
       
       if (error) throw error;
       
       if (data?.topics) {
+        console.log('🔥 Topics loaded successfully:', data.topics);
         setTopics(data.topics);
+      } else {
+        console.warn('🔥 No topics in response');
       }
     } catch (error) {
-      console.error('Failed to load controversial topics:', error);
+      console.error('🔥 Failed to load controversial topics:', error);
     } finally {
       setLoading(false);
     }
