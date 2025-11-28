@@ -236,7 +236,9 @@ const ActiveDiscussion = () => {
     supabase.functions.invoke('notify-debate-action', {
       body: {
         targetUserId: evidence.debater_id,
-        action: 'agreed'
+        action: 'agreed',
+        actorId: user?.id,
+        message: evidence.claim
       }
     }).catch(err => console.error('Failed to send notification:', err));
 
@@ -293,7 +295,9 @@ const ActiveDiscussion = () => {
     supabase.functions.invoke('notify-debate-action', {
       body: {
         targetUserId: challengerId,
-        action: 'validated'
+        action: 'validated',
+        actorId: user?.id,
+        message: evidence.claim
       }
     }).catch(err => console.error('Failed to send notification:', err));
 
@@ -331,7 +335,9 @@ const ActiveDiscussion = () => {
     supabase.functions.invoke('notify-debate-action', {
       body: {
         targetUserId: evidence.debater_id,
-        action: 'challenged'
+        action: 'challenged',
+        actorId: user?.id,
+        message: evidence.claim
       }
     }).catch(err => console.error('Failed to send notification:', err));
 

@@ -16,9 +16,9 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { targetUserId, action } = await req.json();
+    const { targetUserId, action, actorId, message } = await req.json();
 
-    console.log('Notifying user:', targetUserId, 'of action:', action);
+    console.log('Notifying user:', targetUserId, 'of action:', action, 'by:', actorId);
 
     // Get the target user's phone number
     const { data: profile, error: profileError } = await supabase
@@ -43,6 +43,19 @@ serve(async (req) => {
       );
     }
 
+    // Get the actor's name
+    const { data: actorProfile, error: actorError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', actorId)
+      .single();
+
+    if (actorError) {
+      console.error('Error fetching actor profile:', actorError);
+    }
+
+    const actorName = actorProfile?.username || 'Someone';
+
     // Send webhook to Zapier
     const webhookUrl = 'https://hooks.zapier.com/hooks/catch/15079498/ukhjsxh/';
     
@@ -56,6 +69,8 @@ serve(async (req) => {
       body: JSON.stringify({
         phone: profile.phone_number,
         action: action,
+        name: actorName,
+        message: message || '',
         timestamp: new Date().toISOString(),
       }),
     });
