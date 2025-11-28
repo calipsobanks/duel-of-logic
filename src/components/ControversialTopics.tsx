@@ -100,22 +100,22 @@ export const ControversialTopics = () => {
           {topics.map((topic, index) => (
             <Card
               key={index}
-              className="p-5 space-y-3 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2"
+              className="p-5 space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2"
               onClick={() => navigate('/auth')}
             >
-              <div className="flex items-start justify-between gap-2">
+              <h3 className="text-lg font-bold text-foreground leading-tight">
+                {topic.title}
+              </h3>
+
+              <div className="flex items-center gap-2">
                 <Badge
                   variant="outline"
-                  className={`${categoryColors[topic.category]} font-semibold`}
+                  className={`${categoryColors[topic.category]} font-semibold text-xs`}
                 >
                   {categoryIcons[topic.category]} {topic.category}
                 </Badge>
                 <Flame className="w-4 h-4 text-orange-500 flex-shrink-0" />
               </div>
-
-              <h3 className="font-bold text-foreground leading-tight">
-                {topic.title}
-              </h3>
 
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {topic.description}
