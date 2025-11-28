@@ -53,7 +53,7 @@ Rules:
             content: 'What are the top 3 most controversial topics this week? Return JSON only.'
           }
         ],
-        max_completion_tokens: 1000,
+        max_completion_tokens: 4000,
         response_format: { type: "json_object" }
       }),
     });
