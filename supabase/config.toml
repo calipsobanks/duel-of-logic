@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.update-weekly-topics]
 verify_jwt = false
+
+[functions.notify-debate-action]
+verify_jwt = false

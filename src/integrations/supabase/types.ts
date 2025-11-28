@@ -163,6 +163,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           id: string
+          phone_number: string | null
           political_view: string | null
           religion: string | null
           university_degree: string | null
@@ -172,6 +173,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id: string
+          phone_number?: string | null
           political_view?: string | null
           religion?: string | null
           university_degree?: string | null
@@ -181,6 +183,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id?: string
+          phone_number?: string | null
           political_view?: string | null
           religion?: string | null
           university_degree?: string | null

@@ -24,6 +24,7 @@ interface Profile {
   religion?: string | null;
   political_view?: string | null;
   university_degree?: string | null;
+  phone_number?: string | null;
 }
 
 interface Discussion {
@@ -61,6 +62,7 @@ const Discussions = () => {
   const [religion, setReligion] = useState('');
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -291,6 +293,7 @@ const Discussions = () => {
     setReligion(profile.religion || '');
     setPoliticalView(profile.political_view || '');
     setUniversityDegree(profile.university_degree || '');
+    setPhoneNumber(profile.phone_number || '');
     setIsEditBeliefsOpen(true);
   };
 
@@ -302,7 +305,8 @@ const Discussions = () => {
       .update({ 
         religion: religion || null,
         political_view: politicalView || null,
-        university_degree: universityDegree || null
+        university_degree: universityDegree || null,
+        phone_number: phoneNumber || null
       })
       .eq('id', user.id);
 
@@ -311,7 +315,7 @@ const Discussions = () => {
       return;
     }
 
-    toast.success('Beliefs updated!');
+    toast.success('Profile updated!');
     setIsEditBeliefsOpen(false);
     fetchProfiles();
   };
@@ -875,6 +879,21 @@ const Discussions = () => {
                   </div>
                 ))}
               </RadioGroup>
+            </div>
+
+            {/* Phone Number */}
+            <div className="space-y-2">
+              <Label htmlFor="phone-number" className="text-sm font-semibold">Phone Number</Label>
+              <Input
+                id="phone-number"
+                type="tel"
+                placeholder="+1234567890"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Get notified when someone challenges or responds to you
+              </p>
             </div>
 
             <div className="flex gap-2 pt-2">
