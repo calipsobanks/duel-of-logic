@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Eye, Trash2, Share2, ExternalLink } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Eye, Trash2, Share2, ExternalLink, Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -659,6 +659,14 @@ const Discussions = () => {
                     <Button variant="outline" onClick={() => handleEditBeliefs(currentUserProfile)}>
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Beliefs
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => navigate('/support')}
+                      className="w-full border-primary/30 hover:border-primary/50"
+                    >
+                      <Heart className="h-4 w-4 mr-2" />
+                      Support This App
                     </Button>
                     <Button variant="destructive" onClick={handleLogout}>
                       <LogOut className="h-4 w-4 mr-2" />
