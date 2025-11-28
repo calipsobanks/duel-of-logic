@@ -660,11 +660,7 @@ const Discussions = () => {
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Beliefs
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => navigate('/support')}
-                      className="w-full border-primary/30 hover:border-primary/50"
-                    >
+                    <Button variant="outline" onClick={() => navigate('/support')} className="w-full border-primary/30 hover:border-primary/50">
                       <Heart className="h-4 w-4 mr-2" />
                       Support This App
                     </Button>
@@ -676,7 +672,7 @@ const Discussions = () => {
                 </div>
               </CardContent>
               <div className="px-6 pb-4 text-center">
-                <p className="text-xs text-muted-foreground">v0.0.3</p>
+                <p className="text-xs text-muted-foreground">v0.0.4</p>
               </div>
             </Card>
           </div>}
