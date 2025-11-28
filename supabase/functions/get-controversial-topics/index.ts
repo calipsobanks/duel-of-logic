@@ -31,28 +31,30 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a political and social analyst. Identify the top 3 most controversial topics from the current week across politics, religion, and finance. 
+            content: `You are a political and social analyst. Return ONLY valid JSON, no other text.
 
-Return ONLY a valid JSON object in this exact format:
+Your response must be a JSON object with this exact structure:
 {
   "topics": [
-    {
-      "category": "Politics" | "Religion" | "Finance",
-      "title": "Brief topic title",
-      "description": "One sentence description",
-      "controversy": "Why this is controversial in one sentence"
-    }
+    {"category": "Politics", "title": "string", "description": "string", "controversy": "string"},
+    {"category": "Religion", "title": "string", "description": "string", "controversy": "string"},
+    {"category": "Finance", "title": "string", "description": "string", "controversy": "string"}
   ]
 }
 
-Focus on topics that would generate meaningful debate from multiple perspectives.`
+Rules:
+- Return exactly 3 topics (one from each category)
+- category must be exactly "Politics", "Religion", or "Finance"
+- Focus on current week's most debated topics
+- Each field should be concise but informative`
           },
           {
             role: 'user',
-            content: 'What are the top 3 most controversial topics this week across politics, religion, and finance?'
+            content: 'What are the top 3 most controversial topics this week? Return JSON only.'
           }
         ],
-        max_completion_tokens: 800,
+        max_completion_tokens: 1000,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -63,12 +65,31 @@ Focus on topics that would generate meaningful debate from multiple perspectives
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    console.log('Full OpenAI response:', JSON.stringify(data));
     
-    console.log('OpenAI response:', content);
+    const content = data.choices?.[0]?.message?.content;
     
-    // Parse the JSON response
-    const result = JSON.parse(content);
+    if (!content || content.trim() === '') {
+      console.error('Empty content from OpenAI');
+      throw new Error('OpenAI returned empty content');
+    }
+    
+    console.log('OpenAI response content:', content);
+    
+    // Parse the JSON response with error handling
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', parseError);
+      console.error('Content was:', content);
+      throw new Error('Failed to parse AI response as JSON');
+    }
+
+    if (!result.topics || !Array.isArray(result.topics)) {
+      console.error('Invalid response structure:', result);
+      throw new Error('AI response missing topics array');
+    }
 
     return new Response(
       JSON.stringify(result),
