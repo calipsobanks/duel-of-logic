@@ -36,12 +36,25 @@ export const ControversialTopics = () => {
 
   const loadTopics = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('get-controversial-topics');
+      // Fetch topics from database instead of calling edge function
+      const { data, error } = await supabase
+        .from('controversial_topics')
+        .select('*')
+        .order('week_start', { ascending: false })
+        .order('category', { ascending: true })
+        .limit(3);
       
       if (error) throw error;
       
-      if (data?.topics) {
-        setTopics(data.topics);
+      if (data && data.length > 0) {
+        // Map database topics to component Topic type
+        const mappedTopics: Topic[] = data.map(t => ({
+          category: t.category as "Politics" | "Religion" | "Finance",
+          title: t.title,
+          description: t.description,
+          controversy: t.controversy
+        }));
+        setTopics(mappedTopics);
       }
     } catch (error) {
       console.error('Failed to load controversial topics:', error);
@@ -120,10 +133,16 @@ export const ControversialTopics = () => {
         <div className="text-center pt-4">
           <Button
             size="lg"
-            onClick={() => navigate('/auth')}
+            onClick={() => {
+              navigate('/discussions');
+              // Use setTimeout to ensure navigation completes before changing tab
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('change-tab', { detail: 'members' }));
+              }, 100);
+            }}
             className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
           >
-            Join the Debate
+            Start Debate
           </Button>
         </div>
       </div>
