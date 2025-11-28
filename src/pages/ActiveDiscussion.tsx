@@ -8,7 +8,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSwipeable } from "react-swipeable";
-import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -80,11 +79,14 @@ const ActiveDiscussion = () => {
     const updateTimer = () => {
       const expiresAt = new Date(discussion.timer_expires_at!);
       const now = new Date();
+      const diff = expiresAt.getTime() - now.getTime();
       
-      if (now >= expiresAt) {
-        setTimeRemaining("Time's up!");
+      if (diff <= 0) {
+        setTimeRemaining("00:00");
       } else {
-        setTimeRemaining(formatDistanceToNow(expiresAt, { addSuffix: true }));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        setTimeRemaining(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
       }
     };
 
