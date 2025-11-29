@@ -138,6 +138,12 @@ const ActiveDiscussion = () => {
     const sessionKey = `vs-intro-shown-${discussionId}`;
     const hasShownInSession = sessionStorage.getItem(sessionKey);
     
+    console.log('VS Intro Check:', {
+      hasShownInSession: !!hasShownInSession,
+      hasShownIntroRef: hasShownIntroRef.current,
+      discussionId
+    });
+    
     if (!hasShownInSession && !hasShownIntroRef.current) {
       // Check if this is a new discussion (no evidence yet)
       const { count } = await supabase
@@ -145,11 +151,18 @@ const ActiveDiscussion = () => {
         .select('*', { count: 'exact', head: true })
         .eq('debate_id', discussionId);
       
+      console.log('VS Intro: Evidence count:', count);
+      
       if (count === 0) {
+        console.log('VS Intro: Showing animation!');
         setShowVsIntro(true);
         hasShownIntroRef.current = true;
         sessionStorage.setItem(sessionKey, 'true');
+      } else {
+        console.log('VS Intro: Not showing - discussion has evidence');
       }
+    } else {
+      console.log('VS Intro: Not showing - already shown in session');
     }
   };
 
