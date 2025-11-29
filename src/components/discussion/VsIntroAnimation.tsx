@@ -15,7 +15,7 @@ export const VsIntroAnimation = ({ participant1, participant2, onComplete }: VsI
     const timer = setTimeout(() => {
       setShow(false);
       setTimeout(() => onComplete?.(), 500);
-    }, 3500);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
