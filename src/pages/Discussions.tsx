@@ -22,6 +22,7 @@ import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { PostTopicDialog } from '@/components/discussion/PostTopicDialog';
 import { DiscussionPostCard } from '@/components/discussion/DiscussionPostCard';
+import { CommunityFeedbackSheet } from '@/components/feedback/CommunityFeedbackSheet';
 interface Profile {
   id: string;
   username: string;
@@ -89,6 +90,7 @@ const Discussions = () => {
   const [isEditPhoneOpen, setIsEditPhoneOpen] = useState(false);
   const [isEditAboutMeOpen, setIsEditAboutMeOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isCommunityFeedbackOpen, setIsCommunityFeedbackOpen] = useState(false);
   const [religion, setReligion] = useState('');
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
@@ -818,6 +820,10 @@ const Discussions = () => {
                       <Heart className="h-4 w-4 mr-2 fill-gold" />
                       Support This App
                     </Button>
+                    <Button variant="outline" onClick={() => setIsCommunityFeedbackOpen(true)} className="w-full">
+                      <MessagesSquare className="h-4 w-4 mr-2" />
+                      Community Feedback
+                    </Button>
                     <Button variant="destructive" onClick={handleLogout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
@@ -1050,6 +1056,12 @@ const Discussions = () => {
           userId={user.id}
         />
       )}
+
+      {/* Community Feedback Sheet */}
+      <CommunityFeedbackSheet
+        open={isCommunityFeedbackOpen}
+        onOpenChange={setIsCommunityFeedbackOpen}
+      />
     </div>
   );
 };

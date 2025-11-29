@@ -56,20 +56,31 @@ export const CommunityFeedbackSheet = ({ open, onOpenChange }: CommunityFeedback
   const fetchFeedback = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get all feedback
+      const { data: feedbackData, error: feedbackError } = await supabase
         .from("feedback")
-        .select(`
-          *,
-          profiles!feedback_user_id_fkey (
-            username,
-            avatar_url
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (feedbackError) throw feedbackError;
 
-      setFeedback(data || []);
+      // Then get the profiles for those user IDs
+      const userIds = feedbackData?.map((f) => f.user_id) || [];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const profilesMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+      const combinedData = feedbackData?.map((f) => ({
+        ...f,
+        profiles: profilesMap.get(f.user_id) || { username: "Unknown", avatar_url: null },
+      })) || [];
+
+      setFeedback(combinedData);
     } catch (error) {
       console.error("Error fetching feedback:", error);
     } finally {
