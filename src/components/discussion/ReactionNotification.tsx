@@ -98,7 +98,7 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
             damping: 20,
             duration: 0.6
           }}
-          className="fixed top-24 left-0 right-0 bottom-0 z-40 flex items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
         >
           {/* Backdrop blur */}
           <motion.div
@@ -156,7 +156,7 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
               <motion.img
                 src={getImage()}
                 alt={getTitle()}
-                className="w-80 h-80 object-contain drop-shadow-2xl"
+                className="w-96 h-96 object-contain drop-shadow-2xl"
                 style={{
                   filter: 'drop-shadow(0 0 40px rgba(0,0,0,0.3))'
                 }}
