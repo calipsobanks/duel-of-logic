@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ThumbsUp, User } from "lucide-react";
+import { ArrowLeft, ThumbsUp, User, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { DiscussionComment } from "@/components/discussion/DiscussionComment";
@@ -289,6 +289,12 @@ export default function DiscussionThread() {
     setSourceDialog({ open: true, commentId });
   };
 
+  const handleShare = () => {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Link copied to clipboard!");
+  };
+
   const isPostLikedByUser = post && likes.some(l => l.user_id === user?.id && l.post_id === post.id && l.response_type === 'like');
 
   if (!post) {
@@ -302,14 +308,24 @@ export default function DiscussionThread() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-4">
-        <Button
-          variant="ghost"
-          className="mb-4 hover-scale"
-          onClick={() => navigate("/discussions")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Discussions
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            className="hover-scale"
+            onClick={() => navigate("/discussions")}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Discussions
+          </Button>
+          <Button
+            variant="outline"
+            className="hover-scale"
+            onClick={handleShare}
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
+          </Button>
+        </div>
 
         {/* Post Header */}
         <div className="bg-card rounded-lg border p-6 mb-6 animate-fade-in">
