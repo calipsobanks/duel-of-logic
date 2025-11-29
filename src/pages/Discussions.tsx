@@ -23,6 +23,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { PostTopicDialog } from '@/components/discussion/PostTopicDialog';
 import { DiscussionPostCard } from '@/components/discussion/DiscussionPostCard';
 import { CommunityFeedbackSheet } from '@/components/feedback/CommunityFeedbackSheet';
+import { SourcesButton } from '@/components/sources/SourcesButton';
 interface Profile {
   id: string;
   username: string;
@@ -1062,6 +1063,9 @@ const Discussions = () => {
         open={isCommunityFeedbackOpen}
         onOpenChange={setIsCommunityFeedbackOpen}
       />
+
+      {/* Sources Button */}
+      <SourcesButton />
     </div>
   );
 };

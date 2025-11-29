@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { MessageSquare, Lock, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { SourcesButton } from '@/components/sources/SourcesButton';
 
 interface Discussion {
   id: string;
@@ -173,6 +174,9 @@ export default function PublicDiscussion() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sources Button */}
+      <SourcesButton />
     </div>
   );
 }
