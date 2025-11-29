@@ -7,7 +7,7 @@ import { ArrowLeft, Plus, Lightbulb, Share2, Clock } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { TimelineEvidenceCard } from "@/components/discussion/TimelineEvidenceCard";
 import { VsIntroAnimation } from "@/components/discussion/VsIntroAnimation";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useReaction } from "@/contexts/ReactionContext";
@@ -998,6 +998,7 @@ const ActiveDiscussion = () => {
         currentParticipantName={currentParticipant === 1 ? discussion.debater1.username : discussion.debater2.username}
         existingClaim={updatingSourceForId ? evidenceList.find(e => e.id === updatingSourceForId)?.claim : undefined}
         isUpdatingSource={updatingSourceForId !== null}
+        debateId={discussionId || undefined}
       />
 
       {/* Admit Defeat Confirmation Dialog */}

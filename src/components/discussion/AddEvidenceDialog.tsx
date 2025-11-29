@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2, Save } from "lucide-react";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddEvidenceDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ interface AddEvidenceDialogProps {
   currentParticipantName: string;
   existingClaim?: string; // For evidence_requested flow
   isUpdatingSource?: boolean; // Flag for updating vs. adding new
+  debateId?: string; // For unique draft storage
 }
 
 export const AddEvidenceDialog = ({
@@ -29,12 +31,80 @@ export const AddEvidenceDialog = ({
   onSubmit,
   currentParticipantName,
   existingClaim,
-  isUpdatingSource = false
+  isUpdatingSource = false,
+  debateId
 }: AddEvidenceDialogProps) => {
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceType, setSourceType] = useState<"factual" | "opinionated">("factual");
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const { isRecording, isTranscribing, startRecording, stopRecording, cancelRecording } = useVoiceRecording();
+  const { toast } = useToast();
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Get draft storage key
+  const getDraftKey = () => {
+    if (isUpdatingSource) return null; // Don't save drafts for source updates
+    return debateId ? `evidence-draft-${debateId}` : 'evidence-draft-global';
+  };
+
+  // Load draft when dialog opens
+  useEffect(() => {
+    if (open && !isUpdatingSource) {
+      const draftKey = getDraftKey();
+      if (draftKey) {
+        const savedDraft = localStorage.getItem(draftKey);
+        if (savedDraft) {
+          try {
+            const draft = JSON.parse(savedDraft);
+            setContent(draft.content || "");
+            setSourceUrl(draft.sourceUrl || "");
+            setSourceType(draft.sourceType || "factual");
+            setLastSaved(new Date(draft.timestamp));
+            toast({
+              title: "Draft Restored",
+              description: "Your previous draft has been restored.",
+            });
+          } catch (error) {
+            console.error('Failed to load draft:', error);
+          }
+        }
+      }
+    }
+  }, [open, isUpdatingSource, debateId]);
+
+  // Auto-save draft while typing (debounced)
+  useEffect(() => {
+    if (!open || isUpdatingSource) return;
+
+    const draftKey = getDraftKey();
+    if (!draftKey) return;
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Only save if there's content
+    if (content || sourceUrl) {
+      saveTimeoutRef.current = setTimeout(() => {
+        const draft = {
+          content,
+          sourceUrl,
+          sourceType,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+        setLastSaved(new Date());
+      }, 1000); // Save after 1 second of inactivity
+    }
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [content, sourceUrl, sourceType, open, isUpdatingSource, debateId]);
 
   const handleStarterPhrase = (phrase: string) => {
     setContent(prev => {
@@ -98,10 +168,17 @@ export const AddEvidenceDialog = ({
 
       onSubmit(evidenceData);
       
+      // Clear draft from localStorage on successful submit
+      const draftKey = getDraftKey();
+      if (draftKey) {
+        localStorage.removeItem(draftKey);
+      }
+      
       // Reset form
       setContent("");
       setSourceUrl("");
       setSourceType("factual");
+      setLastSaved(null);
     }
   };
 
@@ -109,8 +186,16 @@ export const AddEvidenceDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">
-            {isUpdatingSource ? "Add Source to Evidence" : "Add Evidence"}
+          <DialogTitle className="flex items-center justify-between text-2xl">
+            <span>{isUpdatingSource ? "Add Source to Evidence" : "Add Evidence"}</span>
+            {!isUpdatingSource && lastSaved && (
+              <span className="text-xs text-muted-foreground font-normal flex items-center gap-1">
+                <Save className="w-3 h-3" />
+                Draft saved {new Date().getTime() - lastSaved.getTime() < 60000 
+                  ? 'just now' 
+                  : `${Math.floor((new Date().getTime() - lastSaved.getTime()) / 60000)}m ago`}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
