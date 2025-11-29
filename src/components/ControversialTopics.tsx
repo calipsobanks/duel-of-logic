@@ -214,22 +214,6 @@ export const ControversialTopics = () => {
             );
           })}
         </div>
-
-        <div className="text-center pt-4">
-          <Button
-            size="lg"
-            onClick={() => {
-              navigate('/discussions');
-              // Use setTimeout to ensure navigation completes before changing tab
-              setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('change-tab', { detail: 'members' }));
-              }, 100);
-            }}
-            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
-          >
-            Join the Conversation
-          </Button>
-        </div>
       </div>
     </Card>
   );

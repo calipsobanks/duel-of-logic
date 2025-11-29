@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Eye, Trash2, Share2, ExternalLink, Heart } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -50,7 +50,7 @@ interface LeaderboardEntry {
   totalPoints: number;
   debatesCount: number;
 }
-type TabType = 'home' | 'leaderboard' | 'members' | 'spectate' | 'profile';
+type TabType = 'home' | 'leaderboard' | 'members' | 'discussion_room' | 'profile';
 const Discussions = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
@@ -352,6 +352,7 @@ const Discussions = () => {
             {activeTab === 'home' && 'Discussions'}
             {activeTab === 'leaderboard' && 'Leaderboard'}
             {activeTab === 'members' && 'Members'}
+            {activeTab === 'discussion_room' && 'Discussion Room'}
             {activeTab === 'profile' && 'Profile'}
           </h1>
           <div className="flex items-center gap-2">
@@ -555,43 +556,54 @@ const Discussions = () => {
               </Card>}
           </div>}
 
-        {/* Spectate Tab - View All Discussions */}
-        {activeTab === 'spectate' && <div className="space-y-4">
-            {allDiscussions.length === 0 ? <Card>
-                <CardContent className="pt-8 pb-8 text-center">
-                  <Eye className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground text-sm">No discussions to spectate</p>
-                  <p className="text-xs text-muted-foreground mt-1">Check back later!</p>
-                </CardContent>
-              </Card> : allDiscussions.map(discussion => {
-          const isParticipant = discussion.debater1_id === user?.id || discussion.debater2_id === user?.id;
-          return <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="flex items-start gap-2 text-sm flex-1">
-                          <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">{discussion.topic}</span>
-                        </CardTitle>
-                        {isParticipant && <Badge variant="secondary" className="text-[10px] flex-shrink-0">
-                            You
-                          </Badge>}
-                      </div>
-                      <CardDescription className="text-xs">
-                        @{discussion.debater1?.username || 'Unknown'} vs @{discussion.debater2?.username || 'Unknown'}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          {discussion.debater1?.username}: {discussion.debater1_score}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {discussion.debater2?.username}: {discussion.debater2_score}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>;
-        })}
+        {/* Discussion Room Tab - Hot Topics & All Discussions */}
+        {activeTab === 'discussion_room' && <div className="space-y-6">
+            {/* Hot Topics Section */}
+            <ControversialTopics />
+            
+            {/* All Member Discussions */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <MessagesSquare className="h-5 w-5 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">All Member Discussions</h2>
+              </div>
+              
+              {allDiscussions.length === 0 ? <Card>
+                  <CardContent className="pt-8 pb-8 text-center">
+                    <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground text-sm">No discussions yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">Be the first to start one!</p>
+                  </CardContent>
+                </Card> : allDiscussions.map(discussion => {
+                const isParticipant = discussion.debater1_id === user?.id || discussion.debater2_id === user?.id;
+                return <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="flex items-start gap-2 text-sm flex-1">
+                            <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                            <span className="line-clamp-2">{discussion.topic}</span>
+                          </CardTitle>
+                          {isParticipant && <Badge variant="secondary" className="text-[10px] flex-shrink-0">
+                              You
+                            </Badge>}
+                        </div>
+                        <CardDescription className="text-xs">
+                          @{discussion.debater1?.username || 'Unknown'} vs @{discussion.debater2?.username || 'Unknown'}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            {discussion.debater1?.username}: {discussion.debater1_score}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {discussion.debater2?.username}: {discussion.debater2_score}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>;
+              })}
+            </div>
           </div>}
 
         {/* Profile Tab */}
@@ -693,9 +705,9 @@ const Discussions = () => {
             <Users className={`h-5 w-5 ${activeTab === 'members' ? 'fill-primary/20' : ''}`} />
             <span className="text-[10px] mt-1">Members</span>
           </button>
-          <button onClick={() => setActiveTab('spectate')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'spectate' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <Eye className={`h-5 w-5 ${activeTab === 'spectate' ? 'fill-primary/20' : ''}`} />
-            <span className="text-[10px] mt-1">Spectate</span>
+          <button onClick={() => setActiveTab('discussion_room')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'discussion_room' ? 'text-primary' : 'text-muted-foreground'}`}>
+            <MessagesSquare className={`h-5 w-5 ${activeTab === 'discussion_room' ? 'fill-primary/20' : ''}`} />
+            <span className="text-[10px] mt-1">Discussions</span>
           </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'}`}>
             <User className={`h-5 w-5 ${activeTab === 'profile' ? 'fill-primary/20' : ''}`} />
