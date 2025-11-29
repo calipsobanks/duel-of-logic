@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ export default function GroupDiscussion() {
   const discussionId = searchParams.get("id");
   const navigate = useNavigate();
   const { user } = useAuth();
+  useAnalytics();
 
   const [discussion, setDiscussion] = useState<Discussion | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);

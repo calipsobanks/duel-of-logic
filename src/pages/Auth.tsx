@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Auth = () => {
   const [loginEmail, setLoginEmail] = useState('');
@@ -15,6 +16,7 @@ const Auth = () => {
 
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  useAnalytics();
 
   useEffect(() => {
     if (user) {

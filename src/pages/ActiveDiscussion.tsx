@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useReaction } from "@/contexts/ReactionContext";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import {
   Dialog,
   DialogContent,
@@ -68,6 +69,7 @@ const ActiveDiscussion = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { showReaction } = useReaction();
+  useAnalytics();
   const [discussion, setDiscussion] = useState<DiscussionData | null>(null);
   const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
   const [isAddingEvidence, setIsAddingEvidence] = useState(false);

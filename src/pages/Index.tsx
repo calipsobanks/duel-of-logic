@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { Brain, Scale, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { ControversialTopics } from "@/components/ControversialTopics";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  useAnalytics();
 
   useEffect(() => {
     if (!loading && user) {
