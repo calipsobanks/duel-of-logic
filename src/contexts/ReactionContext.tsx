@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { ReactionNotification } from '@/components/discussion/ReactionNotification';
 
-type ReactionType = 'challenged' | 'agreed' | 'source_requested';
+type ReactionType = 'challenged' | 'agreed' | 'source_requested' | 'low_rating';
 
 interface ReactionContextType {
   showReaction: (type: ReactionType) => void;

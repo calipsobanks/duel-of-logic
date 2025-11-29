@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import challengeReaction from '@/assets/challenge-reaction.png';
 import agreeReaction from '@/assets/agree-reaction.png';
 import sourceRequestReaction from '@/assets/source-request-reaction.png';
+import lowRatingReaction from '@/assets/low-rating-reaction.png';
 
-type ReactionType = 'challenged' | 'agreed' | 'source_requested';
+type ReactionType = 'challenged' | 'agreed' | 'source_requested' | 'low_rating';
 
 interface ReactionNotificationProps {
   type: ReactionType;
@@ -31,6 +32,8 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
         return agreeReaction;
       case 'source_requested':
         return sourceRequestReaction;
+      case 'low_rating':
+        return lowRatingReaction;
     }
   };
 
@@ -42,6 +45,8 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
         return '✅ AGREED!';
       case 'source_requested':
         return '❓ SOURCE REQUESTED!';
+      case 'low_rating':
+        return '⚠️ QUESTIONABLE SOURCE!';
     }
   };
 
@@ -52,6 +57,8 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
       case 'agreed':
         return 'hsl(var(--success))';
       case 'source_requested':
+        return 'hsl(var(--warning))';
+      case 'low_rating':
         return 'hsl(var(--warning))';
     }
   };
