@@ -154,19 +154,39 @@ export const useAnalytics = () => {
 
   // Track clicks on buttons, links, tabs, and discussion topics
   useEffect(() => {
-    if (!user || !session) return;
+    if (!user || !session) {
+      console.log('[Analytics] No tracking - Missing user or session:', { 
+        hasUser: !!user, 
+        hasSession: !!session,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform
+      });
+      return;
+    }
     if (session.user?.email === 'edwardhill91@gmail.com') return;
+
+    console.log('[Analytics] Setting up event listeners for:', {
+      platform: navigator.platform,
+      userAgent: navigator.userAgent,
+      hasTouch: 'ontouchstart' in window
+    });
 
     let lastEventTime = 0;
     const DEBOUNCE_MS = 300; // Prevent duplicate events within 300ms
 
-    const handleInteraction = (event: MouseEvent | TouchEvent) => {
+    const handleInteraction = (event: Event) => {
       // Debounce to prevent double-tracking on mobile (both touch and click fire)
       const now = Date.now();
       if (now - lastEventTime < DEBOUNCE_MS) {
         return;
       }
       lastEventTime = now;
+
+      console.log('[Analytics] Interaction detected:', { 
+        type: event.type, 
+        platform: navigator.platform,
+        hasSession: !!session 
+      });
 
       const target = event.target as HTMLElement;
       const discussionId = getDiscussionId();
@@ -212,13 +232,14 @@ export const useAnalytics = () => {
       }
     };
 
-    // Listen to both click (desktop) and touchend (mobile) events
-    document.addEventListener('click', handleInteraction);
-    document.addEventListener('touchend', handleInteraction);
+    // Use pointer events (works universally on all devices including iOS)
+    // Keep click as fallback for older browsers
+    document.addEventListener('pointerup', handleInteraction, { passive: true });
+    document.addEventListener('click', handleInteraction, { passive: true });
     
     return () => {
+      document.removeEventListener('pointerup', handleInteraction);
       document.removeEventListener('click', handleInteraction);
-      document.removeEventListener('touchend', handleInteraction);
     };
   }, [user, session, location]);
 
