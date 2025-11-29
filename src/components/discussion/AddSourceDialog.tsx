@@ -16,7 +16,7 @@ interface AddSourceDialogProps {
 
 export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: AddSourceDialogProps) => {
   const [sourceUrl, setSourceUrl] = useState("");
-  const [additionalContext, setAdditionalContext] = useState("");
+  const [sourceQuote, setSourceQuote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,11 +39,15 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
 
       if (fetchError) throw fetchError;
 
-      // Call AI to rate the source
+      // Call AI to rate the source with quote
+      const claimWithQuote = sourceQuote.trim()
+        ? `${comment.content}\n\nQuoted from source: "${sourceQuote.trim()}"`
+        : comment.content;
+
       const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
         body: {
           sourceUrl: sourceUrl.trim(),
-          evidenceDescription: comment.content + (additionalContext ? `\n\nAdditional context: ${additionalContext}` : ''),
+          evidenceDescription: claimWithQuote,
         }
       });
 
@@ -54,6 +58,7 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
         .from("discussion_comments")
         .update({
           source_url: sourceUrl.trim(),
+          source_quote: sourceQuote.trim() || null,
           source_rating: ratingData.rating,
           source_confidence: ratingData.confidence,
           source_reasoning: JSON.stringify(ratingData.reasoning),
@@ -91,7 +96,7 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
 
       toast.success("Source added and evaluated!");
       setSourceUrl("");
-      setAdditionalContext("");
+      setSourceQuote("");
       onOpenChange(false);
       onSuccess();
     } catch (error) {
@@ -123,15 +128,18 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="context">Additional Context (optional)</Label>
+            <Label htmlFor="source-quote">Quote from Source</Label>
             <Textarea
-              id="context"
-              value={additionalContext}
-              onChange={(e) => setAdditionalContext(e.target.value)}
-              placeholder="Any additional details to help verify the source..."
+              id="source-quote"
+              value={sourceQuote}
+              onChange={(e) => setSourceQuote(e.target.value)}
+              placeholder='e.g., "Studies show that 87% of participants..." - Help others verify your source quickly'
               rows={3}
               maxLength={500}
             />
+            <p className="text-xs text-muted-foreground">
+              Copy the relevant quote that supports your comment
+            </p>
           </div>
           <div className="flex justify-end gap-2">
             <Button
