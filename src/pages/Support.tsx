@@ -41,7 +41,7 @@ const Support = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/discussions')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold text-gold">Support This App</h1>
+          <h1 className="text-xl font-bold text-green-600">Support This App</h1>
         </div>
       </header>
 
@@ -64,15 +64,28 @@ const Support = () => {
 
         {/* Affiliate Links Section */}
         <div className="space-y-4 pt-2">
-          <div className="bg-primary/5 -mx-4 px-4 py-6 border-y border-primary/20">
+          <div className="bg-green-500/10 -mx-4 px-4 py-6 border-y border-green-500/30">
             <div className="max-w-2xl mx-auto">
               <div className="flex items-center gap-4 mb-4">
-                <div className="h-2 w-20 bg-primary rounded-full shadow-lg shadow-primary/30" />
-                <h2 className="text-3xl font-bold tracking-tight">Support Through Affiliate Links</h2>
+                <div className="h-2 w-20 bg-green-600 rounded-full shadow-lg shadow-green-500/30" />
+                <h2 className="text-3xl font-bold tracking-tight">Earn $100 - $5,000</h2>
               </div>
+              <p className="text-base font-semibold text-green-700 mb-3">
+                No Gimmicks. 100% Legal.
+              </p>
+              <p className="text-sm text-muted-foreground px-1 mb-3">
+                Use our affiliate links to sign up for legitimate services:
+              </p>
+              <ul className="text-sm text-muted-foreground px-1 space-y-2 list-disc list-inside mb-4">
+                <li>Open high-yield savings accounts with bonuses</li>
+                <li>Start investing with sign-up rewards</li>
+                <li>Get banking bonuses for new accounts</li>
+              </ul>
+              <p className="text-base font-bold text-green-700 mb-2">
+                Win-Win! 🎉
+              </p>
               <p className="text-sm text-muted-foreground px-1">
-                These are services we use and recommend. When you sign up through our links, we earn a small 
-                commission at no extra cost to you:
+                You earn real money. We get a small commission. Everyone benefits!
               </p>
             </div>
           </div>
