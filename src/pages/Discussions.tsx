@@ -347,7 +347,9 @@ const Discussions = () => {
   }) : profiles;
   const currentUserLeaderboardEntry = leaderboard.find(e => e.userId === user?.id);
   const currentUserRank = leaderboard.findIndex(e => e.userId === user?.id) + 1;
-  return <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex flex-col">
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b px-4 py-3">
         <div className="flex items-center justify-between">
