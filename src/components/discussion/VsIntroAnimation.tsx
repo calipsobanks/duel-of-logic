@@ -32,7 +32,7 @@ export const VsIntroAnimation = ({ participant1, participant2, onComplete }: VsI
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="fixed top-24 left-0 right-0 bottom-0 z-40 flex items-center justify-center bg-gradient-to-br from-orange-400 via-yellow-400 to-orange-500"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-orange-400 via-yellow-400 to-orange-500"
         >
           {/* Background animated rays */}
           <motion.div
