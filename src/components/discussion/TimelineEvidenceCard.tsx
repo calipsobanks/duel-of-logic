@@ -91,7 +91,7 @@ export const TimelineEvidenceCard = ({
   const getStatusBadge = () => {
     switch (evidence.status) {
       case "agreed":
-        return <Badge className="bg-green-500">Agreed</Badge>;
+        return <Badge className="bg-green-500">Agreed 🤝</Badge>;
       case "validated":
         return <Badge className="bg-green-600">Validated</Badge>;
       case "challenged":
