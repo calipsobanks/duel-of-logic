@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ThumbsUp, User } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -180,6 +181,15 @@ export default function DiscussionThread() {
   const handleSubmitComment = async () => {
     if (!user || !postId || !newComment.trim()) return;
 
+    // Validate starter phrase
+    const starterPhrases = ["I think", "I believe", "I know that"];
+    const startsWithRequired = starterPhrases.some(phrase => newComment.trim().startsWith(phrase));
+    
+    if (!startsWithRequired) {
+      toast.error("Please start your comment with 'I think', 'I believe', or 'I know that'");
+      return;
+    }
+
     // Validate that if source URL is provided, quote is also required
     if (sourceUrl.trim() && !sourceQuote.trim()) {
       toast.error("Please provide a quote from your source");
@@ -336,10 +346,67 @@ export default function DiscussionThread() {
 
         {/* Add Comment */}
         <div className="bg-card rounded-lg border p-4 mb-6">
+          <div className="flex gap-2 mb-2">
+            <span className="text-sm text-muted-foreground">Start with:</span>
+            <Badge
+              variant="outline"
+              className="cursor-pointer hover:bg-accent"
+              onClick={() => {
+                const starterPhrases = ["I think", "I believe", "I know that"];
+                const startsWithStarter = starterPhrases.some(p => newComment.startsWith(p));
+                if (!newComment) {
+                  setNewComment("I think ");
+                } else if (startsWithStarter) {
+                  const afterStarter = newComment.replace(/^(I think|I believe|I know that)\s*/, '');
+                  setNewComment(`I think ${afterStarter}`);
+                } else {
+                  setNewComment(`I think ${newComment}`);
+                }
+              }}
+            >
+              I think
+            </Badge>
+            <Badge
+              variant="outline"
+              className="cursor-pointer hover:bg-accent"
+              onClick={() => {
+                const starterPhrases = ["I think", "I believe", "I know that"];
+                const startsWithStarter = starterPhrases.some(p => newComment.startsWith(p));
+                if (!newComment) {
+                  setNewComment("I believe ");
+                } else if (startsWithStarter) {
+                  const afterStarter = newComment.replace(/^(I think|I believe|I know that)\s*/, '');
+                  setNewComment(`I believe ${afterStarter}`);
+                } else {
+                  setNewComment(`I believe ${newComment}`);
+                }
+              }}
+            >
+              I believe
+            </Badge>
+            <Badge
+              variant="outline"
+              className="cursor-pointer hover:bg-accent"
+              onClick={() => {
+                const starterPhrases = ["I think", "I believe", "I know that"];
+                const startsWithStarter = starterPhrases.some(p => newComment.startsWith(p));
+                if (!newComment) {
+                  setNewComment("I know that ");
+                } else if (startsWithStarter) {
+                  const afterStarter = newComment.replace(/^(I think|I believe|I know that)\s*/, '');
+                  setNewComment(`I know that ${afterStarter}`);
+                } else {
+                  setNewComment(`I know that ${newComment}`);
+                }
+              }}
+            >
+              I know that
+            </Badge>
+          </div>
           <Textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Share your thoughts..."
+            placeholder='Start with "I think", "I believe", or "I know that"...'
             rows={3}
             className="mb-3"
           />
