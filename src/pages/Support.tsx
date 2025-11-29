@@ -41,7 +41,7 @@ const Support = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/discussions')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold">Support This App</h1>
+          <h1 className="text-xl font-bold text-gold">Support This App</h1>
         </div>
       </header>
 
