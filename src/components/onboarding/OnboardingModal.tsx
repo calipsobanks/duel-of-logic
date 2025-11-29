@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Lightbulb, Trophy, Zap, Star, Award } from "lucide-react";
+import { CheckCircle2, XCircle, Lightbulb, Trophy, Zap, Star, Award, Heart, DollarSign } from "lucide-react";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -15,9 +16,10 @@ interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-type Step = "welcome" | "assessment" | "question1" | "question2" | "rules" | "complete";
+type Step = "welcome" | "assessment" | "question1" | "question2" | "rules" | "support" | "complete";
 
 const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>("welcome");
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const [showExplanation, setShowExplanation] = useState(false);
@@ -441,9 +443,95 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
               </div>
             </Card>
 
-            <Button onClick={handleComplete} className="w-full" size="lg">
-              Start Debating! 🚀
+            <Button onClick={() => setStep("support")} className="w-full" size="lg">
+              Continue
             </Button>
+          </div>
+        )}
+
+        {step === "support" && (
+          <div className="space-y-6 py-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold">Help Keep This App Free! 💛</h2>
+              <p className="text-sm text-muted-foreground">
+                Your support keeps debates flowing and the app completely free for everyone
+              </p>
+            </div>
+
+            {/* Affiliate Earnings Card */}
+            <Card className="p-6 space-y-4 bg-gradient-to-br from-gold/20 to-yellow-500/10 border-gold/30">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+                  <DollarSign className="h-6 w-6 text-gold" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-1">Earn $100 - $5,000</h3>
+                  <Badge className="bg-gold text-gold-foreground mb-3">No Gimmicks. 100% Legal.</Badge>
+                </div>
+              </div>
+              
+              <div className="space-y-3 text-sm">
+                <p className="font-medium">Use our affiliate links to sign up for legitimate services:</p>
+                <ul className="space-y-2 ml-4">
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold mt-0.5">•</span>
+                    <span>Open high-yield savings accounts with bonuses</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold mt-0.5">•</span>
+                    <span>Start investing with sign-up rewards</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold mt-0.5">•</span>
+                    <span>Get banking bonuses for new accounts</span>
+                  </li>
+                </ul>
+                <div className="pt-3 border-t border-gold/20">
+                  <p className="font-semibold text-gold">Win-Win! 🎉</p>
+                  <p className="text-muted-foreground">
+                    You earn real money. We get a small commission. Everyone benefits!
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Direct Donations Card */}
+            <Card className="p-4 bg-muted/30 space-y-2">
+              <div className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-destructive" />
+                <h3 className="font-semibold">Direct Donations</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Prefer to support directly? One-time donations are always welcome and appreciated!
+              </p>
+            </Card>
+
+            {/* Call-to-Action Buttons */}
+            <div className="space-y-3 pt-2">
+              <Button 
+                onClick={async () => {
+                  await handleComplete();
+                  navigate("/support");
+                }}
+                className="w-full bg-gold hover:bg-gold/90 text-gold-foreground"
+                size="lg"
+              >
+                <Star className="h-4 w-4 mr-2" />
+                Learn More & Support
+              </Button>
+              <Button 
+                onClick={handleComplete}
+                variant="ghost"
+                className="w-full"
+                size="lg"
+              >
+                Continue Without Supporting
+              </Button>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground">
+              No pressure! You can always support us later from the menu.
+            </p>
           </div>
         )}
 
