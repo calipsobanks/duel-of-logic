@@ -64,8 +64,8 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
 
       if (updateError) throw updateError;
 
-      // Award bonus points for high-quality sources
-      if (ratingData.rating >= 8) {
+      // Award bonus points for high-quality sources (4-5 rating on 1-5 scale)
+      if (ratingData.rating >= 4) {
         const { error: pointsError } = await supabase
           .from("discussion_points")
           .insert({
@@ -76,7 +76,7 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
           });
 
         if (pointsError) console.error("Error awarding bonus points:", pointsError);
-      } else if (ratingData.rating >= 5) {
+      } else if (ratingData.rating >= 3) {
         const { error: pointsError } = await supabase
           .from("discussion_points")
           .insert({
