@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare, Award, BookOpen } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare, Award, BookOpen, Info } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { getRankForPoints } from '@/lib/ranks';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ interface Profile {
   political_view?: string | null;
   university_degree?: string | null;
   phone_number?: string | null;
+  about_me?: string | null;
 }
 interface Discussion {
   id: string;
@@ -59,15 +61,19 @@ const Discussions = () => {
   const [allDiscussions, setAllDiscussions] = useState<Discussion[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
+  const [viewMemberProfile, setViewMemberProfile] = useState<Profile | null>(null);
   const [topic, setTopic] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMemberProfileOpen, setIsMemberProfileOpen] = useState(false);
   const [isEditBeliefsOpen, setIsEditBeliefsOpen] = useState(false);
   const [isEditPhoneOpen, setIsEditPhoneOpen] = useState(false);
+  const [isEditAboutMeOpen, setIsEditAboutMeOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [religion, setReligion] = useState('');
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [aboutMe, setAboutMe] = useState('');
   const [selectedBelief, setSelectedBelief] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -311,6 +317,22 @@ const Discussions = () => {
     setIsEditPhoneOpen(false);
     fetchProfiles();
   };
+
+  const handleSaveAboutMe = async () => {
+    if (!user) return;
+    const {
+      error
+    } = await supabase.from('profiles').update({
+      about_me: aboutMe || null
+    }).eq('id', user.id);
+    if (error) {
+      toast.error('Failed to update about me');
+      return;
+    }
+    toast.success('About me updated!');
+    setIsEditAboutMeOpen(false);
+    fetchProfiles();
+  };
   const handleBeliefClick = (beliefType: string, value: string) => {
     const beliefTag = `#${beliefType}: ${value}`;
     if (selectedBelief === beliefTag) {
@@ -510,7 +532,10 @@ const Discussions = () => {
                   Clear
                 </Button>
               </div>}
-            {filteredProfiles.filter(p => p.id !== user?.id).map(profile => <Card key={profile.id}>
+            {filteredProfiles.filter(p => p.id !== user?.id).map(profile => <Card key={profile.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
+                setViewMemberProfile(profile);
+                setIsMemberProfileOpen(true);
+              }}>
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -537,7 +562,10 @@ const Discussions = () => {
                 if (open) setSelectedMember(profile);else setSelectedMember(null);
               }}>
                       <DialogTrigger asChild>
-                        <Button size="sm" className="flex-shrink-0" onClick={() => setSelectedMember(profile)}>
+                        <Button size="sm" className="flex-shrink-0" onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMember(profile);
+                        }}>
                           <Plus className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
@@ -686,6 +714,13 @@ const Discussions = () => {
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Phone Number
                     </Button>
+                    <Button variant="outline" onClick={() => {
+                      setAboutMe(currentUserProfile.about_me || '');
+                      setIsEditAboutMeOpen(true);
+                    }} className="w-full">
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Edit About Me
+                    </Button>
                     <Button variant="outline" onClick={() => handleEditBeliefs(currentUserProfile)}>
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Beliefs
@@ -816,6 +851,95 @@ const Discussions = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit About Me Dialog */}
+      <Dialog open={isEditAboutMeOpen} onOpenChange={setIsEditAboutMeOpen}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader>
+            <DialogTitle>Edit About Me</DialogTitle>
+            <DialogDescription className="text-xs">
+              Tell others about yourself
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="about-me-edit" className="text-sm font-semibold">About Me</Label>
+              <Textarea 
+                id="about-me-edit" 
+                placeholder="Share something about yourself..."
+                value={aboutMe}
+                onChange={e => setAboutMe(e.target.value)}
+                className="min-h-[120px]"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" onClick={() => setIsEditAboutMeOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleSaveAboutMe} className="flex-1">
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Member Profile Dialog */}
+      <Dialog open={isMemberProfileOpen} onOpenChange={setIsMemberProfileOpen}>
+        <DialogContent className="max-w-sm mx-4 max-h-[80vh] overflow-y-auto">
+          {viewMemberProfile && (
+            <>
+              <DialogHeader>
+                <div className="flex flex-col items-center text-center">
+                  <Avatar className="h-20 w-20 mb-3">
+                    <AvatarImage src={viewMemberProfile.avatar_url || undefined} alt={viewMemberProfile.username} />
+                    <AvatarFallback>
+                      <User className="h-10 w-10" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <DialogTitle className="text-lg">@{viewMemberProfile.username}</DialogTitle>
+                </div>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                {/* About Me Section */}
+                {viewMemberProfile.about_me && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">About</Label>
+                    <p className="text-sm text-muted-foreground">{viewMemberProfile.about_me}</p>
+                  </div>
+                )}
+
+                {/* Beliefs Section */}
+                {getBeliefTags(viewMemberProfile).length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Beliefs</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {getBeliefTags(viewMemberProfile).map((tag, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {tag.type}: {tag.value}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button 
+                  onClick={() => {
+                    setIsMemberProfileOpen(false);
+                    setSelectedMember(viewMemberProfile);
+                    setIsDialogOpen(true);
+                  }} 
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Start Debate
+                </Button>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
