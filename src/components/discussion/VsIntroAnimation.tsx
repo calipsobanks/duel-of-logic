@@ -13,8 +13,12 @@ export const VsIntroAnimation = ({ participant1, participant2, onComplete }: VsI
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      console.log('VS Intro: hiding animation');
       setShow(false);
-      setTimeout(() => onComplete?.(), 500);
+      setTimeout(() => {
+        console.log('VS Intro: calling onComplete');
+        onComplete?.();
+      }, 500);
     }, 2500);
 
     return () => clearTimeout(timer);
