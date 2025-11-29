@@ -135,7 +135,7 @@ const ActiveDiscussion = () => {
       .from('evidence')
       .select('*')
       .eq('debate_id', discussionId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (error) {
       toast({
