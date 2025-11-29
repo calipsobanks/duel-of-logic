@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Users, TrendingUp, MessageSquare, ArrowLeft } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { toast } from "sonner";
+import { TimelineEvidenceCard } from "@/components/discussion/TimelineEvidenceCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Participant {
   id: string;
@@ -31,6 +33,12 @@ interface GroupEvidence {
   source_type: string | null;
   source_rating: number | null;
   source_reasoning: string | null;
+  source_confidence: string | null;
+  source_warning: string | null;
+  claim_evaluation: string | null;
+  suggested_correction: string | null;
+  quote_example: string | null;
+  created_at: string;
   profiles: {
     username: string;
   };
@@ -126,7 +134,7 @@ export default function GroupDiscussion() {
           )
         `)
         .eq("discussion_id", discussionId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
 
       if (evidenceError) throw evidenceError;
       
@@ -409,92 +417,78 @@ export default function GroupDiscussion() {
             </div>
           </Card>
 
-          {/* Evidence Feed */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Evidence Timeline */}
+          <div className="lg:col-span-2">
             {canSubmitEvidence() && (
-              <Button onClick={() => setShowAddEvidence(true)} className="w-full">
+              <Button onClick={() => setShowAddEvidence(true)} className="w-full mb-4">
                 Submit Evidence
               </Button>
             )}
 
             {!canSubmitEvidence() && currentParticipant?.has_submitted_evidence && (
-              <Card className="p-4 bg-muted">
+              <Card className="p-4 bg-muted mb-4">
                 <p className="text-sm text-muted-foreground text-center">
                   Respond to all other evidence before submitting more
                 </p>
               </Card>
             )}
 
-            {evidence.map((e) => {
-              const isMyEvidence = e.user_id === user?.id;
-              const responded = hasRespondedTo(e.id);
-              const agreeCount = e.responses.filter((r) => r.response_type === "agree").length;
-              const disagreeCount = e.responses.filter(
-                (r) => r.response_type === "disagree"
-              ).length;
+            <ScrollArea className="h-[calc(100vh-250px)]">
+              <div className="space-y-6 pr-4">
+                {evidence.map((e, index) => {
+                  const isMyEvidence = e.user_id === user?.id;
+                  const responded = hasRespondedTo(e.id);
 
-              return (
-                <Card key={e.id} className="p-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    <Avatar>
-                      <AvatarFallback>{e.profiles.username[0].toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="font-medium">{e.profiles.username}</div>
-                      <div className="text-sm text-muted-foreground mt-1">{e.claim}</div>
-                      {e.source_url && (
-                        <a
-                          href={e.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline mt-2 inline-block"
-                        >
-                          View Source
-                        </a>
+                  return (
+                    <div key={e.id} className="relative">
+                      {index < evidence.length - 1 && (
+                        <div className="absolute left-6 top-16 bottom-0 w-0.5 bg-border" />
                       )}
+                      <TimelineEvidenceCard
+                        evidence={{
+                          id: e.id,
+                          claim: e.claim,
+                          source_url: e.source_url,
+                          source_type: e.source_type,
+                          source_rating: e.source_rating,
+                          source_reasoning: e.source_reasoning,
+                          source_confidence: e.source_confidence,
+                          source_warning: e.source_warning,
+                          content_analyzed: false,
+                          status: responded ? "responded" : "pending",
+                          created_at: e.created_at,
+                          debater_id: e.user_id,
+                        }}
+                        index={index}
+                        participantUsername={e.profiles.username}
+                        isCurrentUser={isMyEvidence}
+                        canAgree={!isMyEvidence && !responded}
+                        canChallenge={false}
+                        canRequestEvidence={false}
+                        canValidate={false}
+                        canAddSource={false}
+                        needsAction={!isMyEvidence && !responded}
+                        onAgree={() => handleRespond(e.id, "agree")}
+                        onChallenge={() => {}}
+                        onRequestEvidence={() => {}}
+                        onValidate={() => {}}
+                        onAddSource={() => {}}
+                        onRerateSource={() => {}}
+                        isReratingSource={false}
+                      />
                     </div>
-                  </div>
+                  );
+                })}
 
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-muted-foreground">
-                      {agreeCount} agree • {disagreeCount} disagree
-                    </span>
-                  </div>
-
-                  {!isMyEvidence && !responded && (
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        size="sm"
-                        onClick={() => handleRespond(e.id, "agree")}
-                        className="flex-1"
-                      >
-                        Agree
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleRespond(e.id, "disagree")}
-                        className="flex-1"
-                      >
-                        Disagree
-                      </Button>
-                    </div>
-                  )}
-
-                  {responded && (
-                    <div className="mt-4 text-sm text-muted-foreground">✓ You responded</div>
-                  )}
-                </Card>
-              );
-            })}
-
-            {evidence.length === 0 && (
-              <Card className="p-12 text-center">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">No evidence submitted yet</p>
-                <p className="text-sm text-muted-foreground mt-2">Be the first to share!</p>
-              </Card>
-            )}
+                {evidence.length === 0 && (
+                  <Card className="p-12 text-center">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">No evidence submitted yet</p>
+                    <p className="text-sm text-muted-foreground mt-2">Be the first to share!</p>
+                  </Card>
+                )}
+              </div>
+            </ScrollArea>
           </div>
         </div>
       </div>
