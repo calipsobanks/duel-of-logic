@@ -137,6 +137,14 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
                   <span className="text-primary font-bold mt-0.5">3.</span>
                   <span><strong>How to use evidence:</strong> Supporting your arguments with reliable sources</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold mt-0.5">4.</span>
+                  <span><strong>How to play:</strong> Learn the debate flow, point system, and ranking system</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold mt-0.5">5.</span>
+                  <span><strong>How to support:</strong> Ways to help keep this app free for everyone</span>
+                </li>
               </ul>
             </Card>
 
