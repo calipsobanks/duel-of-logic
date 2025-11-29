@@ -179,6 +179,189 @@ export type Database = {
           },
         ]
       }
+      group_discussion_participants: {
+        Row: {
+          discussion_id: string
+          has_submitted_evidence: boolean
+          id: string
+          joined_at: string
+          score: number
+          stance: string | null
+          user_id: string
+        }
+        Insert: {
+          discussion_id: string
+          has_submitted_evidence?: boolean
+          id?: string
+          joined_at?: string
+          score?: number
+          stance?: string | null
+          user_id: string
+        }
+        Update: {
+          discussion_id?: string
+          has_submitted_evidence?: boolean
+          id?: string
+          joined_at?: string
+          score?: number
+          stance?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_discussion_participants_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "group_discussions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_discussion_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_discussions: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          status: string
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          status?: string
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          status?: string
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_discussions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_discussions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "controversial_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_evidence: {
+        Row: {
+          claim: string
+          created_at: string
+          discussion_id: string
+          id: string
+          source_confidence: string | null
+          source_rating: number | null
+          source_reasoning: string | null
+          source_type: string | null
+          source_url: string | null
+          source_warning: string | null
+          user_id: string
+        }
+        Insert: {
+          claim: string
+          created_at?: string
+          discussion_id: string
+          id?: string
+          source_confidence?: string | null
+          source_rating?: number | null
+          source_reasoning?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          source_warning?: string | null
+          user_id: string
+        }
+        Update: {
+          claim?: string
+          created_at?: string
+          discussion_id?: string
+          id?: string
+          source_confidence?: string | null
+          source_rating?: number | null
+          source_reasoning?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          source_warning?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_evidence_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "group_discussions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_evidence_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_evidence_responses: {
+        Row: {
+          created_at: string
+          evidence_id: string
+          id: string
+          respondent_id: string
+          response_type: string
+        }
+        Insert: {
+          created_at?: string
+          evidence_id: string
+          id?: string
+          respondent_id: string
+          response_type: string
+        }
+        Update: {
+          created_at?: string
+          evidence_id?: string
+          id?: string
+          respondent_id?: string
+          response_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_evidence_responses_evidence_id_fkey"
+            columns: ["evidence_id"]
+            isOneToOne: false
+            referencedRelation: "group_evidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_evidence_responses_respondent_id_fkey"
+            columns: ["respondent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
