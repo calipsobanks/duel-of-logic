@@ -267,7 +267,7 @@ export const DiscussionComment = ({
   };
 
   return (
-    <div className="flex gap-3 p-4 bg-card rounded-lg border">
+    <div className="flex gap-3 p-4 bg-card rounded-lg border hover:shadow-sm transition-all duration-300 animate-fade-in">
       <Avatar className="h-10 w-10">
         <AvatarImage src={authorAvatar || ""} />
         <AvatarFallback>
