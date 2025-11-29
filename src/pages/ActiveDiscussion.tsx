@@ -198,9 +198,11 @@ const ActiveDiscussion = () => {
               })
               .eq('id', updatingSourceForId);
             
-            // Show low rating animation if rating is less than 3
+            // Show rating animations
             if (ratingData.rating < 3) {
               showReaction('low_rating');
+            } else if (ratingData.rating > 3) {
+              showReaction('high_rating');
             }
           }
         } catch (error) {
@@ -268,9 +270,11 @@ const ActiveDiscussion = () => {
             })
             .eq('id', insertedEvidence.id);
           
-          // Show low rating animation if rating is less than 3
+          // Show rating animations
           if (ratingData.rating < 3) {
             showReaction('low_rating');
+          } else if (ratingData.rating > 3) {
+            showReaction('high_rating');
           }
         }
       } catch (error) {
@@ -484,9 +488,11 @@ const ActiveDiscussion = () => {
 
         await loadEvidence();
         
-        // Show low rating animation if rating is less than 3
+        // Show rating animations
         if (ratingData.rating < 3) {
           showReaction('low_rating');
+        } else if (ratingData.rating > 3) {
+          showReaction('high_rating');
         }
         
         toast({
