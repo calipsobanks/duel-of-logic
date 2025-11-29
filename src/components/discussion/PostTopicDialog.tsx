@@ -44,6 +44,14 @@ export const PostTopicDialog = ({ open, onOpenChange, onSuccess, userId }: PostT
       return;
     }
 
+    const starterPhrases = ["I think", "I believe", "I know that"];
+    const startsWithRequired = starterPhrases.some(phrase => title.trim().startsWith(phrase));
+    
+    if (!startsWithRequired) {
+      toast.error("Please start your topic with 'I think', 'I believe', or 'I know that'");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
