@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -18,6 +19,22 @@ export const PostTopicDialog = ({ open, onOpenChange, onSuccess, userId }: PostT
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleStarterPhrase = (phrase: string) => {
+    setTitle(prev => {
+      // If title is empty or doesn't start with the phrase, add it
+      if (!prev) return `${phrase} `;
+      // If it already starts with a starter phrase, replace it
+      const starterPhrases = ["I think", "I believe", "I know that"];
+      const startsWithStarter = starterPhrases.some(p => prev.startsWith(p));
+      if (startsWithStarter) {
+        const afterStarter = prev.replace(/^(I think|I believe|I know that)\s*/, '');
+        return `${phrase} ${afterStarter}`;
+      }
+      // Otherwise prepend it
+      return `${phrase} ${prev}`;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +79,30 @@ export const PostTopicDialog = ({ open, onOpenChange, onSuccess, userId }: PostT
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Topic Title *</Label>
+            <div className="flex gap-2 mb-2">
+              <span className="text-sm text-muted-foreground">Start with:</span>
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleStarterPhrase("I think")}
+              >
+                I think
+              </Badge>
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleStarterPhrase("I believe")}
+              >
+                I believe
+              </Badge>
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleStarterPhrase("I know that")}
+              >
+                I know that
+              </Badge>
+            </div>
             <Input
               id="title"
               value={title}
