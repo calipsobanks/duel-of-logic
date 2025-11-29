@@ -34,8 +34,8 @@ Based on your knowledge, analyze this claim and source.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
-        max_completion_tokens: 3000,
+        model: 'gpt-4o-mini',
+        max_tokens: 3000,
         messages: [
           {
             role: 'system',
