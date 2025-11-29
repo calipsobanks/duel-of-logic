@@ -15,6 +15,7 @@ import { DiscussionComment } from "@/components/discussion/DiscussionComment";
 import { ChallengeToDebateDialog } from "@/components/discussion/ChallengeToDebateDialog";
 import { AddSourceDialog } from "@/components/discussion/AddSourceDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SourcesButton } from "@/components/sources/SourcesButton";
 
 interface Post {
   id: string;
@@ -530,6 +531,9 @@ export default function DiscussionThread() {
           setSourceDialog({ open: false, commentId: "" });
         }}
       />
+
+      {/* Sources Button */}
+      <SourcesButton />
     </div>
   );
 }
