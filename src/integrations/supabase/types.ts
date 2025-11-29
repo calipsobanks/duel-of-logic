@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          event_target: string
+          event_type: string
+          id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          event_target: string
+          event_type: string
+          id?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          event_target?: string
+          event_type?: string
+          id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       controversial_topics: {
         Row: {
           category: string
