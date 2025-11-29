@@ -514,6 +514,39 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          admin_response: string | null
+          category: string
+          content: string
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       group_discussion_participants: {
         Row: {
           discussion_id: string
