@@ -70,8 +70,8 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
 
   const handleAssessmentContinue = async () => {
     if (confidenceLevel === 5) {
-      // They're confident, skip the test
-      await handleComplete();
+      // They're confident, skip questions but show gameplay and support
+      setStep("rules");
     } else {
       // They need the onboarding
       setStep("question1");

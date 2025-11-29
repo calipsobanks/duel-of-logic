@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare, Award } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare, Award, BookOpen } from 'lucide-react';
 import { getRankForPoints } from '@/lib/ranks';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { useNotifications } from '@/hooks/useNotifications';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ControversialTopics } from '@/components/ControversialTopics';
+import OnboardingModal from '@/components/onboarding/OnboardingModal';
 interface Profile {
   id: string;
   username: string;
@@ -62,6 +63,7 @@ const Discussions = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditBeliefsOpen, setIsEditBeliefsOpen] = useState(false);
   const [isEditPhoneOpen, setIsEditPhoneOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [religion, setReligion] = useState('');
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
@@ -665,6 +667,10 @@ const Discussions = () => {
                           Enable Notifications
                         </>}
                     </Button>
+                    <Button variant="outline" onClick={() => setIsOnboardingOpen(true)} className="w-full">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      View Tutorial
+                    </Button>
                     <label htmlFor="avatar-upload" className="cursor-pointer w-full">
                       <input id="avatar-upload" type="file" accept="image/*" onChange={e => handleAvatarUpload(e, currentUserProfile.id)} className="hidden" />
                       <Button variant="outline" className="w-full" asChild>
@@ -810,6 +816,17 @@ const Discussions = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>;
+
+      {/* Onboarding Modal */}
+      {user && (
+        <OnboardingModal 
+          open={isOnboardingOpen}
+          userId={user.id}
+          onComplete={() => setIsOnboardingOpen(false)}
+        />
+      )}
+    </div>
+  );
 };
+
 export default Discussions;
