@@ -226,6 +226,13 @@ export type Database = {
           likes_count: number
           parent_comment_id: string | null
           post_id: string
+          score: number
+          source_confidence: string | null
+          source_rating: number | null
+          source_reasoning: string | null
+          source_type: string | null
+          source_url: string | null
+          source_warning: string | null
           user_id: string
         }
         Insert: {
@@ -235,6 +242,13 @@ export type Database = {
           likes_count?: number
           parent_comment_id?: string | null
           post_id: string
+          score?: number
+          source_confidence?: string | null
+          source_rating?: number | null
+          source_reasoning?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          source_warning?: string | null
           user_id: string
         }
         Update: {
@@ -244,6 +258,13 @@ export type Database = {
           likes_count?: number
           parent_comment_id?: string | null
           post_id?: string
+          score?: number
+          source_confidence?: string | null
+          source_rating?: number | null
+          source_reasoning?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          source_warning?: string | null
           user_id?: string
         }
         Relationships: [
@@ -276,6 +297,7 @@ export type Database = {
           created_at: string
           id: string
           post_id: string | null
+          response_type: string
           user_id: string
         }
         Insert: {
@@ -283,6 +305,7 @@ export type Database = {
           created_at?: string
           id?: string
           post_id?: string | null
+          response_type?: string
           user_id: string
         }
         Update: {
@@ -290,6 +313,7 @@ export type Database = {
           created_at?: string
           id?: string
           post_id?: string | null
+          response_type?: string
           user_id?: string
         }
         Relationships: [
@@ -309,6 +333,58 @@ export type Database = {
           },
           {
             foreignKeyName: "discussion_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_points: {
+        Row: {
+          action_type: string
+          comment_id: string | null
+          created_at: string
+          id: string
+          points_earned: number
+          post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          points_earned?: number
+          post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          points_earned?: number
+          post_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_points_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_points_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_points_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
