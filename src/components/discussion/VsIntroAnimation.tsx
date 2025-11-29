@@ -125,10 +125,24 @@ export const VsIntroAnimation = ({ participant1, participant2, onComplete }: VsI
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1, type: "spring" }}
+              className="flex flex-col items-center gap-6"
             >
               <h1 className="text-5xl font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
                 LET THE DEBATE BEGIN!
               </h1>
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.5 }}
+                onClick={() => {
+                  console.log('VS Intro: User clicked Start Debate button');
+                  setShow(false);
+                  setTimeout(() => onComplete?.(), 500);
+                }}
+                className="bg-white text-orange-600 px-8 py-4 rounded-full text-xl font-bold shadow-2xl border-4 border-black hover:scale-110 transition-transform active:scale-95"
+              >
+                Start Debate Now!
+              </motion.button>
             </motion.div>
 
             {/* Energy particles */}
