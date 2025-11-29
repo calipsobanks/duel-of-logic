@@ -9,6 +9,7 @@ import { TimelineEvidenceCard } from "@/components/discussion/TimelineEvidenceCa
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useReaction } from "@/contexts/ReactionContext";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,7 @@ const ActiveDiscussion = () => {
   const discussionId = searchParams.get('id');
   const { toast } = useToast();
   const { user } = useAuth();
+  const { showReaction } = useReaction();
   const [discussion, setDiscussion] = useState<DiscussionData | null>(null);
   const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
   const [isAddingEvidence, setIsAddingEvidence] = useState(false);
@@ -195,6 +197,11 @@ const ActiveDiscussion = () => {
                 source_warning: ratingData.warning
               })
               .eq('id', updatingSourceForId);
+            
+            // Show low rating animation if rating is less than 3
+            if (ratingData.rating < 3) {
+              showReaction('low_rating');
+            }
           }
         } catch (error) {
           console.error('Failed to rate source:', error);
@@ -260,6 +267,11 @@ const ActiveDiscussion = () => {
               quote_example: ratingData.quoteExample
             })
             .eq('id', insertedEvidence.id);
+          
+          // Show low rating animation if rating is less than 3
+          if (ratingData.rating < 3) {
+            showReaction('low_rating');
+          }
         }
       } catch (error) {
         console.error('Failed to rate source:', error);
@@ -471,6 +483,11 @@ const ActiveDiscussion = () => {
           .eq('id', evidenceId);
 
         await loadEvidence();
+        
+        // Show low rating animation if rating is less than 3
+        if (ratingData.rating < 3) {
+          showReaction('low_rating');
+        }
         
         toast({
           title: "Source Re-rated",
