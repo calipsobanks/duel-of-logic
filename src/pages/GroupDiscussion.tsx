@@ -502,6 +502,7 @@ export default function GroupDiscussion() {
           sourceType: evidence.sourceType
         })}
         currentParticipantName={currentParticipant?.profiles.username || ""}
+        debateId={discussionId || undefined}
       />
     </div>
   );
