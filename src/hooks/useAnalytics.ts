@@ -173,7 +173,23 @@ export const useAnalytics = () => {
         trackEvent('button_click', `${pageContext}: ${buttonText}`, discussionId);
       } else if (link) {
         const href = link.getAttribute('href') || 'Unknown Link';
-        trackEvent('link_click', `${pageContext}: ${href}`, discussionId);
+        let eventTarget = `${pageContext}: ${href}`;
+        
+        // If it's a "View Source" link, try to capture the associated claim
+        if (link.textContent?.includes('View Source')) {
+          // Find the closest parent card element
+          const card = target.closest('.p-4, .p-6');
+          if (card) {
+            // Try to find the claim text (usually in a <p> tag before the source section)
+            const claimElement = card.querySelector('p.text-base, p.leading-relaxed');
+            const claim = claimElement?.textContent?.trim();
+            if (claim && claim.length < 300) {
+              eventTarget = `${pageContext}: View Source for "${claim}" | ${href}`;
+            }
+          }
+        }
+        
+        trackEvent('link_click', eventTarget, discussionId);
       } else if (tab) {
         const tabText = tab.textContent?.trim() || 'Unknown Tab';
         trackEvent('tab_click', `${pageContext}: ${tabText}`, discussionId);
