@@ -98,7 +98,7 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
             damping: 20,
             duration: 0.6
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+          className="fixed top-24 left-0 right-0 bottom-0 z-40 flex items-center justify-center pointer-events-none"
         >
           {/* Backdrop blur */}
           <motion.div
