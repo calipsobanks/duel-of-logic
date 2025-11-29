@@ -19,6 +19,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DiscussionData {
   id: string;
@@ -69,6 +79,7 @@ const ActiveDiscussion = () => {
   const [showVsIntro, setShowVsIntro] = useState(false);
   const hasShownIntroRef = useRef(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [showAdmitDefeatDialog, setShowAdmitDefeatDialog] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -587,6 +598,61 @@ const ActiveDiscussion = () => {
     });
   };
 
+  const handleAdmitDefeat = async () => {
+    if (!discussion || !user) return;
+
+    const isDebater1 = user.id === discussion.debater1_id;
+    const winnerId = isDebater1 ? discussion.debater2_id : discussion.debater1_id;
+    const winnerUsername = isDebater1 ? discussion.debater2.username : discussion.debater1.username;
+    
+    // Award 10 points to the winner
+    const victoryPoints = 10;
+    const newWinnerScore = isDebater1 
+      ? discussion.debater2_score + victoryPoints 
+      : discussion.debater1_score + victoryPoints;
+
+    const { error } = await supabase
+      .from('debates')
+      .update({
+        status: 'completed',
+        ...(isDebater1 
+          ? { debater2_score: newWinnerScore } 
+          : { debater1_score: newWinnerScore })
+      })
+      .eq('id', discussionId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process defeat",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Notify the winner
+    supabase.functions.invoke('notify-debate-action', {
+      body: {
+        targetUserId: winnerId,
+        action: 'victory',
+        actorId: user.id,
+        message: `You won the debate: "${discussion.topic}"`
+      }
+    }).catch(err => console.error('Failed to send notification:', err));
+
+    setShowAdmitDefeatDialog(false);
+    
+    toast({
+      title: "Debate Ended",
+      description: `${winnerUsername} wins! +${victoryPoints} points awarded.`,
+    });
+
+    // Navigate back after a short delay
+    setTimeout(() => {
+      navigate('/discussions');
+    }, 2000);
+  };
+
   if (loading || !discussion) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/20 to-background">
@@ -653,6 +719,15 @@ const ActiveDiscussion = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowAdmitDefeatDialog(true)}
+              className="text-xs"
+            >
+              Admit Defeat
+            </Button>
+            
             <Button
               variant="ghost"
               size="icon"
@@ -844,6 +919,24 @@ const ActiveDiscussion = () => {
         existingClaim={updatingSourceForId ? evidenceList.find(e => e.id === updatingSourceForId)?.claim : undefined}
         isUpdatingSource={updatingSourceForId !== null}
       />
+
+      {/* Admit Defeat Confirmation Dialog */}
+      <AlertDialog open={showAdmitDefeatDialog} onOpenChange={setShowAdmitDefeatDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Admit Defeat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to admit defeat? Your opponent will be awarded 10 victory points and this debate will end.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAdmitDefeat} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Admit Defeat
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
