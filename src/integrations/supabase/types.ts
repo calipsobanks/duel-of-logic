@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           created_at: string
           device_info: string | null
+          discussion_id: string | null
+          duration_seconds: number | null
           event_target: string
           event_type: string
           id: string
@@ -27,6 +29,8 @@ export type Database = {
         Insert: {
           created_at?: string
           device_info?: string | null
+          discussion_id?: string | null
+          duration_seconds?: number | null
           event_target: string
           event_type: string
           id?: string
@@ -36,6 +40,8 @@ export type Database = {
         Update: {
           created_at?: string
           device_info?: string | null
+          discussion_id?: string | null
+          duration_seconds?: number | null
           event_target?: string
           event_type?: string
           id?: string
