@@ -31,7 +31,7 @@ interface DiscussionCommentProps {
   sourceConfidence: string | null;
   sourceWarning: string | null;
   sourceReasoning: string | null;
-  claimEvaluation: string | null;
+  claimEvaluation: string | null | undefined;
   onChallenge: (commentId: string, authorId: string, authorUsername: string) => void;
   onAddSource: (commentId: string) => void;
   onResponseChange: () => void;
