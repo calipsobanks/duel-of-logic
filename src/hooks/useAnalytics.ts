@@ -152,7 +152,7 @@ export const useAnalytics = () => {
     };
   }, []);
 
-  // Track clicks on buttons, links, and tabs
+  // Track clicks on buttons, links, tabs, and discussion topics
   useEffect(() => {
     if (!user || !session) return;
     if (session.user?.email === 'edwardhill91@gmail.com') return;
@@ -162,10 +162,11 @@ export const useAnalytics = () => {
       const discussionId = getDiscussionId();
       const pageContext = getPageContext();
       
-      // Check if click is on a button, link, or tab
+      // Check if click is on a button, link, tab, or clickable discussion topic
       const button = target.closest('button');
       const link = target.closest('a');
       const tab = target.closest('[role="tab"]');
+      const clickableCard = target.closest('.cursor-pointer');
       
       if (button) {
         const buttonText = button.textContent?.trim() || button.getAttribute('aria-label') || 'Unknown Button';
@@ -176,6 +177,12 @@ export const useAnalytics = () => {
       } else if (tab) {
         const tabText = tab.textContent?.trim() || 'Unknown Tab';
         trackEvent('tab_click', `${pageContext}: ${tabText}`, discussionId);
+      } else if (clickableCard && !button && !link && !tab) {
+        // Track discussion topic clicks
+        const cardText = clickableCard.textContent?.trim() || '';
+        if (cardText && cardText.length < 200) { // Only track if reasonable length
+          trackEvent('discussion_click', `${pageContext}: ${cardText}`, discussionId);
+        }
       }
     };
 
