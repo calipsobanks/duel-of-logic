@@ -143,6 +143,18 @@ const ActiveDiscussion = () => {
       return;
     }
 
+    // Check if user is a participant
+    const isParticipant = data.debater1_id === user?.id || data.debater2_id === user?.id;
+    if (!isParticipant) {
+      toast({
+        title: "Access Denied",
+        description: "You are not a participant in this debate. Only the two debaters can add evidence.",
+        variant: "destructive",
+      });
+      navigate('/discussions');
+      return;
+    }
+
     setDiscussion(data);
     setCurrentParticipant(data.debater1_id === user?.id ? 1 : 2);
     setLoading(false);
@@ -199,6 +211,16 @@ const ActiveDiscussion = () => {
   };
 
   const handleAddEvidence = async (evidenceData: { content: string; sourceUrl?: string; sourceType?: "factual" | "opinionated" }) => {
+    // Verify user is still a participant
+    if (!discussion || (discussion.debater1_id !== user?.id && discussion.debater2_id !== user?.id)) {
+      toast({
+        title: "Access Denied",
+        description: "You are not a participant in this debate.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check if we're updating evidence_requested evidence
     const isUpdatingRequestedEvidence = updatingSourceForId !== null;
     
@@ -313,9 +335,10 @@ const ActiveDiscussion = () => {
       .single();
 
     if (error) {
+      console.error('Failed to insert evidence:', error);
       toast({
         title: "Error",
-        description: "Failed to add evidence",
+        description: error.message || "Failed to add evidence. Please try again.",
         variant: "destructive",
       });
       return;
