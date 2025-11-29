@@ -26,6 +26,8 @@ interface DiscussionCommentProps {
   isLikedByUser: boolean;
   hasAgreed: boolean;
   hasDisagreed: boolean;
+  hasRequestedSource: boolean;
+  sourceRequestsCount: number;
   sourceUrl: string | null;
   sourceQuote: string | null;
   sourceRating: number | null;
@@ -52,6 +54,8 @@ export const DiscussionComment = ({
   isLikedByUser,
   hasAgreed,
   hasDisagreed,
+  hasRequestedSource,
+  sourceRequestsCount,
   sourceUrl,
   sourceQuote,
   sourceRating,
@@ -163,6 +167,40 @@ export const DiscussionComment = ({
     } catch (error) {
       console.error("Error toggling like:", error);
       toast.error("Failed to update like");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRequestSource = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    try {
+      if (hasRequestedSource) {
+        const { error } = await supabase
+          .from("discussion_likes")
+          .delete()
+          .eq("user_id", currentUserId)
+          .eq("comment_id", id)
+          .eq("response_type", "source_request");
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("discussion_likes")
+          .insert({
+            user_id: currentUserId,
+            comment_id: id,
+            response_type: "source_request",
+          });
+
+        if (error) throw error;
+      }
+      onResponseChange();
+    } catch (error) {
+      console.error("Error requesting source:", error);
+      toast.error("Failed to request source");
     } finally {
       setIsProcessing(false);
     }
@@ -356,6 +394,18 @@ export const DiscussionComment = ({
             >
               <Link className="h-4 w-4" />
               <span>Add Source</span>
+            </Button>
+          )}
+          {authorId !== currentUserId && !sourceUrl && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 gap-1 ${hasRequestedSource ? "text-orange-600 bg-orange-500/10" : ""}`}
+              onClick={handleRequestSource}
+              disabled={isProcessing}
+            >
+              <Link className={`h-4 w-4 ${hasRequestedSource ? "fill-current" : ""}`} />
+              <span>Request Source {sourceRequestsCount > 0 && `(${sourceRequestsCount})`}</span>
             </Button>
           )}
           <Button

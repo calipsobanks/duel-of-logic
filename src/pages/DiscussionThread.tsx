@@ -401,6 +401,8 @@ export default function DiscussionThread() {
                     isLikedByUser={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'like')}
                     hasAgreed={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'agree')}
                     hasDisagreed={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'disagree')}
+                    hasRequestedSource={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'source_request')}
+                    sourceRequestsCount={likes.filter(l => l.comment_id === comment.id && l.response_type === 'source_request').length}
                     sourceUrl={comment.source_url}
                     sourceQuote={comment.source_quote}
                     sourceRating={comment.source_rating}
