@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { DiscussionComment } from "@/components/discussion/DiscussionComment";
 import { ChallengeToDebateDialog } from "@/components/discussion/ChallengeToDebateDialog";
+import { AddSourceDialog } from "@/components/discussion/AddSourceDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Post {
@@ -31,7 +32,12 @@ interface Comment {
   content: string;
   user_id: string;
   likes_count: number;
+  score: number;
   created_at: string;
+  source_url: string | null;
+  source_rating: number | null;
+  source_confidence: string | null;
+  source_warning: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -42,6 +48,7 @@ interface Like {
   user_id: string;
   post_id: string | null;
   comment_id: string | null;
+  response_type: string;
 }
 
 export default function DiscussionThread() {
@@ -60,6 +67,10 @@ export default function DiscussionThread() {
     userId: string;
     username: string;
   }>({ open: false, commentId: "", userId: "", username: "" });
+  const [sourceDialog, setSourceDialog] = useState<{
+    open: boolean;
+    commentId: string;
+  }>({ open: false, commentId: "" });
 
   useEffect(() => {
     if (!user) {
@@ -96,7 +107,7 @@ export default function DiscussionThread() {
       .from("discussion_comments")
       .select("*, profiles(username, avatar_url)")
       .eq("post_id", postId)
-      .order("created_at", { ascending: false });
+      .order("score", { ascending: false });
 
     if (error) {
       console.error("Error loading comments:", error);
@@ -107,12 +118,13 @@ export default function DiscussionThread() {
   };
 
   const loadLikes = async () => {
-    if (!postId) return;
+    if (!postId || comments.length === 0) return;
 
+    const commentIds = comments.map(c => c.id).join(",");
     const { data, error } = await supabase
       .from("discussion_likes")
-      .select("user_id, post_id, comment_id")
-      .or(`post_id.eq.${postId},comment_id.in.(${comments.map(c => c.id).join(",")})`);
+      .select("user_id, post_id, comment_id, response_type")
+      .or(`post_id.eq.${postId},comment_id.in.(${commentIds})`);
 
     if (error) {
       console.error("Error loading likes:", error);
@@ -190,7 +202,11 @@ export default function DiscussionThread() {
     setChallengeDialog({ open: true, commentId, userId, username });
   };
 
-  const isPostLikedByUser = post && likes.some(l => l.user_id === user?.id && l.post_id === post.id);
+  const handleAddSource = (commentId: string) => {
+    setSourceDialog({ open: true, commentId });
+  };
+
+  const isPostLikedByUser = post && likes.some(l => l.user_id === user?.id && l.post_id === post.id && l.response_type === 'like');
 
   if (!post) {
     return (
@@ -279,12 +295,23 @@ export default function DiscussionThread() {
                     authorUsername={comment.profiles.username}
                     authorAvatar={comment.profiles.avatar_url}
                     likesCount={comment.likes_count}
+                    score={comment.score}
                     createdAt={comment.created_at}
                     currentUserId={user?.id || ""}
                     postId={post.id}
-                    isLikedByUser={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id)}
+                    isLikedByUser={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'like')}
+                    hasAgreed={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'agree')}
+                    hasDisagreed={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'disagree')}
+                    sourceUrl={comment.source_url}
+                    sourceRating={comment.source_rating}
+                    sourceConfidence={comment.source_confidence}
+                    sourceWarning={comment.source_warning}
                     onChallenge={handleChallenge}
-                    onLikeToggle={loadLikes}
+                    onAddSource={handleAddSource}
+                    onResponseChange={async () => {
+                      await loadComments();
+                      await loadLikes();
+                    }}
                   />
                 ))
               )}
@@ -306,6 +333,17 @@ export default function DiscussionThread() {
         onSuccess={() => {
           toast.success("Challenge sent!");
           setChallengeDialog({ open: false, commentId: "", userId: "", username: "" });
+        }}
+      />
+
+      {/* Add Source Dialog */}
+      <AddSourceDialog
+        open={sourceDialog.open}
+        onOpenChange={(open) => setSourceDialog({ ...sourceDialog, open })}
+        commentId={sourceDialog.commentId}
+        onSuccess={async () => {
+          await loadComments();
+          setSourceDialog({ open: false, commentId: "" });
         }}
       />
     </div>
