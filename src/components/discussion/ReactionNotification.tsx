@@ -5,8 +5,9 @@ import agreeReaction from '@/assets/agree-reaction.png';
 import sourceRequestReaction from '@/assets/source-request-reaction.png';
 import lowRatingReaction from '@/assets/low-rating-reaction.png';
 import highRatingReaction from '@/assets/high-rating-reaction.png';
+import mediumRatingReaction from '@/assets/medium-rating-reaction.png';
 
-type ReactionType = 'challenged' | 'agreed' | 'source_requested' | 'low_rating' | 'high_rating';
+type ReactionType = 'challenged' | 'agreed' | 'source_requested' | 'low_rating' | 'high_rating' | 'medium_rating';
 
 interface ReactionNotificationProps {
   type: ReactionType;
@@ -37,6 +38,8 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
         return lowRatingReaction;
       case 'high_rating':
         return highRatingReaction;
+      case 'medium_rating':
+        return mediumRatingReaction;
     }
   };
 
@@ -52,6 +55,8 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
         return '⚠️ QUESTIONABLE SOURCE!';
       case 'high_rating':
         return '✨ EXCELLENT SOURCE!';
+      case 'medium_rating':
+        return '🤔 NEEDS VERIFICATION!';
     }
   };
 
@@ -67,6 +72,8 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
         return 'hsl(var(--warning))';
       case 'high_rating':
         return 'hsl(var(--success))';
+      case 'medium_rating':
+        return 'hsl(var(--warning))';
     }
   };
 

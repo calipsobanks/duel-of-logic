@@ -201,6 +201,8 @@ const ActiveDiscussion = () => {
             // Show rating animations
             if (ratingData.rating < 3) {
               showReaction('low_rating');
+            } else if (ratingData.rating === 3) {
+              showReaction('medium_rating');
             } else if (ratingData.rating > 3) {
               showReaction('high_rating');
             }
@@ -273,6 +275,8 @@ const ActiveDiscussion = () => {
           // Show rating animations
           if (ratingData.rating < 3) {
             showReaction('low_rating');
+          } else if (ratingData.rating === 3) {
+            showReaction('medium_rating');
           } else if (ratingData.rating > 3) {
             showReaction('high_rating');
           }
@@ -491,6 +495,8 @@ const ActiveDiscussion = () => {
         // Show rating animations
         if (ratingData.rating < 3) {
           showReaction('low_rating');
+        } else if (ratingData.rating === 3) {
+          showReaction('medium_rating');
         } else if (ratingData.rating > 3) {
           showReaction('high_rating');
         }
