@@ -14,13 +14,14 @@ interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-type Step = "welcome" | "question1" | "question2" | "complete";
+type Step = "welcome" | "assessment" | "question1" | "question2" | "complete";
 
 const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => {
   const [step, setStep] = useState<Step>("welcome");
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const [showExplanation, setShowExplanation] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [confidenceLevel, setConfidenceLevel] = useState<number | null>(null);
 
   const questions = [
     {
@@ -62,6 +63,16 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
     const correct = currentQuestion.options.find(opt => opt.id === selectedAnswer)?.correct || false;
     setIsCorrect(correct);
     setShowExplanation(true);
+  };
+
+  const handleAssessmentContinue = async () => {
+    if (confidenceLevel === 5) {
+      // They're confident, skip the test
+      await handleComplete();
+    } else {
+      // They need the onboarding
+      setStep("question1");
+    }
   };
 
   const handleNext = () => {
@@ -132,8 +143,81 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
               </p>
             </div>
 
-            <Button onClick={() => setStep("question1")} className="w-full" size="lg">
-              Start Quick Test
+            <Button onClick={() => setStep("assessment")} className="w-full" size="lg">
+              Continue
+            </Button>
+          </div>
+        )}
+
+        {step === "assessment" && (
+          <div className="space-y-6 py-6">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold">Quick Self-Assessment</h2>
+              <p className="text-muted-foreground">
+                On a scale of 1 to 5, how well do you understand deductive and inductive reasoning?
+              </p>
+            </div>
+
+            <Card className="p-6 space-y-4 bg-muted/30">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>Not at all</span>
+                  <span>Expert level</span>
+                </div>
+                <div className="grid grid-cols-5 gap-3">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setConfidenceLevel(level)}
+                      className={`aspect-square rounded-lg border-2 transition-all flex flex-col items-center justify-center gap-1 hover:scale-105 ${
+                        confidenceLevel === level
+                          ? "border-primary bg-primary/20 scale-105"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="text-2xl font-bold">{level}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {level === 1 && "Beginner"}
+                        {level === 2 && "Novice"}
+                        {level === 3 && "Intermediate"}
+                        {level === 4 && "Advanced"}
+                        {level === 5 && "Expert"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+
+            {confidenceLevel && confidenceLevel < 5 && (
+              <Card className="p-4 bg-blue-500/10 border-blue-500">
+                <p className="text-sm flex items-start gap-2">
+                  <Lightbulb className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span>
+                    Great! We'll walk you through a quick crash course to strengthen your understanding.
+                  </span>
+                </p>
+              </Card>
+            )}
+
+            {confidenceLevel === 5 && (
+              <Card className="p-4 bg-green-500/10 border-green-500">
+                <p className="text-sm flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>
+                    Excellent! You're ready to start discussing right away.
+                  </span>
+                </p>
+              </Card>
+            )}
+
+            <Button
+              onClick={handleAssessmentContinue}
+              disabled={!confidenceLevel}
+              className="w-full"
+              size="lg"
+            >
+              {confidenceLevel === 5 ? "Start Discussing" : "Start Learning"}
             </Button>
           </div>
         )}
