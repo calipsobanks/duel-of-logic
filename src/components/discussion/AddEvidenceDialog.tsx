@@ -79,6 +79,16 @@ export const AddEvidenceDialog = ({
     
     const evidenceContent = isUpdatingSource ? (existingClaim || "") : content;
     
+    // Validate starter phrase for new evidence
+    if (!isUpdatingSource && evidenceContent) {
+      const starterPhrases = ["I think", "I believe", "I know that"];
+      const startsWithRequired = starterPhrases.some(phrase => evidenceContent.trim().startsWith(phrase));
+      
+      if (!startsWithRequired) {
+        return; // Silently prevent submission - required field will show native validation
+      }
+    }
+    
     if (evidenceContent) {
       const evidenceData = {
         submittedBy: currentParticipantName,
@@ -174,7 +184,7 @@ export const AddEvidenceDialog = ({
               </div>
               <Textarea
                 id="content"
-                placeholder="Describe your evidence and how it supports your argument..."
+                placeholder='Start with "I think", "I believe", or "I know that"...'
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[120px]"
