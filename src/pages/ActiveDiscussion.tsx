@@ -601,7 +601,10 @@ const ActiveDiscussion = () => {
         <VsIntroAnimation
           participant1={discussion.debater1.username}
           participant2={discussion.debater2.username}
-          onComplete={() => setShowVsIntro(false)}
+          onComplete={() => {
+            console.log('ActiveDiscussion: VS intro completed, setting showVsIntro to false');
+            setShowVsIntro(false);
+          }}
         />
       )}
       {/* Compact Header */}
