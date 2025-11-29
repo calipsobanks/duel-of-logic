@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, BellOff, MessageSquare, Shield, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Bell, BellOff, MessageSquare, Shield, CheckCircle, AlertTriangle, Swords } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -12,13 +12,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 interface Notification {
   id: string;
-  type: 'debate_invite' | 'evidence_challenged' | 'evidence_accepted' | 'evidence_validated';
+  type: 'debate_invite' | 'evidence_challenged' | 'evidence_accepted' | 'evidence_validated' | 'debate_challenge';
   title: string;
   message: string;
-  debateId: string;
+  debateId?: string;
+  challengeId?: string;
   createdAt: string;
 }
 
@@ -108,6 +110,32 @@ export const NotificationsDropdown = () => {
         }
       });
 
+      // Fetch debate challenges where user is challenged
+      const { data: challenges } = await supabase
+        .from('debate_challenges')
+        .select(`
+          id,
+          topic,
+          status,
+          created_at,
+          challenger:profiles!debate_challenges_challenger_id_fkey(username)
+        `)
+        .eq('challenged_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      challenges?.forEach((challenge) => {
+        notifs.push({
+          id: `challenge-${challenge.id}`,
+          type: 'debate_challenge',
+          title: 'Debate Challenge',
+          message: `@${challenge.challenger?.username || 'Someone'} challenged you to debate: "${challenge.topic.slice(0, 50)}${challenge.topic.length > 50 ? '...' : ''}"`,
+          challengeId: challenge.id,
+          createdAt: challenge.created_at,
+        });
+      });
+
       // Sort by date
       notifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setNotifications(notifs.slice(0, 15));
@@ -130,6 +158,8 @@ export const NotificationsDropdown = () => {
     switch (type) {
       case 'debate_invite':
         return <MessageSquare className="h-4 w-4 text-primary" />;
+      case 'debate_challenge':
+        return <Swords className="h-4 w-4 text-red-500" />;
       case 'evidence_challenged':
         return <AlertTriangle className="h-4 w-4 text-orange-500" />;
       case 'evidence_accepted':
@@ -139,9 +169,69 @@ export const NotificationsDropdown = () => {
     }
   };
 
+  const handleAcceptChallenge = async (challengeId: string, topic: string) => {
+    try {
+      // Create debate
+      const { data: challenge } = await supabase
+        .from('debate_challenges')
+        .select('challenger_id, challenged_id')
+        .eq('id', challengeId)
+        .single();
+
+      if (!challenge) return;
+
+      const { data: debate, error: debateError } = await supabase
+        .from('debates')
+        .insert({
+          debater1_id: challenge.challenger_id,
+          debater2_id: challenge.challenged_id,
+          topic,
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (debateError) throw debateError;
+
+      // Update challenge status
+      await supabase
+        .from('debate_challenges')
+        .update({ status: 'accepted', debate_id: debate.id })
+        .eq('id', challengeId);
+
+      toast.success('Challenge accepted!');
+      navigate(`/discussion/active?id=${debate.id}`);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error accepting challenge:', error);
+      toast.error('Failed to accept challenge');
+    }
+  };
+
+  const handleDeclineChallenge = async (challengeId: string) => {
+    try {
+      await supabase
+        .from('debate_challenges')
+        .update({ status: 'declined' })
+        .eq('id', challengeId);
+
+      toast.success('Challenge declined');
+      fetchNotifications();
+    } catch (error) {
+      console.error('Error declining challenge:', error);
+      toast.error('Failed to decline challenge');
+    }
+  };
+
   const handleNotificationClick = (notification: Notification) => {
+    if (notification.type === 'debate_challenge') {
+      // Don't navigate, let the Accept/Decline buttons handle it
+      return;
+    }
     setIsOpen(false);
-    navigate(`/discussion/active?id=${notification.debateId}`);
+    if (notification.debateId) {
+      navigate(`/discussion/active?id=${notification.debateId}`);
+    }
   };
 
   return (
@@ -181,24 +271,57 @@ export const NotificationsDropdown = () => {
           ) : (
             <div className="divide-y">
               {notifications.map((notification) => (
-                <button
+                <div
                   key={notification.id}
-                  className="w-full p-3 text-left hover:bg-muted/50 transition-colors flex gap-3"
-                  onClick={() => handleNotificationClick(notification)}
+                  className={`w-full p-3 text-left ${notification.type === 'debate_challenge' ? '' : 'hover:bg-muted/50 transition-colors cursor-pointer'}`}
                 >
-                  <div className="flex-shrink-0 mt-0.5">
-                    {getIcon(notification.type)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{notification.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                    </p>
-                  </div>
-                </button>
+                  <button
+                    className="w-full flex gap-3 text-left"
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getIcon(notification.type)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{notification.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </button>
+                  {notification.type === 'debate_challenge' && notification.challengeId && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAcceptChallenge(
+                            notification.challengeId!,
+                            notification.message.split(': "')[1]?.replace('"', '') || 'Debate Topic'
+                          );
+                        }}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeclineChallenge(notification.challengeId!);
+                        }}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}
