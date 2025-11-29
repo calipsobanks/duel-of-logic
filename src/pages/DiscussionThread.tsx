@@ -39,7 +39,7 @@ interface Comment {
   source_confidence: string | null;
   source_warning: string | null;
   source_reasoning: string | null;
-  claim_evaluation: string | null;
+  claim_evaluation?: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -309,7 +309,7 @@ export default function DiscussionThread() {
                     sourceConfidence={comment.source_confidence}
                     sourceWarning={comment.source_warning}
                     sourceReasoning={comment.source_reasoning}
-                    claimEvaluation={comment.claim_evaluation}
+                    claimEvaluation={comment.claim_evaluation || null}
                     onChallenge={handleChallenge}
                     onAddSource={handleAddSource}
                     onResponseChange={async () => {

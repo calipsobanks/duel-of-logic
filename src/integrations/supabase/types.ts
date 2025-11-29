@@ -220,6 +220,7 @@ export type Database = {
       }
       discussion_comments: {
         Row: {
+          claim_evaluation: string | null
           content: string
           created_at: string
           id: string
@@ -236,6 +237,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          claim_evaluation?: string | null
           content: string
           created_at?: string
           id?: string
@@ -252,6 +254,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          claim_evaluation?: string | null
           content?: string
           created_at?: string
           id?: string

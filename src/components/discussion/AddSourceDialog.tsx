@@ -42,8 +42,8 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
       // Call AI to rate the source
       const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
         body: {
-          claim: comment.content + (additionalContext ? `\n\nAdditional context: ${additionalContext}` : ''),
           sourceUrl: sourceUrl.trim(),
+          evidenceDescription: comment.content + (additionalContext ? `\n\nAdditional context: ${additionalContext}` : ''),
         }
       });
 
@@ -54,11 +54,11 @@ export const AddSourceDialog = ({ open, onOpenChange, commentId, onSuccess }: Ad
         .from("discussion_comments")
         .update({
           source_url: sourceUrl.trim(),
-          source_type: ratingData.sourceType,
           source_rating: ratingData.rating,
           source_confidence: ratingData.confidence,
-          source_reasoning: ratingData.reasoning,
+          source_reasoning: JSON.stringify(ratingData.reasoning),
           source_warning: ratingData.warning,
+          claim_evaluation: ratingData.claimEvaluation,
         })
         .eq("id", commentId);
 
