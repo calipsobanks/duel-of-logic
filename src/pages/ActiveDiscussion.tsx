@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, Plus, Lightbulb, Share2, Clock } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { TimelineEvidenceCard } from "@/components/discussion/TimelineEvidenceCard";
+import { VsIntroAnimation } from "@/components/discussion/VsIntroAnimation";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,6 +66,7 @@ const ActiveDiscussion = () => {
   const [isReratingSource, setIsReratingSource] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [updatingSourceForId, setUpdatingSourceForId] = useState<string | null>(null);
+  const [showVsIntro, setShowVsIntro] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -130,6 +132,7 @@ const ActiveDiscussion = () => {
     setDiscussion(data);
     setCurrentParticipant(data.debater1_id === user?.id ? 1 : 2);
     setLoading(false);
+    setShowVsIntro(true);
   };
 
   const loadEvidence = async () => {
@@ -575,6 +578,14 @@ const ActiveDiscussion = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 via-background to-background flex flex-col">
+      {/* VS Intro Animation */}
+      {showVsIntro && (
+        <VsIntroAnimation
+          participant1={discussion.debater1.username}
+          participant2={discussion.debater2.username}
+          onComplete={() => setShowVsIntro(false)}
+        />
+      )}
       {/* Compact Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b">
         <div className="flex items-center justify-between px-4 py-3">
