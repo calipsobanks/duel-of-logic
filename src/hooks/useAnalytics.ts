@@ -157,7 +157,17 @@ export const useAnalytics = () => {
     if (!user || !session) return;
     if (session.user?.email === 'edwardhill91@gmail.com') return;
 
-    const handleClick = (event: MouseEvent) => {
+    let lastEventTime = 0;
+    const DEBOUNCE_MS = 300; // Prevent duplicate events within 300ms
+
+    const handleInteraction = (event: MouseEvent | TouchEvent) => {
+      // Debounce to prevent double-tracking on mobile (both touch and click fire)
+      const now = Date.now();
+      if (now - lastEventTime < DEBOUNCE_MS) {
+        return;
+      }
+      lastEventTime = now;
+
       const target = event.target as HTMLElement;
       const discussionId = getDiscussionId();
       const pageContext = getPageContext();
@@ -202,8 +212,14 @@ export const useAnalytics = () => {
       }
     };
 
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    // Listen to both click (desktop) and touchend (mobile) events
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchend', handleInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchend', handleInteraction);
+    };
   }, [user, session, location]);
 
   return { trackEvent };
