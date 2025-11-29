@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useReaction } from '@/contexts/ReactionContext';
 import { toast } from 'sonner';
 
 // Notification sound URL (free sound effect)
@@ -8,6 +9,7 @@ const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869
 
 export const useNotifications = () => {
   const { user } = useAuth();
+  const { showReaction } = useReaction();
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [hasNewNotification, setHasNewNotification] = useState(false);
 
@@ -171,6 +173,7 @@ export const useNotifications = () => {
             .single();
 
           if (newRecord.status === 'challenged' && oldRecord.status === 'pending') {
+            showReaction('challenged');
             showNotification(
               '⚔️ Evidence Challenged!',
               `Your evidence in "${debate?.topic?.slice(0, 50)}..." has been challenged. Defend your claim!`,
@@ -181,6 +184,7 @@ export const useNotifications = () => {
           }
 
           if (newRecord.status === 'agreed' && oldRecord.status === 'pending') {
+            showReaction('agreed');
             showNotification(
               '✅ Evidence Accepted!',
               `Your evidence in "${debate?.topic?.slice(0, 50)}..." was accepted! You earned points.`,
@@ -190,7 +194,19 @@ export const useNotifications = () => {
             );
           }
 
+          if (newRecord.status === 'source_requested' && oldRecord.status === 'pending') {
+            showReaction('source_requested');
+            showNotification(
+              '❓ Source Requested!',
+              `Your opponent wants a source for your claim in "${debate?.topic?.slice(0, 50)}...". Provide evidence!`,
+              () => {
+                window.location.href = `/discussion/active?id=${newRecord.debate_id}`;
+              }
+            );
+          }
+
           if (newRecord.status === 'validated' && oldRecord.status === 'challenged') {
+            showReaction('agreed');
             showNotification(
               '🏆 Evidence Validated!',
               `Your challenged evidence in "${debate?.topic?.slice(0, 50)}..." was validated! You defended successfully.`,
@@ -209,7 +225,7 @@ export const useNotifications = () => {
       console.log('Cleaning up notification channel');
       supabase.removeChannel(channel);
     };
-  }, [user, showNotification]);
+  }, [user, showNotification, showReaction]);
 
   return {
     permission,
