@@ -91,21 +91,21 @@ export const PostTopicDialog = ({ open, onOpenChange, onSuccess, userId }: PostT
               <span className="text-sm text-muted-foreground">Start with:</span>
               <Badge
                 variant="outline"
-                className="cursor-pointer hover:bg-accent"
+                className="cursor-pointer hover:bg-accent transition-all hover:scale-105"
                 onClick={() => handleStarterPhrase("I think")}
               >
                 I think
               </Badge>
               <Badge
                 variant="outline"
-                className="cursor-pointer hover:bg-accent"
+                className="cursor-pointer hover:bg-accent transition-all hover:scale-105"
                 onClick={() => handleStarterPhrase("I believe")}
               >
                 I believe
               </Badge>
               <Badge
                 variant="outline"
-                className="cursor-pointer hover:bg-accent"
+                className="cursor-pointer hover:bg-accent transition-all hover:scale-105"
                 onClick={() => handleStarterPhrase("I know that")}
               >
                 I know that

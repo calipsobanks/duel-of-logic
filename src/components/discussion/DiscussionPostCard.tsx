@@ -28,7 +28,7 @@ export const DiscussionPostCard = ({
   onViewThread,
 }: DiscussionPostCardProps) => {
   return (
-    <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => onViewThread(id)}>
+    <Card className="hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer animate-fade-in" onClick={() => onViewThread(id)}>
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10">
@@ -60,7 +60,7 @@ export const DiscussionPostCard = ({
             <MessageSquare className="h-4 w-4" />
             <span>{commentsCount}</span>
           </div>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={(e) => {
+          <Button variant="ghost" size="sm" className="ml-auto hover-scale" onClick={(e) => {
             e.stopPropagation();
             onViewThread(id);
           }}>

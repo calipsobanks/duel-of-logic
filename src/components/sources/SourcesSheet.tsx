@@ -144,8 +144,8 @@ export const SourcesSheet = ({ open, onOpenChange }: SourcesSheetProps) => {
                   <p className="text-xs mt-1">Add your frequently used sources above</p>
                 </div>
               ) : (
-                sources.map((source) => (
-                  <Card key={source.id}>
+                sources.map((source, index) => (
+                  <Card key={source.id} className="animate-fade-in hover:shadow-md transition-all duration-300" style={{ animationDelay: `${index * 0.05}s` }}>
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
@@ -165,7 +165,7 @@ export const SourcesSheet = ({ open, onOpenChange }: SourcesSheetProps) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyUrl(source.url)}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 hover:scale-110 transition-transform"
                             title="Copy URL"
                           >
                             <Copy className="h-4 w-4" />
@@ -174,7 +174,7 @@ export const SourcesSheet = ({ open, onOpenChange }: SourcesSheetProps) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteSource(source.id)}
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:scale-110 transition-transform"
                             title="Delete"
                           >
                             <Trash2 className="h-4 w-4" />

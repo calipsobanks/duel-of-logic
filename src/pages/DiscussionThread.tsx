@@ -293,7 +293,7 @@ export default function DiscussionThread() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center animate-pulse">
         <p className="text-muted-foreground">Loading...</p>
       </div>
     );
@@ -304,7 +304,7 @@ export default function DiscussionThread() {
       <div className="max-w-4xl mx-auto p-4">
         <Button
           variant="ghost"
-          className="mb-4"
+          className="mb-4 hover-scale"
           onClick={() => navigate("/discussions")}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -312,7 +312,7 @@ export default function DiscussionThread() {
         </Button>
 
         {/* Post Header */}
-        <div className="bg-card rounded-lg border p-6 mb-6">
+        <div className="bg-card rounded-lg border p-6 mb-6 animate-fade-in">
           <div className="flex items-start gap-4 mb-4">
             <Avatar className="h-12 w-12">
               <AvatarImage src={post.profiles.avatar_url || ""} />
@@ -346,12 +346,12 @@ export default function DiscussionThread() {
         </div>
 
         {/* Add Comment */}
-        <div className="bg-card rounded-lg border p-4 mb-6">
+        <div className="bg-card rounded-lg border p-4 mb-6 animate-fade-in">
           <div className="flex gap-2 mb-2">
             <span className="text-sm text-muted-foreground">Start with:</span>
             <Badge
               variant="outline"
-              className="cursor-pointer hover:bg-accent"
+              className="cursor-pointer hover:bg-accent transition-all hover:scale-105"
               onClick={() => {
                 const starterPhrases = ["I think", "I believe", "I know that"];
                 const startsWithStarter = starterPhrases.some(p => newComment.startsWith(p));
@@ -369,7 +369,7 @@ export default function DiscussionThread() {
             </Badge>
             <Badge
               variant="outline"
-              className="cursor-pointer hover:bg-accent"
+              className="cursor-pointer hover:bg-accent transition-all hover:scale-105"
               onClick={() => {
                 const starterPhrases = ["I think", "I believe", "I know that"];
                 const startsWithStarter = starterPhrases.some(p => newComment.startsWith(p));
@@ -387,7 +387,7 @@ export default function DiscussionThread() {
             </Badge>
             <Badge
               variant="outline"
-              className="cursor-pointer hover:bg-accent"
+              className="cursor-pointer hover:bg-accent transition-all hover:scale-105"
               onClick={() => {
                 const starterPhrases = ["I think", "I believe", "I know that"];
                 const startsWithStarter = starterPhrases.some(p => newComment.startsWith(p));
