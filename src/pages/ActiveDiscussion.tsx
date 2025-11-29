@@ -226,6 +226,7 @@ const ActiveDiscussion = () => {
       if (evidenceData.sourceUrl) {
         try {
           const evidence = evidenceList.find(e => e.id === updatingSourceForId);
+          console.log('[Rating] Starting source rating for updated evidence:', updatingSourceForId);
           const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
             body: {
               sourceUrl: evidenceData.sourceUrl,
@@ -233,29 +234,56 @@ const ActiveDiscussion = () => {
             }
           });
 
-          if (!ratingError && ratingData) {
-            await supabase
+          console.log('[Rating] Response received:', { ratingError, hasData: !!ratingData, ratingData });
+
+          if (ratingError) {
+            console.error('[Rating] Error from rate-source function:', ratingError);
+            toast({
+              title: "Rating Failed",
+              description: "Could not rate the source. Evidence updated without rating.",
+              variant: "destructive",
+            });
+          } else if (ratingData) {
+            const { error: updateError } = await supabase
               .from('evidence')
               .update({
                 source_rating: ratingData.rating,
                 source_reasoning: JSON.stringify(ratingData.reasoning),
                 source_confidence: ratingData.confidence,
                 content_analyzed: ratingData.contentAnalyzed,
-                source_warning: ratingData.warning
+                source_warning: ratingData.warning,
+                claim_evaluation: ratingData.claimEvaluation,
+                suggested_correction: ratingData.suggestedCorrection,
+                quote_example: ratingData.quoteExample
               })
               .eq('id', updatingSourceForId);
-            
-            // Show rating animations
-            if (ratingData.rating < 3) {
-              showReaction('low_rating');
-            } else if (ratingData.rating === 3) {
-              showReaction('medium_rating');
-            } else if (ratingData.rating > 3) {
-              showReaction('high_rating');
+
+            if (updateError) {
+              console.error('[Rating] Failed to update evidence with rating:', updateError);
+              toast({
+                title: "Rating Update Failed",
+                description: "Source was rated but failed to save. Please try re-rating.",
+                variant: "destructive",
+              });
+            } else {
+              console.log('[Rating] Successfully updated evidence with rating');
+              // Show rating animations
+              if (ratingData.rating < 3) {
+                showReaction('low_rating');
+              } else if (ratingData.rating === 3) {
+                showReaction('medium_rating');
+              } else if (ratingData.rating > 3) {
+                showReaction('high_rating');
+              }
             }
           }
         } catch (error) {
-          console.error('Failed to rate source:', error);
+          console.error('[Rating] Exception during rating:', error);
+          toast({
+            title: "Rating Error",
+            description: error instanceof Error ? error.message : "Failed to rate source",
+            variant: "destructive",
+          });
         }
       }
 
@@ -296,6 +324,7 @@ const ActiveDiscussion = () => {
     // Rate the source if URL is provided
     if (evidenceData.sourceUrl && insertedEvidence) {
       try {
+        console.log('[Rating] Starting source rating for evidence:', insertedEvidence.id);
         const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
           body: {
             sourceUrl: evidenceData.sourceUrl,
@@ -303,9 +332,18 @@ const ActiveDiscussion = () => {
           }
         });
 
-        if (!ratingError && ratingData) {
+        console.log('[Rating] Response received:', { ratingError, hasData: !!ratingData, ratingData });
+
+        if (ratingError) {
+          console.error('[Rating] Error from rate-source function:', ratingError);
+          toast({
+            title: "Rating Failed",
+            description: "Could not rate the source. Evidence added without rating.",
+            variant: "destructive",
+          });
+        } else if (ratingData) {
           // Update evidence with rating and reasoning
-          await supabase
+          const { error: updateError } = await supabase
             .from('evidence')
             .update({
               source_rating: ratingData.rating,
@@ -318,18 +356,33 @@ const ActiveDiscussion = () => {
               quote_example: ratingData.quoteExample
             })
             .eq('id', insertedEvidence.id);
-          
-          // Show rating animations
-          if (ratingData.rating < 3) {
-            showReaction('low_rating');
-          } else if (ratingData.rating === 3) {
-            showReaction('medium_rating');
-          } else if (ratingData.rating > 3) {
-            showReaction('high_rating');
+
+          if (updateError) {
+            console.error('[Rating] Failed to update evidence with rating:', updateError);
+            toast({
+              title: "Rating Update Failed",
+              description: "Source was rated but failed to save. Please try re-rating.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('[Rating] Successfully updated evidence with rating');
+            // Show rating animations
+            if (ratingData.rating < 3) {
+              showReaction('low_rating');
+            } else if (ratingData.rating === 3) {
+              showReaction('medium_rating');
+            } else if (ratingData.rating > 3) {
+              showReaction('high_rating');
+            }
           }
         }
       } catch (error) {
-        console.error('Failed to rate source:', error);
+        console.error('[Rating] Exception during rating:', error);
+        toast({
+          title: "Rating Error",
+          description: error instanceof Error ? error.message : "Failed to rate source",
+          variant: "destructive",
+        });
       }
     }
 
