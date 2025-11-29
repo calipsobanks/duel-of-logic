@@ -35,10 +35,18 @@ export const useAnalytics = () => {
     discussionId: string | null = null,
     durationSeconds: number | null = null
   ) => {
-    if (!user || !session) return;
+    if (!user || !session) {
+      console.log('[Analytics] No user or session:', { user: !!user, session: !!session });
+      return;
+    }
     
     // Skip tracking for admin user
-    if (session.user?.email === 'edwardhill91@gmail.com') return;
+    if (session.user?.email === 'edwardhill91@gmail.com') {
+      console.log('[Analytics] Skipping admin user');
+      return;
+    }
+
+    console.log('[Analytics] Tracking event:', { eventType, eventTarget, discussionId, durationSeconds, email: session.user?.email });
 
     try {
       // Get device info
@@ -50,7 +58,7 @@ export const useAnalytics = () => {
         : durationSeconds;
 
       // Insert analytics event
-      await supabase.from('analytics_events').insert({
+      const { data, error } = await supabase.from('analytics_events').insert({
         user_id: user.id,
         username: usernameRef.current || 'Unknown',
         event_type: eventType,
@@ -59,8 +67,14 @@ export const useAnalytics = () => {
         discussion_id: discussionId,
         duration_seconds: cappedDuration,
       });
+
+      if (error) {
+        console.error('[Analytics] Insert error:', error);
+      } else {
+        console.log('[Analytics] Event tracked successfully');
+      }
     } catch (error) {
-      console.error('Failed to track analytics event:', error);
+      console.error('[Analytics] Failed to track analytics event:', error);
     }
   };
 
