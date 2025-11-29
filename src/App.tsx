@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ReactionProvider } from "@/contexts/ReactionContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingModal from "@/components/onboarding/OnboardingModal";
@@ -97,7 +98,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <AppContent />
+            <ReactionProvider>
+              <AppContent />
+            </ReactionProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
