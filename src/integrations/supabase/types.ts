@@ -23,6 +23,7 @@ export type Database = {
           event_target: string
           event_type: string
           id: string
+          topic: string | null
           user_id: string
           username: string
         }
@@ -34,6 +35,7 @@ export type Database = {
           event_target: string
           event_type: string
           id?: string
+          topic?: string | null
           user_id: string
           username: string
         }
@@ -45,6 +47,7 @@ export type Database = {
           event_target?: string
           event_type?: string
           id?: string
+          topic?: string | null
           user_id?: string
           username?: string
         }

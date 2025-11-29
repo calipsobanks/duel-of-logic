@@ -57,6 +57,18 @@ export const useAnalytics = () => {
         ? MAX_DURATION_SECONDS 
         : durationSeconds;
 
+      // Fetch debate topic if discussionId is provided
+      let topic = null;
+      if (discussionId) {
+        const { data: debateData } = await supabase
+          .from('debates')
+          .select('topic')
+          .eq('id', discussionId)
+          .single();
+        
+        topic = debateData?.topic || null;
+      }
+
       // Insert analytics event
       const { data, error } = await supabase.from('analytics_events').insert({
         user_id: user.id,
@@ -65,13 +77,14 @@ export const useAnalytics = () => {
         event_target: eventTarget,
         device_info: deviceInfo,
         discussion_id: discussionId,
+        topic: topic,
         duration_seconds: cappedDuration,
       });
 
       if (error) {
         console.error('[Analytics] Insert error:', error);
       } else {
-        console.log('[Analytics] Event tracked successfully');
+        console.log('[Analytics] Event tracked successfully', { topic });
       }
     } catch (error) {
       console.error('[Analytics] Failed to track analytics event:', error);
