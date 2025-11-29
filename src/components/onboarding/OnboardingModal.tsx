@@ -467,14 +467,14 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
             </div>
 
             {/* Affiliate Earnings Card */}
-            <Card className="p-6 space-y-4 bg-gradient-to-br from-gold/20 to-yellow-500/10 border-gold/30">
+            <Card className="p-6 space-y-4 bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/30">
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
-                  <DollarSign className="h-6 w-6 text-gold" />
+                <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                  <DollarSign className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-lg mb-1">Earn $100 - $5,000</h3>
-                  <Badge className="bg-gold text-gold-foreground mb-3">No Gimmicks. 100% Legal.</Badge>
+                  <Badge className="bg-green-600 text-white mb-3">No Gimmicks. 100% Legal.</Badge>
                 </div>
               </div>
               
@@ -482,20 +482,20 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
                 <p className="font-medium">Use our affiliate links to sign up for legitimate services:</p>
                 <ul className="space-y-2 ml-4">
                   <li className="flex items-start gap-2">
-                    <span className="text-gold mt-0.5">•</span>
+                    <span className="text-green-600 mt-0.5">•</span>
                     <span>Open high-yield savings accounts with bonuses</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-gold mt-0.5">•</span>
+                    <span className="text-green-600 mt-0.5">•</span>
                     <span>Start investing with sign-up rewards</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-gold mt-0.5">•</span>
+                    <span className="text-green-600 mt-0.5">•</span>
                     <span>Get banking bonuses for new accounts</span>
                   </li>
                 </ul>
-                <div className="pt-3 border-t border-gold/20">
-                  <p className="font-semibold text-gold">Win-Win! 🎉</p>
+                <div className="pt-3 border-t border-green-500/20">
+                  <p className="font-semibold text-green-600">Win-Win! 🎉</p>
                   <p className="text-muted-foreground">
                     You earn real money. We get a small commission. Everyone benefits!
                   </p>
@@ -521,7 +521,7 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
                   await handleComplete();
                   navigate("/support");
                 }}
-                className="w-full bg-gold hover:bg-gold/90 text-gold-foreground"
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
                 size="lg"
               >
                 <Star className="h-4 w-4 mr-2" />
