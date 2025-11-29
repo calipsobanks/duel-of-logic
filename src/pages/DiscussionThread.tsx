@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, ThumbsUp, User } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +37,7 @@ interface Comment {
   score: number;
   created_at: string;
   source_url: string | null;
+  source_quote: string | null;
   source_rating: number | null;
   source_confidence: string | null;
   source_warning: string | null;
@@ -61,6 +64,8 @@ export default function DiscussionThread() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [likes, setLikes] = useState<Like[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [sourceQuote, setSourceQuote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [challengeDialog, setChallengeDialog] = useState<{
@@ -178,18 +183,77 @@ export default function DiscussionThread() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
+      // Insert comment first
+      const { data: newCommentData, error: insertError } = await supabase
         .from("discussion_comments")
         .insert({
           post_id: postId,
           user_id: user.id,
           content: newComment.trim(),
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // If source URL is provided, rate it with AI
+      if (sourceUrl.trim()) {
+        const claimWithQuote = sourceQuote.trim() 
+          ? `${newComment.trim()}\n\nQuoted from source: "${sourceQuote.trim()}"`
+          : newComment.trim();
+
+        const { data: ratingData, error: ratingError } = await supabase.functions.invoke('rate-source', {
+          body: {
+            sourceUrl: sourceUrl.trim(),
+            evidenceDescription: claimWithQuote,
+          }
         });
 
-      if (error) throw error;
+        if (ratingError) {
+          console.error("Error rating source:", ratingError);
+          toast.error("Comment posted but source rating failed");
+        } else {
+          // Update comment with source and rating
+          const { error: updateError } = await supabase
+            .from("discussion_comments")
+            .update({
+              source_url: sourceUrl.trim(),
+              source_quote: sourceQuote.trim() || null,
+              source_rating: ratingData.rating,
+              source_confidence: ratingData.confidence,
+              source_reasoning: JSON.stringify(ratingData.reasoning),
+              source_warning: ratingData.warning,
+              claim_evaluation: ratingData.claimEvaluation,
+            })
+            .eq("id", newCommentData.id);
+
+          if (updateError) {
+            console.error("Error updating source:", updateError);
+          }
+
+          // Award points for sourced comments
+          if (ratingData.rating >= 4) {
+            await supabase.from("discussion_points").insert({
+              user_id: user.id,
+              comment_id: newCommentData.id,
+              points_earned: 5,
+              action_type: "high_quality_source",
+            });
+          } else if (ratingData.rating >= 3) {
+            await supabase.from("discussion_points").insert({
+              user_id: user.id,
+              comment_id: newCommentData.id,
+              points_earned: 1,
+              action_type: "comment_sourced",
+            });
+          }
+        }
+      }
 
       toast.success("Comment posted!");
       setNewComment("");
+      setSourceUrl("");
+      setSourceQuote("");
       await loadComments();
       await loadPost();
     } catch (error) {
@@ -273,6 +337,39 @@ export default function DiscussionThread() {
             rows={3}
             className="mb-3"
           />
+          
+          {/* Optional Source Fields */}
+          <div className="space-y-3 mb-3">
+            <div className="space-y-2">
+              <Label htmlFor="comment-source" className="text-xs text-muted-foreground">
+                Source URL (optional) - Add credibility to your comment
+              </Label>
+              <Input
+                id="comment-source"
+                type="url"
+                value={sourceUrl}
+                onChange={(e) => setSourceUrl(e.target.value)}
+                placeholder="https://example.com/article"
+              />
+            </div>
+            
+            {sourceUrl && (
+              <div className="space-y-2">
+                <Label htmlFor="comment-quote" className="text-xs text-muted-foreground">
+                  Quote from source - Help others verify quickly
+                </Label>
+                <Textarea
+                  id="comment-quote"
+                  value={sourceQuote}
+                  onChange={(e) => setSourceQuote(e.target.value)}
+                  placeholder='e.g., "Studies show that 87% of participants..."'
+                  rows={2}
+                  maxLength={500}
+                />
+              </div>
+            )}
+          </div>
+
           <div className="flex justify-end">
             <Button onClick={handleSubmitComment} disabled={isSubmitting || !newComment.trim()}>
               {isSubmitting ? "Posting..." : "Post Comment"}
@@ -305,6 +402,7 @@ export default function DiscussionThread() {
                     hasAgreed={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'agree')}
                     hasDisagreed={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id && l.response_type === 'disagree')}
                     sourceUrl={comment.source_url}
+                    sourceQuote={comment.source_quote}
                     sourceRating={comment.source_rating}
                     sourceConfidence={comment.source_confidence}
                     sourceWarning={comment.source_warning}

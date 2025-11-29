@@ -27,6 +27,7 @@ interface DiscussionCommentProps {
   hasAgreed: boolean;
   hasDisagreed: boolean;
   sourceUrl: string | null;
+  sourceQuote: string | null;
   sourceRating: number | null;
   sourceConfidence: string | null;
   sourceWarning: string | null;
@@ -52,6 +53,7 @@ export const DiscussionComment = ({
   hasAgreed,
   hasDisagreed,
   sourceUrl,
+  sourceQuote,
   sourceRating,
   sourceConfidence,
   sourceWarning,
@@ -264,6 +266,13 @@ export const DiscussionComment = ({
                     </a>
                   </div>
                 </div>
+
+                {/* Show quote if available */}
+                {sourceQuote && (
+                  <div className="mb-2 p-2 bg-background/50 rounded border-l-2 border-primary">
+                    <p className="text-xs text-muted-foreground italic">"{sourceQuote}"</p>
+                  </div>
+                )}
                 
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   {getSourceBadge()}

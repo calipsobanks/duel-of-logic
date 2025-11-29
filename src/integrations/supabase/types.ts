@@ -229,6 +229,7 @@ export type Database = {
           post_id: string
           score: number
           source_confidence: string | null
+          source_quote: string | null
           source_rating: number | null
           source_reasoning: string | null
           source_type: string | null
@@ -246,6 +247,7 @@ export type Database = {
           post_id: string
           score?: number
           source_confidence?: string | null
+          source_quote?: string | null
           source_rating?: number | null
           source_reasoning?: string | null
           source_type?: string | null
@@ -263,6 +265,7 @@ export type Database = {
           post_id?: string
           score?: number
           source_confidence?: string | null
+          source_quote?: string | null
           source_rating?: number | null
           source_reasoning?: string | null
           source_type?: string | null
