@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 
@@ -34,6 +35,22 @@ export const AddEvidenceDialog = ({
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceType, setSourceType] = useState<"factual" | "opinionated">("factual");
   const { isRecording, isTranscribing, startRecording, stopRecording, cancelRecording } = useVoiceRecording();
+
+  const handleStarterPhrase = (phrase: string) => {
+    setContent(prev => {
+      // If content is empty or doesn't start with the phrase, add it
+      if (!prev) return `${phrase} `;
+      // If it already starts with a starter phrase, replace it
+      const starterPhrases = ["I think", "I believe", "I know that"];
+      const startsWithStarter = starterPhrases.some(p => prev.startsWith(p));
+      if (startsWithStarter) {
+        const afterStarter = prev.replace(/^(I think|I believe|I know that)\s*/, '');
+        return `${phrase} ${afterStarter}`;
+      }
+      // Otherwise prepend it
+      return `${phrase} ${prev}`;
+    });
+  };
 
   const handleVoiceToggle = async () => {
     if (isRecording) {
@@ -130,6 +147,30 @@ export const AddEvidenceDialog = ({
                     </>
                   )}
                 </Button>
+              </div>
+              <div className="flex gap-2 mb-2">
+                <span className="text-sm text-muted-foreground">Start with:</span>
+                <Badge
+                  variant="outline"
+                  className="cursor-pointer hover:bg-accent"
+                  onClick={() => handleStarterPhrase("I think")}
+                >
+                  I think
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="cursor-pointer hover:bg-accent"
+                  onClick={() => handleStarterPhrase("I believe")}
+                >
+                  I believe
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="cursor-pointer hover:bg-accent"
+                  onClick={() => handleStarterPhrase("I know that")}
+                >
+                  I know that
+                </Badge>
               </div>
               <Textarea
                 id="content"
