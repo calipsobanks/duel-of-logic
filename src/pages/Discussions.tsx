@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare, Award, BookOpen, Info, BarChart3 } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare, Award, BookOpen, Info } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { getRankForPoints } from '@/lib/ranks';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,7 +20,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ControversialTopics } from '@/components/ControversialTopics';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 interface Profile {
   id: string;
   username: string;
@@ -71,7 +70,6 @@ const Discussions = () => {
   const [isEditPhoneOpen, setIsEditPhoneOpen] = useState(false);
   const [isEditAboutMeOpen, setIsEditAboutMeOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [religion, setReligion] = useState('');
   const [politicalView, setPoliticalView] = useState('');
   const [universityDegree, setUniversityDegree] = useState('');
@@ -93,9 +91,6 @@ const Discussions = () => {
   
   // Initialize analytics tracking
   useAnalytics();
-  
-  // Check if current user is the analytics admin
-  const isAnalyticsAdmin = session?.user?.email === 'edwardhill91@gmail.com';
   const currentUserProfile = profiles.find(p => p.id === user?.id);
   useEffect(() => {
     if (!user) {
@@ -735,12 +730,6 @@ const Discussions = () => {
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Beliefs
                     </Button>
-                    {isAnalyticsAdmin && (
-                      <Button variant="outline" onClick={() => setIsAnalyticsOpen(true)} className="w-full">
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Analytics
-                      </Button>
-                    )}
                     <Button variant="outline" onClick={() => navigate('/support')} className="w-full border-gold/50 hover:border-gold hover:bg-gold/10 text-gold hover:text-gold">
                       <Heart className="h-4 w-4 mr-2 fill-gold" />
                       Support This App
@@ -967,12 +956,6 @@ const Discussions = () => {
           onComplete={() => setIsOnboardingOpen(false)}
         />
       )}
-
-      {/* Analytics Dialog */}
-      <AnalyticsDialog 
-        open={isAnalyticsOpen}
-        onOpenChange={setIsAnalyticsOpen}
-      />
     </div>
   );
 };
