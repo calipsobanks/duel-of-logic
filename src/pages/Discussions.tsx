@@ -684,7 +684,7 @@ const Discussions = () => {
                 </div>
               </CardContent>
               <div className="px-6 pb-4 text-center">
-                <p className="text-xs text-muted-foreground">v0.0.4</p>
+                <p className="text-xs text-muted-foreground">v0.5</p>
               </div>
             </Card>
           </div>}
