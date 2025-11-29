@@ -180,6 +180,12 @@ export default function DiscussionThread() {
   const handleSubmitComment = async () => {
     if (!user || !postId || !newComment.trim()) return;
 
+    // Validate that if source URL is provided, quote is also required
+    if (sourceUrl.trim() && !sourceQuote.trim()) {
+      toast.error("Please provide a quote from your source");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -356,7 +362,7 @@ export default function DiscussionThread() {
             {sourceUrl && (
               <div className="space-y-2">
                 <Label htmlFor="comment-quote" className="text-xs text-muted-foreground">
-                  Quote from source - Help others verify quickly
+                  Quote from source (required) - Help others verify quickly
                 </Label>
                 <Textarea
                   id="comment-quote"
@@ -365,13 +371,20 @@ export default function DiscussionThread() {
                   placeholder='e.g., "Studies show that 87% of participants..."'
                   rows={2}
                   maxLength={500}
+                  required
                 />
+                {sourceUrl && !sourceQuote.trim() && (
+                  <p className="text-xs text-destructive">Please provide a quote from your source</p>
+                )}
               </div>
             )}
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleSubmitComment} disabled={isSubmitting || !newComment.trim()}>
+            <Button 
+              onClick={handleSubmitComment} 
+              disabled={isSubmitting || !newComment.trim() || (sourceUrl.trim() && !sourceQuote.trim())}
+            >
               {isSubmitting ? "Posting..." : "Post Comment"}
             </Button>
           </div>
