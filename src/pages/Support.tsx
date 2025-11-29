@@ -100,6 +100,45 @@ const Support = () => {
           ))}
         </div>
 
+        {/* Financial Community Section */}
+        <div className="space-y-4 pt-2">
+          <div className="bg-secondary/5 -mx-4 px-4 py-6 border-y border-secondary/20">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-2 w-20 bg-secondary rounded-full shadow-lg shadow-secondary/30" />
+                <h2 className="text-3xl font-bold tracking-tight">Join Our Financial Community</h2>
+              </div>
+              <p className="text-sm text-muted-foreground px-1">
+                Want to learn more about financial education? Join our community where members earn $1,000 - $5,000:
+              </p>
+            </div>
+          </div>
+          
+          <Card className="border-secondary/20">
+            <CardHeader>
+              <CardTitle>Earn Back Your Time Community</CardTitle>
+              <CardDescription>
+                A thriving community focused on financial education and earning opportunities
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Join our financing community where we discuss financial education strategies. 
+                Members have the opportunity to earn between $1,000 - $5,000 while learning valuable 
+                financial skills.
+              </p>
+              <Button 
+                variant="secondary" 
+                className="w-full" 
+                onClick={() => window.open('https://www.skool.com/earn-back-your-time-1806/about?ref=d11ada6914ad4efbadf3be4b311fe2eb', '_blank')}
+              >
+                Join the Community
+                <ExternalLink className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Donation Section */}
         <div className="space-y-4 pt-2">
           <div className="bg-accent/5 -mx-4 px-4 py-6 border-y border-accent/20">
