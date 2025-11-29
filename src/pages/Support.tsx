@@ -63,16 +63,18 @@ const Support = () => {
         </Card>
 
         {/* Affiliate Links Section */}
-        <div className="space-y-4 pt-4">
-          <div className="border-t pt-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-1 w-12 bg-primary rounded-full" />
-              <h2 className="text-2xl font-bold">Support Through Affiliate Links</h2>
+        <div className="space-y-4 pt-2">
+          <div className="bg-primary/5 -mx-4 px-4 py-6 border-y border-primary/20">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-2 w-20 bg-primary rounded-full shadow-lg shadow-primary/30" />
+                <h2 className="text-3xl font-bold tracking-tight">Support Through Affiliate Links</h2>
+              </div>
+              <p className="text-sm text-muted-foreground px-1">
+                These are services we use and recommend. When you sign up through our links, we earn a small 
+                commission at no extra cost to you:
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground px-1 mb-4">
-              These are services we use and recommend. When you sign up through our links, we earn a small 
-              commission at no extra cost to you:
-            </p>
           </div>
           
           {affiliateLinks.map((link, index) => (
@@ -99,15 +101,17 @@ const Support = () => {
         </div>
 
         {/* Donation Section */}
-        <div className="space-y-4 pt-4">
-          <div className="border-t pt-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-1 w-12 bg-accent rounded-full" />
-              <h2 className="text-2xl font-bold">Direct Support</h2>
+        <div className="space-y-4 pt-2">
+          <div className="bg-accent/5 -mx-4 px-4 py-6 border-y border-accent/20">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-2 w-20 bg-accent rounded-full shadow-lg shadow-accent/30" />
+                <h2 className="text-3xl font-bold tracking-tight">Direct Support</h2>
+              </div>
+              <p className="text-sm text-muted-foreground px-1">
+                Prefer to support us directly? You can make a one-time donation through PayPal:
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground px-1 mb-4">
-              Prefer to support us directly? You can make a one-time donation through PayPal:
-            </p>
           </div>
           
           <Card>
