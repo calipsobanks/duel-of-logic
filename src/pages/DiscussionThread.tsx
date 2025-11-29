@@ -1,0 +1,313 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowLeft, ThumbsUp, User } from "lucide-react";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { DiscussionComment } from "@/components/discussion/DiscussionComment";
+import { ChallengeToDebateDialog } from "@/components/discussion/ChallengeToDebateDialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface Post {
+  id: string;
+  title: string;
+  description: string | null;
+  user_id: string;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  user_id: string;
+  likes_count: number;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
+interface Like {
+  user_id: string;
+  post_id: string | null;
+  comment_id: string | null;
+}
+
+export default function DiscussionThread() {
+  const { postId } = useParams<{ postId: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [likes, setLikes] = useState<Like[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [challengeDialog, setChallengeDialog] = useState<{
+    open: boolean;
+    commentId: string;
+    userId: string;
+    username: string;
+  }>({ open: false, commentId: "", userId: "", username: "" });
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    loadPost();
+    loadComments();
+    loadLikes();
+  }, [postId, user]);
+
+  const loadPost = async () => {
+    if (!postId) return;
+
+    const { data, error } = await supabase
+      .from("discussion_posts")
+      .select("*, profiles(username, avatar_url)")
+      .eq("id", postId)
+      .single();
+
+    if (error) {
+      console.error("Error loading post:", error);
+      toast.error("Failed to load post");
+      return;
+    }
+
+    setPost(data);
+  };
+
+  const loadComments = async () => {
+    if (!postId) return;
+
+    const { data, error } = await supabase
+      .from("discussion_comments")
+      .select("*, profiles(username, avatar_url)")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading comments:", error);
+      return;
+    }
+
+    setComments(data || []);
+  };
+
+  const loadLikes = async () => {
+    if (!postId) return;
+
+    const { data, error } = await supabase
+      .from("discussion_likes")
+      .select("user_id, post_id, comment_id")
+      .or(`post_id.eq.${postId},comment_id.in.(${comments.map(c => c.id).join(",")})`);
+
+    if (error) {
+      console.error("Error loading likes:", error);
+      return;
+    }
+
+    setLikes(data || []);
+  };
+
+  const handlePostLike = async () => {
+    if (!user || !post || isLiking) return;
+    setIsLiking(true);
+
+    const isLiked = likes.some(l => l.user_id === user.id && l.post_id === post.id);
+
+    try {
+      if (isLiked) {
+        const { error } = await supabase
+          .from("discussion_likes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("post_id", post.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("discussion_likes")
+          .insert({
+            user_id: user.id,
+            post_id: post.id,
+          });
+
+        if (error) throw error;
+      }
+      
+      await loadPost();
+      await loadLikes();
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      toast.error("Failed to update like");
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!user || !postId || !newComment.trim()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from("discussion_comments")
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: newComment.trim(),
+        });
+
+      if (error) throw error;
+
+      toast.success("Comment posted!");
+      setNewComment("");
+      await loadComments();
+      await loadPost();
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      toast.error("Failed to post comment");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChallenge = (commentId: string, userId: string, username: string) => {
+    setChallengeDialog({ open: true, commentId, userId, username });
+  };
+
+  const isPostLikedByUser = post && likes.some(l => l.user_id === user?.id && l.post_id === post.id);
+
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto p-4">
+        <Button
+          variant="ghost"
+          className="mb-4"
+          onClick={() => navigate("/discussions")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Discussions
+        </Button>
+
+        {/* Post Header */}
+        <div className="bg-card rounded-lg border p-6 mb-6">
+          <div className="flex items-start gap-4 mb-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={post.profiles.avatar_url || ""} />
+              <AvatarFallback>
+                <User className="h-6 w-6" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-foreground mb-2">{post.title}</h1>
+              <p className="text-sm text-muted-foreground">
+                by {post.profiles.username} · {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              </p>
+            </div>
+          </div>
+          {post.description && (
+            <p className="text-foreground mb-4 whitespace-pre-wrap">{post.description}</p>
+          )}
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`gap-1 ${isPostLikedByUser ? "text-primary" : ""}`}
+              onClick={handlePostLike}
+              disabled={isLiking}
+            >
+              <ThumbsUp className={`h-4 w-4 ${isPostLikedByUser ? "fill-current" : ""}`} />
+              <span>{post.likes_count}</span>
+            </Button>
+            <span className="text-sm text-muted-foreground">{post.comments_count} comments</span>
+          </div>
+        </div>
+
+        {/* Add Comment */}
+        <div className="bg-card rounded-lg border p-4 mb-6">
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Share your thoughts..."
+            rows={3}
+            className="mb-3"
+          />
+          <div className="flex justify-end">
+            <Button onClick={handleSubmitComment} disabled={isSubmitting || !newComment.trim()}>
+              {isSubmitting ? "Posting..." : "Post Comment"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Comments List */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-foreground">Comments</h2>
+          <ScrollArea className="h-[600px]">
+            <div className="space-y-3 pr-4">
+              {comments.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No comments yet. Be the first to comment!</p>
+              ) : (
+                comments.map((comment) => (
+                  <DiscussionComment
+                    key={comment.id}
+                    id={comment.id}
+                    content={comment.content}
+                    authorId={comment.user_id}
+                    authorUsername={comment.profiles.username}
+                    authorAvatar={comment.profiles.avatar_url}
+                    likesCount={comment.likes_count}
+                    createdAt={comment.created_at}
+                    currentUserId={user?.id || ""}
+                    postId={post.id}
+                    isLikedByUser={likes.some(l => l.user_id === user?.id && l.comment_id === comment.id)}
+                    onChallenge={handleChallenge}
+                    onLikeToggle={loadLikes}
+                  />
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+
+      {/* Challenge Dialog */}
+      <ChallengeToDebateDialog
+        open={challengeDialog.open}
+        onOpenChange={(open) => setChallengeDialog({ ...challengeDialog, open })}
+        challengerId={user?.id || ""}
+        challengedId={challengeDialog.userId}
+        challengedUsername={challengeDialog.username}
+        postId={post.id}
+        commentId={challengeDialog.commentId}
+        defaultTopic={post.title}
+        onSuccess={() => {
+          toast.success("Challenge sent!");
+          setChallengeDialog({ open: false, commentId: "", userId: "", username: "" });
+        }}
+      />
+    </div>
+  );
+}

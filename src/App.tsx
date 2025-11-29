@@ -16,6 +16,7 @@ import DiscussionSetup from "./pages/DiscussionSetup";
 import ActiveDiscussion from "./pages/ActiveDiscussion";
 import PublicDiscussion from "./pages/PublicDiscussion";
 import GroupDiscussion from "./pages/GroupDiscussion";
+import DiscussionThread from "./pages/DiscussionThread";
 import Admin from "./pages/Admin";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
@@ -81,6 +82,7 @@ const AppContent = () => {
         <Route path="/discussion/active" element={<ActiveDiscussion />} />
         <Route path="/discussion/public" element={<PublicDiscussion />} />
         <Route path="/discussion/group" element={<GroupDiscussion />} />
+        <Route path="/discussion/thread/:postId" element={<DiscussionThread />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/support" element={<Support />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

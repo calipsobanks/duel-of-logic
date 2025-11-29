@@ -20,6 +20,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ControversialTopics } from '@/components/ControversialTopics';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { PostTopicDialog } from '@/components/discussion/PostTopicDialog';
+import { DiscussionPostCard } from '@/components/discussion/DiscussionPostCard';
 interface Profile {
   id: string;
   username: string;
@@ -55,12 +57,29 @@ interface LeaderboardEntry {
   totalPoints: number;
   debatesCount: number;
 }
+
+interface DiscussionPost {
+  id: string;
+  title: string;
+  description: string | null;
+  user_id: string;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
 type TabType = 'home' | 'leaderboard' | 'members' | 'discussion_room' | 'profile';
 const Discussions = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [allDiscussions, setAllDiscussions] = useState<Discussion[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [discussionPosts, setDiscussionPosts] = useState<DiscussionPost[]>([]);
+  const [isPostTopicOpen, setIsPostTopicOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [viewMemberProfile, setViewMemberProfile] = useState<Profile | null>(null);
   const [topic, setTopic] = useState('');
@@ -100,6 +119,7 @@ const Discussions = () => {
     fetchProfiles();
     fetchDiscussions();
     fetchAllDiscussions();
+    fetchDiscussionPosts();
     checkAdminStatus();
 
     // Listen for tab change events from ControversialTopics component
@@ -195,6 +215,20 @@ const Discussions = () => {
     }
     setDiscussions(data || []);
   };
+  const fetchDiscussionPosts = async () => {
+    const { data, error } = await supabase
+      .from('discussion_posts')
+      .select('*, profiles(username, avatar_url)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching discussion posts:', error);
+      return;
+    }
+
+    setDiscussionPosts(data || []);
+  };
+
   const fetchAllDiscussions = async () => {
     const {
       data,
@@ -603,16 +637,66 @@ const Discussions = () => {
               </Card>}
           </div>}
 
-        {/* Discussion Room Tab - Hot Topics & All Discussions */}
+        {/* Discussion Room Tab - Hot Topics & Community Discussions */}
         {activeTab === 'discussion_room' && <div className="space-y-6">
+            {/* Post Topic Button */}
+            <Button 
+              onClick={() => setIsPostTopicOpen(true)} 
+              className="w-full"
+              size="lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Post a Discussion Topic
+            </Button>
+
             {/* Hot Topics Section */}
-            <ControversialTopics />
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">🔥</span>
+                <h2 className="text-lg font-semibold">Hot Topics This Week</h2>
+              </div>
+              <ControversialTopics />
+            </div>
             
+            {/* Community Discussions */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">💬</span>
+                <h2 className="text-lg font-semibold">Community Discussions</h2>
+              </div>
+              {discussionPosts.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-8 pb-8 text-center">
+                    <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground text-sm">No community topics yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">Be the first to post one!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {discussionPosts.map(post => (
+                    <DiscussionPostCard
+                      key={post.id}
+                      id={post.id}
+                      title={post.title}
+                      description={post.description}
+                      authorUsername={post.profiles.username}
+                      authorAvatar={post.profiles.avatar_url}
+                      likesCount={post.likes_count}
+                      commentsCount={post.comments_count}
+                      createdAt={post.created_at}
+                      onViewThread={(postId) => navigate(`/discussion/thread/${postId}`)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* All Member Discussions */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <MessagesSquare className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">All Member Discussions</h2>
+                <h2 className="text-lg font-semibold">1v1 Debates</h2>
               </div>
               
               {allDiscussions.length === 0 ? <Card>
@@ -954,6 +1038,16 @@ const Discussions = () => {
           open={isOnboardingOpen}
           userId={user.id}
           onComplete={() => setIsOnboardingOpen(false)}
+        />
+      )}
+
+      {/* Post Topic Dialog */}
+      {user && (
+        <PostTopicDialog
+          open={isPostTopicOpen}
+          onOpenChange={setIsPostTopicOpen}
+          onSuccess={fetchDiscussionPosts}
+          userId={user.id}
         />
       )}
     </div>
