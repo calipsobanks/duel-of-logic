@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Users, TrendingUp, MessageSquare } from "lucide-react";
+import { Loader2, Users, TrendingUp, MessageSquare, ArrowLeft } from "lucide-react";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { toast } from "sonner";
 
@@ -354,7 +354,18 @@ export default function GroupDiscussion() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold mb-2">{discussion?.controversial_topics.title}</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <h1 className="text-xl font-bold">{discussion?.controversial_topics.title}</h1>
+          </div>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
