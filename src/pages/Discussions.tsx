@@ -672,8 +672,8 @@ const Discussions = () => {
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Beliefs
                     </Button>
-                    <Button variant="outline" onClick={() => navigate('/support')} className="w-full border-primary/30 hover:border-primary/50">
-                      <Heart className="h-4 w-4 mr-2" />
+                    <Button variant="outline" onClick={() => navigate('/support')} className="w-full border-gold/50 hover:border-gold hover:bg-gold/10 text-gold hover:text-gold">
+                      <Heart className="h-4 w-4 mr-2 fill-gold" />
                       Support This App
                     </Button>
                     <Button variant="destructive" onClick={handleLogout}>
