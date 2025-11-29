@@ -9,6 +9,7 @@ import { ReactionProvider } from "@/contexts/ReactionContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingModal from "@/components/onboarding/OnboardingModal";
+import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Discussions from "./pages/Discussions";
@@ -74,6 +75,7 @@ const AppContent = () => {
           onComplete={handleOnboardingComplete}
         />
       )}
+      <FeedbackButton />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
