@@ -361,9 +361,10 @@ const ActiveDiscussion = () => {
     }
 
     const hasSource = !!evidence.source_url;
-    const basePoints = 1;
+    const basePoints = 2; // Increased from 1 to 2
     const sourceBonus = hasSource ? 2 : 0;
-    const totalPoints = basePoints + sourceBonus;
+    const highQualitySourceBonus = (hasSource && evidence.source_rating && evidence.source_rating >= 4) ? 3 : 0;
+    const totalPoints = basePoints + sourceBonus + highQualitySourceBonus;
 
     const isDebater1 = evidence.debater_id === discussion?.debater1_id;
     const newScore = isDebater1 
@@ -392,7 +393,7 @@ const ActiveDiscussion = () => {
       title: "Evidence Accepted",
       description: hasSource 
         ? `Both participants agreed on sourced evidence! +${totalPoints} points awarded.`
-        : `Both participants agreed. +${totalPoints} point awarded.`,
+        : `Both participants agreed. +${totalPoints} points awarded.`,
     });
   };
 
@@ -415,9 +416,10 @@ const ActiveDiscussion = () => {
     }
 
     const hasSource = !!evidence.source_url;
-    const basePoints = 2;
+    const basePoints = 5; // Increased from 2 to 5 for surviving a challenge
     const sourceBonus = hasSource ? 2 : 0;
-    const totalPoints = basePoints + sourceBonus;
+    const highQualitySourceBonus = (hasSource && evidence.source_rating && evidence.source_rating >= 4) ? 3 : 0;
+    const totalPoints = basePoints + sourceBonus + highQualitySourceBonus;
 
     const isDebater1 = evidence.debater_id === discussion?.debater1_id;
     const newScore = isDebater1 
@@ -605,8 +607,8 @@ const ActiveDiscussion = () => {
     const winnerId = isDebater1 ? discussion.debater2_id : discussion.debater1_id;
     const winnerUsername = isDebater1 ? discussion.debater2.username : discussion.debater1.username;
     
-    // Award 10 points to the winner
-    const victoryPoints = 10;
+    // Award 15 points to the winner (increased from 10)
+    const victoryPoints = 15;
     const newWinnerScore = isDebater1 
       ? discussion.debater2_score + victoryPoints 
       : discussion.debater1_score + victoryPoints;
@@ -926,7 +928,7 @@ const ActiveDiscussion = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Admit Defeat?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to admit defeat? Your opponent will be awarded 10 victory points and this debate will end.
+              Are you sure you want to admit defeat? Your opponent will be awarded 15 victory points and this debate will end.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare } from 'lucide-react';
+import { LogOut, Plus, MessageSquare, User, Edit2, Shield, Trophy, Home, Users, Bell, BellOff, Trash2, Share2, ExternalLink, Heart, MessagesSquare, Award } from 'lucide-react';
+import { getRankForPoints } from '@/lib/ranks';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -451,7 +452,9 @@ const Discussions = () => {
 
         {/* Leaderboard Tab */}
         {activeTab === 'leaderboard' && <div className="space-y-3">
-            {leaderboard.map((entry, index) => <div key={entry.userId} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
+            {leaderboard.map((entry, index) => {
+              const rank = getRankForPoints(entry.totalPoints);
+              return <div key={entry.userId} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={`text-lg font-bold min-w-[1.5rem] text-center flex-shrink-0 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-600' : 'text-muted-foreground'}`}>
                     {index + 1}
@@ -463,20 +466,27 @@ const Discussions = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm truncate">
-                      @{entry.username}
-                      {entry.userId === user?.id && <span className="ml-1 text-xs text-muted-foreground">(You)</span>}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {entry.debatesCount} debates
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-semibold text-sm truncate">
+                        @{entry.username}
+                        {entry.userId === user?.id && <span className="ml-1 text-xs text-muted-foreground">(You)</span>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs">{rank.icon}</span>
+                      <p className={`text-xs font-medium ${rank.color}`}>
+                        {rank.name}
+                      </p>
+                      <span className="text-xs text-muted-foreground">• {entry.debatesCount} debates</span>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-xl font-bold text-primary">{entry.totalPoints}</p>
                   <p className="text-xs text-muted-foreground">pts</p>
                 </div>
-              </div>)}
+              </div>;
+            })}
             {leaderboard.length === 0 && <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-3" />

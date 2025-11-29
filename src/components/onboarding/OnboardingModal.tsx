@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Lightbulb } from "lucide-react";
+import { CheckCircle2, XCircle, Lightbulb, Trophy, Zap, Star, Award } from "lucide-react";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -14,7 +15,7 @@ interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-type Step = "welcome" | "assessment" | "question1" | "question2" | "complete";
+type Step = "welcome" | "assessment" | "question1" | "question2" | "rules" | "complete";
 
 const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => {
   const [step, setStep] = useState<Step>("welcome");
@@ -81,7 +82,7 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
       setSelectedAnswer("");
       setShowExplanation(false);
     } else if (step === "question2") {
-      handleComplete();
+      setStep("rules");
     }
   };
 
@@ -307,10 +308,142 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
                 </Button>
               ) : (
                 <Button onClick={handleNext} className="w-full" size="lg">
-                  {step === "question1" ? "Next Question" : "Complete Onboarding"}
+                  {step === "question1" ? "Next Question" : "Continue"}
                 </Button>
               )}
             </div>
+          </div>
+        )}
+
+        {step === "rules" && (
+          <div className="space-y-6 py-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold">How the App Works 🎮</h2>
+              <p className="text-sm text-muted-foreground">
+                Learn the rules and point system to become a master debater!
+              </p>
+            </div>
+
+            {/* How It Works - 3 Step Flow */}
+            <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" />
+                The Debate Flow
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
+                  <div>
+                    <p className="font-semibold text-sm">Add Evidence</p>
+                    <p className="text-xs text-muted-foreground">Present claims with reliable sources</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">2</div>
+                  <div>
+                    <p className="font-semibold text-sm">React & Respond</p>
+                    <p className="text-xs text-muted-foreground">Agree, Challenge, or Request Sources</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">3</div>
+                  <div>
+                    <p className="font-semibold text-sm">Earn Points & Rank Up</p>
+                    <p className="text-xs text-muted-foreground">Build your reputation through quality arguments</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Point System */}
+            <Card className="p-4 bg-muted/30">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                Point System
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between p-2 bg-background rounded">
+                  <span className="text-xs">📝 Evidence Submitted</span>
+                  <Badge variant="secondary" className="text-xs">+1</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background rounded">
+                  <span className="text-xs">✅ Evidence Agreed</span>
+                  <Badge variant="secondary" className="text-xs">+2</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-green-500/10 rounded border border-green-500/20">
+                  <span className="text-xs">🔗 Sourced Evidence Bonus</span>
+                  <Badge className="text-xs bg-green-600">+2</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gold/10 rounded border border-gold/20">
+                  <span className="text-xs">⭐ High-Quality Source (4-5★)</span>
+                  <Badge className="text-xs bg-gold text-gold-foreground">+3</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background rounded">
+                  <span className="text-xs">🛡️ Survives Challenge</span>
+                  <Badge variant="secondary" className="text-xs">+5</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background rounded">
+                  <span className="text-xs">⚔️ Successful Challenge</span>
+                  <Badge variant="secondary" className="text-xs">+3</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-blue-500/10 rounded border border-blue-500/20">
+                  <span className="text-xs">🏃 Quick Response (&lt;1hr)</span>
+                  <Badge className="text-xs bg-blue-600">+1</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-purple-500/10 rounded border border-purple-500/20">
+                  <span className="text-xs">🥇 First Evidence</span>
+                  <Badge className="text-xs bg-purple-600">+2</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-primary/10 rounded border border-primary/20">
+                  <span className="text-xs">👑 Opponent Admits Defeat</span>
+                  <Badge className="text-xs bg-primary">+15</Badge>
+                </div>
+              </div>
+            </Card>
+
+            {/* Ranks Preview */}
+            <Card className="p-4 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                Rank Up Your Status
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                  <span className="text-base">🌱</span>
+                  <span className="text-xs flex-1">Novice Debater</span>
+                  <span className="text-xs text-muted-foreground">0+ pts</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                  <span className="text-base">📖</span>
+                  <span className="text-xs flex-1">Apprentice</span>
+                  <span className="text-xs text-muted-foreground">25+ pts</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                  <span className="text-base">⚖️</span>
+                  <span className="text-xs flex-1">Skilled Debater</span>
+                  <span className="text-xs text-muted-foreground">75+ pts</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                  <span className="text-base">🎓</span>
+                  <span className="text-xs flex-1">Expert</span>
+                  <span className="text-xs text-muted-foreground">150+ pts</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-gold/20 rounded border border-gold/30">
+                  <span className="text-base">👑</span>
+                  <span className="text-xs flex-1 font-semibold">Master Debater</span>
+                  <span className="text-xs text-muted-foreground">300+ pts</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-yellow-500/20 rounded border border-yellow-500/30">
+                  <span className="text-base">🏆</span>
+                  <span className="text-xs flex-1 font-semibold">Legendary</span>
+                  <span className="text-xs text-muted-foreground">500+ pts</span>
+                </div>
+              </div>
+            </Card>
+
+            <Button onClick={handleComplete} className="w-full" size="lg">
+              Start Debating! 🚀
+            </Button>
           </div>
         )}
 
