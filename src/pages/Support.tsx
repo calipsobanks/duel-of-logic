@@ -48,10 +48,10 @@ const Support = () => {
       {/* Main Content */}
       <main className="p-4 pb-8 space-y-6 max-w-2xl mx-auto">
         {/* Introduction Card */}
-        <Card className="border-primary/20">
+        <Card className="border-green-500/30 bg-green-500/10">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
-              <Heart className="h-5 w-5 text-primary" />
+              <Heart className="h-5 w-5 text-green-600" />
               <CardTitle>Help Us Keep This Free</CardTitle>
             </div>
             <CardDescription>
