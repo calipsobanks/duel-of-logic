@@ -21,7 +21,7 @@ export const ReactionNotification = ({ type, onComplete }: ReactionNotificationP
     const timer = setTimeout(() => {
       setShow(false);
       setTimeout(() => onComplete?.(), 500);
-    }, 3000);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
