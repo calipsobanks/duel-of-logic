@@ -67,6 +67,7 @@ const ActiveDiscussion = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [updatingSourceForId, setUpdatingSourceForId] = useState<string | null>(null);
   const [showVsIntro, setShowVsIntro] = useState(false);
+  const hasShownIntroRef = useRef(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,7 +133,24 @@ const ActiveDiscussion = () => {
     setDiscussion(data);
     setCurrentParticipant(data.debater1_id === user?.id ? 1 : 2);
     setLoading(false);
-    setShowVsIntro(true);
+    
+    // Only show VS intro once per session and only if discussion just started
+    const sessionKey = `vs-intro-shown-${discussionId}`;
+    const hasShownInSession = sessionStorage.getItem(sessionKey);
+    
+    if (!hasShownInSession && !hasShownIntroRef.current) {
+      // Check if this is a new discussion (no evidence yet)
+      const { count } = await supabase
+        .from('evidence')
+        .select('*', { count: 'exact', head: true })
+        .eq('debate_id', discussionId);
+      
+      if (count === 0) {
+        setShowVsIntro(true);
+        hasShownIntroRef.current = true;
+        sessionStorage.setItem(sessionKey, 'true');
+      }
+    }
   };
 
   const loadEvidence = async () => {
