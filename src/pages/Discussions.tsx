@@ -453,8 +453,8 @@ const Discussions = () => {
         {/* Leaderboard Tab */}
         {activeTab === 'leaderboard' && <div className="space-y-3">
             {leaderboard.map((entry, index) => {
-              const rank = getRankForPoints(entry.totalPoints);
-              return <div key={entry.userId} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
+          const rank = getRankForPoints(entry.totalPoints);
+          return <div key={entry.userId} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${entry.userId === user?.id ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={`text-lg font-bold min-w-[1.5rem] text-center flex-shrink-0 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-600' : 'text-muted-foreground'}`}>
                     {index + 1}
@@ -486,7 +486,7 @@ const Discussions = () => {
                   <p className="text-xs text-muted-foreground">pts</p>
                 </div>
               </div>;
-            })}
+        })}
             {leaderboard.length === 0 && <Card>
                 <CardContent className="pt-8 pb-8 text-center">
                   <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
@@ -585,8 +585,8 @@ const Discussions = () => {
                     <p className="text-xs text-muted-foreground mt-1">Be the first to start one!</p>
                   </CardContent>
                 </Card> : allDiscussions.map(discussion => {
-                const isParticipant = discussion.debater1_id === user?.id || discussion.debater2_id === user?.id;
-                return <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
+            const isParticipant = discussion.debater1_id === user?.id || discussion.debater2_id === user?.id;
+            return <Card key={discussion.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/discussion/active?id=${discussion.id}`)}>
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between gap-2">
                           <CardTitle className="flex items-start gap-2 text-sm flex-1">
@@ -612,7 +612,7 @@ const Discussions = () => {
                         </div>
                       </CardContent>
                     </Card>;
-              })}
+          })}
             </div>
           </div>}
 
@@ -694,7 +694,7 @@ const Discussions = () => {
                 </div>
               </CardContent>
               <div className="px-6 pb-4 text-center">
-                <p className="text-xs text-muted-foreground">v0.5</p>
+                <p className="text-xs text-muted-foreground">v0.6</p>
               </div>
             </Card>
           </div>}
