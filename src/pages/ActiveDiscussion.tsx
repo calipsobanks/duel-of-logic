@@ -90,6 +90,7 @@ const ActiveDiscussion = () => {
   const [evaluationError, setEvaluationError] = useState(false);
   const [evaluationHistory, setEvaluationHistory] = useState<Array<{ id: string; evaluation: string; evidence_count: number; created_at: string }>>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [lastEvaluatedCount, setLastEvaluatedCount] = useState<number>(0);
 
   useEffect(() => {
     if (!user) {
@@ -209,8 +210,9 @@ const ActiveDiscussion = () => {
 
     setEvidenceList(data || []);
     
-    // Load AI evaluation if there's evidence
-    if (data && data.length > 0 && discussion) {
+    // Only trigger AI evaluation if evidence count has changed
+    if (data && data.length > 0 && discussion && data.length !== lastEvaluatedCount) {
+      setLastEvaluatedCount(data.length);
       loadAiEvaluation(data);
     }
     
