@@ -33,12 +33,13 @@ ${debater2Name} has made ${debater2Evidence.length} rebuttals.
 Recent rebuttals (most recent first):
 ${evidence.slice(0, 4).map((e: any, i: number) => `${i + 1}. ${e.claim.substring(0, 200)}...`).join('\n')}
 
-Provide a brief analysis (max 3 sentences) that:
+Provide a brief analysis (max 4 sentences) that:
 1. Identifies the core points each side is making
 2. Notes if either party is straying from the topic
-3. Suggests what specific aspect they should focus on next to resolve the debate
+3. Suggests specific factual information, data, or credible sources both speakers can research to strengthen their arguments (e.g., "Look up recent statistics on X" or "Research studies from Y organization")
+4. Recommends what specific aspect they should focus on next to resolve the debate
 
-Keep it concise, neutral, and actionable.`;
+Keep it concise, neutral, and actionable. Focus on directing them to verifiable facts.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -48,12 +49,12 @@ Keep it concise, neutral, and actionable.`;
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        max_tokens: 300,
+        max_tokens: 400,
         temperature: 0.7,
         messages: [
           { 
             role: 'system', 
-            content: 'You are a neutral debate moderator. Be concise, fair, and focus on keeping discussions productive.' 
+            content: 'You are a neutral debate moderator. Be concise, fair, and focus on keeping discussions productive by directing debaters to factual, verifiable information.' 
           },
           { role: 'user', content: prompt }
         ],
