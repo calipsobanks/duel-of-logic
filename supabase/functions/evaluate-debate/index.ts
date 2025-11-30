@@ -47,8 +47,9 @@ Keep it concise, neutral, and actionable.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
-        max_completion_tokens: 300,
+        model: 'gpt-4o-mini',
+        max_tokens: 300,
+        temperature: 0.7,
         messages: [
           { 
             role: 'system', 
@@ -66,7 +67,14 @@ Keep it concise, neutral, and actionable.`;
     }
 
     const data = await response.json();
-    const evaluation = data.choices[0].message.content;
+    console.log('OpenAI response:', JSON.stringify(data, null, 2));
+    
+    const evaluation = data.choices?.[0]?.message?.content;
+    
+    if (!evaluation || evaluation.trim() === '') {
+      console.error('Empty evaluation received from OpenAI');
+      throw new Error('AI returned empty evaluation');
+    }
 
     // Save evaluation to database
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {

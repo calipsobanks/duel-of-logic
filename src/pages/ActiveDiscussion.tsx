@@ -86,6 +86,7 @@ const ActiveDiscussion = () => {
   const [isSpectator, setIsSpectator] = useState(false);
   const [aiEvaluation, setAiEvaluation] = useState<string>("");
   const [isLoadingEvaluation, setIsLoadingEvaluation] = useState(false);
+  const [evaluationError, setEvaluationError] = useState(false);
   const [evaluationHistory, setEvaluationHistory] = useState<Array<{ id: string; evaluation: string; evidence_count: number; created_at: string }>>([]);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -234,6 +235,7 @@ const ActiveDiscussion = () => {
     if (!discussion || evidence.length === 0) return;
     
     setIsLoadingEvaluation(true);
+    setEvaluationError(false);
     try {
       const { data, error } = await supabase.functions.invoke('evaluate-debate', {
         body: {
@@ -253,13 +255,24 @@ const ActiveDiscussion = () => {
 
       if (error) {
         console.error('Failed to load AI evaluation:', error);
+        setEvaluationError(true);
+        toast({
+          title: "Analysis Failed",
+          description: "Could not analyze debate. Click retry to try again.",
+          variant: "destructive",
+        });
       } else if (data?.evaluation) {
         setAiEvaluation(data.evaluation);
+        setEvaluationError(false);
         // Reload history to include the new evaluation
         setTimeout(() => loadEvaluationHistory(), 1000);
+      } else {
+        console.error('Empty evaluation received');
+        setEvaluationError(true);
       }
     } catch (error) {
       console.error('Error loading AI evaluation:', error);
+      setEvaluationError(true);
     } finally {
       setIsLoadingEvaluation(false);
     }
@@ -988,6 +1001,16 @@ const ActiveDiscussion = () => {
                   {isLoadingEvaluation && (
                     <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   )}
+                  {evaluationError && !isLoadingEvaluation && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => loadAiEvaluation(evidenceList)}
+                      className="h-6 text-xs"
+                    >
+                      Retry
+                    </Button>
+                  )}
                 </div>
                 {aiEvaluation ? (
                   <p className="text-sm text-muted-foreground leading-relaxed">
@@ -999,6 +1022,10 @@ const ActiveDiscussion = () => {
                     <div className="h-3 bg-muted animate-pulse rounded w-5/6" />
                     <div className="h-3 bg-muted animate-pulse rounded w-4/6" />
                   </div>
+                ) : evaluationError ? (
+                  <p className="text-sm text-destructive italic">
+                    Failed to analyze - Click retry to try again
+                  </p>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
                     Waiting for analysis...
