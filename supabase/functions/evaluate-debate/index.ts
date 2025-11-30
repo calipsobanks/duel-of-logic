@@ -12,8 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, debater1Name, debater2Name, debater1Id, debater2Id, evidence } = await req.json();
+    const { debateId, topic, debater1Name, debater2Name, debater1Id, debater2Id, evidence } = await req.json();
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not configured');
@@ -65,6 +67,32 @@ Keep it concise, neutral, and actionable.`;
 
     const data = await response.json();
     const evaluation = data.choices[0].message.content;
+
+    // Save evaluation to database
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/debate_evaluations`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_SERVICE_ROLE_KEY,
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            debate_id: debateId,
+            evaluation: evaluation,
+            evidence_count: evidence.length
+          })
+        });
+
+        if (!saveResponse.ok) {
+          console.error('Failed to save evaluation to database:', await saveResponse.text());
+        }
+      } catch (dbError) {
+        console.error('Database save error:', dbError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ evaluation }),

@@ -158,6 +158,30 @@ export type Database = {
           },
         ]
       }
+      debate_evaluations: {
+        Row: {
+          created_at: string
+          debate_id: string
+          evaluation: string
+          evidence_count: number
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          debate_id: string
+          evaluation: string
+          evidence_count?: number
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          debate_id?: string
+          evaluation?: string
+          evidence_count?: number
+          id?: string
+        }
+        Relationships: []
+      }
       debates: {
         Row: {
           created_at: string

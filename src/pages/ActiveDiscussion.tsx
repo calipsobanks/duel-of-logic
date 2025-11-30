@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Plus, Lightbulb, Share2, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Lightbulb, Share2, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { TimelineEvidenceCard } from "@/components/discussion/TimelineEvidenceCard";
 import { VsIntroAnimation } from "@/components/discussion/VsIntroAnimation";
@@ -85,6 +86,8 @@ const ActiveDiscussion = () => {
   const [isSpectator, setIsSpectator] = useState(false);
   const [aiEvaluation, setAiEvaluation] = useState<string>("");
   const [isLoadingEvaluation, setIsLoadingEvaluation] = useState(false);
+  const [evaluationHistory, setEvaluationHistory] = useState<Array<{ id: string; evaluation: string; evidence_count: number; created_at: string }>>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -208,6 +211,23 @@ const ActiveDiscussion = () => {
     if (data && data.length > 0 && discussion) {
       loadAiEvaluation(data);
     }
+    
+    // Load evaluation history
+    loadEvaluationHistory();
+  };
+
+  const loadEvaluationHistory = async () => {
+    const { data, error } = await supabase
+      .from('debate_evaluations')
+      .select('*')
+      .eq('debate_id', discussionId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load evaluation history:', error);
+    } else {
+      setEvaluationHistory(data || []);
+    }
   };
 
   const loadAiEvaluation = async (evidence: Evidence[]) => {
@@ -217,6 +237,7 @@ const ActiveDiscussion = () => {
     try {
       const { data, error } = await supabase.functions.invoke('evaluate-debate', {
         body: {
+          debateId: discussionId,
           topic: discussion.topic,
           debater1Name: discussion.debater1.username,
           debater2Name: discussion.debater2.username,
@@ -234,6 +255,8 @@ const ActiveDiscussion = () => {
         console.error('Failed to load AI evaluation:', error);
       } else if (data?.evaluation) {
         setAiEvaluation(data.evaluation);
+        // Reload history to include the new evaluation
+        setTimeout(() => loadEvaluationHistory(), 1000);
       }
     } catch (error) {
       console.error('Error loading AI evaluation:', error);
@@ -951,31 +974,66 @@ const ActiveDiscussion = () => {
 
       {/* AI Moderator Section */}
       {evidenceList.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-b border-border/50 px-4 py-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                <Lightbulb className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-b border-border/50">
+          <div className="px-4 py-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                  <Lightbulb className="w-4 h-4 text-white" />
+                </div>
               </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-sm font-semibold text-foreground">AI Moderator Analysis</h3>
-                {isLoadingEvaluation && (
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-sm font-semibold text-foreground">AI Moderator Analysis</h3>
+                  {isLoadingEvaluation && (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+                {aiEvaluation ? (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {aiEvaluation}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    Analyzing debate positions...
+                  </p>
                 )}
               </div>
-              {aiEvaluation ? (
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {aiEvaluation}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">
-                  Analyzing debate positions...
-                </p>
-              )}
             </div>
           </div>
+
+          {/* Historical Timeline */}
+          {evaluationHistory.length > 1 && (
+            <Collapsible open={showHistory} onOpenChange={setShowHistory}>
+              <CollapsibleTrigger asChild>
+                <button className="w-full px-4 py-2 border-t border-border/30 flex items-center justify-between hover:bg-muted/20 transition-colors">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    View Analysis History ({evaluationHistory.length - 1} previous)
+                  </span>
+                  {showHistory ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-4 py-3 space-y-3 border-t border-border/20 bg-muted/5 max-h-64 overflow-y-auto">
+                  {evaluationHistory.slice(1).map((evaluation, index) => (
+                    <div key={evaluation.id} className="relative pl-4 border-l-2 border-border/40">
+                      <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-gradient-to-br from-blue-400 to-purple-400" />
+                      <div className="text-xs text-muted-foreground mb-1">
+                        {new Date(evaluation.created_at).toLocaleString()} · After {evaluation.evidence_count} rebuttals
+                      </div>
+                      <p className="text-xs text-foreground/80 leading-relaxed">
+                        {evaluation.evaluation}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
       )}
 
