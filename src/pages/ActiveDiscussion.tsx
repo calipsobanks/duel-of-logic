@@ -83,6 +83,8 @@ const ActiveDiscussion = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [showAdmitDefeatDialog, setShowAdmitDefeatDialog] = useState(false);
   const [isSpectator, setIsSpectator] = useState(false);
+  const [aiEvaluation, setAiEvaluation] = useState<string>("");
+  const [isLoadingEvaluation, setIsLoadingEvaluation] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -201,6 +203,43 @@ const ActiveDiscussion = () => {
     }
 
     setEvidenceList(data || []);
+    
+    // Load AI evaluation if there's evidence
+    if (data && data.length > 0 && discussion) {
+      loadAiEvaluation(data);
+    }
+  };
+
+  const loadAiEvaluation = async (evidence: Evidence[]) => {
+    if (!discussion || evidence.length === 0) return;
+    
+    setIsLoadingEvaluation(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('evaluate-debate', {
+        body: {
+          topic: discussion.topic,
+          debater1Name: discussion.debater1.username,
+          debater2Name: discussion.debater2.username,
+          debater1Id: discussion.debater1_id,
+          debater2Id: discussion.debater2_id,
+          evidence: evidence.map(e => ({
+            debater_id: e.debater_id,
+            claim: e.claim,
+            status: e.status
+          }))
+        }
+      });
+
+      if (error) {
+        console.error('Failed to load AI evaluation:', error);
+      } else if (data?.evaluation) {
+        setAiEvaluation(data.evaluation);
+      }
+    } catch (error) {
+      console.error('Error loading AI evaluation:', error);
+    } finally {
+      setIsLoadingEvaluation(false);
+    }
   };
 
   const handleAddEvidence = async (evidenceData: { content: string; sourceUrl?: string; sourceType?: "factual" | "opinionated" }) => {
@@ -909,6 +948,36 @@ const ActiveDiscussion = () => {
           </div>
         )}
       </header>
+
+      {/* AI Moderator Section */}
+      {evidenceList.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-b border-border/50 px-4 py-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                <Lightbulb className="w-4 h-4 text-white" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-sm font-semibold text-foreground">AI Moderator Analysis</h3>
+                {isLoadingEvaluation && (
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                )}
+              </div>
+              {aiEvaluation ? (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {aiEvaluation}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Analyzing debate positions...
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Timeline Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
