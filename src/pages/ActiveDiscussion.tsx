@@ -82,6 +82,7 @@ const ActiveDiscussion = () => {
   const hasShownIntroRef = useRef(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [showAdmitDefeatDialog, setShowAdmitDefeatDialog] = useState(false);
+  const [isSpectator, setIsSpectator] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -145,15 +146,7 @@ const ActiveDiscussion = () => {
 
     // Check if user is a participant
     const isParticipant = data.debater1_id === user?.id || data.debater2_id === user?.id;
-    if (!isParticipant) {
-      toast({
-        title: "Access Denied",
-        description: "You are not a participant in this debate. Only the two debaters can add evidence.",
-        variant: "destructive",
-      });
-      navigate('/discussions');
-      return;
-    }
+    setIsSpectator(!isParticipant);
 
     setDiscussion(data);
     setCurrentParticipant(data.debater1_id === user?.id ? 1 : 2);
@@ -799,14 +792,16 @@ const ActiveDiscussion = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowAdmitDefeatDialog(true)}
-              className="text-xs"
-            >
-              Admit Defeat
-            </Button>
+            {!isSpectator && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowAdmitDefeatDialog(true)}
+                className="text-xs"
+              >
+                Admit Defeat
+              </Button>
+            )}
             
             <Button
               variant="ghost"
@@ -875,7 +870,14 @@ const ActiveDiscussion = () => {
 
         {/* Topic Banner */}
         <div className="bg-gradient-to-r from-primary/20 to-primary/10 px-4 py-3 border-b border-border/50">
-          <p className="text-xs text-muted-foreground mb-1">Debate Topic</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-muted-foreground">Debate Topic</p>
+            {isSpectator && (
+              <Badge variant="secondary" className="text-xs">
+                👁️ Spectating
+              </Badge>
+            )}
+          </div>
           <p className="text-sm font-bold text-foreground leading-snug">
             {discussion.topic}
           </p>
@@ -916,10 +918,14 @@ const ActiveDiscussion = () => {
               <div className="w-24 h-24 mx-auto bg-muted rounded-full flex items-center justify-center">
                 <Plus className="w-12 h-12 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground">No evidence yet</p>
-              <Button onClick={() => setIsAddingEvidence(true)}>
-                Add First Evidence
-              </Button>
+              <p className="text-muted-foreground">
+                {isSpectator ? "No rebuttals yet. Check back later!" : "No evidence yet"}
+              </p>
+              {!isSpectator && (
+                <Button onClick={() => setIsAddingEvidence(true)}>
+                  Add First Evidence
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -977,7 +983,7 @@ const ActiveDiscussion = () => {
       </div>
 
       {/* Floating Add Rebuttal Button */}
-      {canAddEvidence && evidenceList.length > 0 && (
+      {!isSpectator && canAddEvidence && evidenceList.length > 0 && (
         <Button
           size="lg"
           className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl z-40"
