@@ -155,7 +155,12 @@ export const AddEvidenceDialog = ({
       const startsWithRequired = starterPhrases.some(phrase => evidenceContent.trim().startsWith(phrase));
       
       if (!startsWithRequired) {
-        return; // Silently prevent submission - required field will show native validation
+        toast({
+          title: "Invalid Evidence Format",
+          description: "Your evidence must start with 'I think', 'I believe', or 'I know that'",
+          variant: "destructive"
+        });
+        return;
       }
     }
     
