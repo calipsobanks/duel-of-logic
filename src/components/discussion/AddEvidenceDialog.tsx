@@ -170,6 +170,16 @@ export const AddEvidenceDialog = ({
       return;
     }
     
+    // If any source is provided, require at least 3 sources
+    if (!isUpdatingSource && validSources.length > 0 && validSources.length < 3) {
+      toast({
+        title: "Insufficient Sources",
+        description: "If you provide a source, you must include at least 3 sources total.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const evidenceContent = isUpdatingSource ? (existingClaim || "") : content;
     
     // Validate starter phrase for new evidence
