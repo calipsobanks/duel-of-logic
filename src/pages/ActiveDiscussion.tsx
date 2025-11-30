@@ -493,6 +493,49 @@ const ActiveDiscussion = () => {
     const evidence = evidenceList.find(e => e.id === evidenceId);
     if (!evidence) return;
 
+    // Spectators agreeing with evidence awards points
+    if (isSpectator) {
+      const pointsToAward = 2;
+      const isDebater1 = evidence.debater_id === discussion?.debater1_id;
+      const newScore = isDebater1 
+        ? discussion!.debater1_score + pointsToAward 
+        : discussion!.debater2_score + pointsToAward;
+
+      const { error } = await supabase
+        .from('debates')
+        .update(isDebater1 ? { debater1_score: newScore } : { debater2_score: newScore })
+        .eq('id', discussionId);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to award points",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Notify the evidence creator
+      supabase.functions.invoke('notify-debate-action', {
+        body: {
+          targetUserId: evidence.debater_id,
+          action: 'agreed',
+          actorId: user?.id,
+          message: evidence.claim
+        }
+      }).catch(err => console.error('Failed to send notification:', err));
+
+      loadDiscussion();
+      loadEvidence();
+
+      toast({
+        title: "Agreed",
+        description: `+${pointsToAward} points awarded.`,
+      });
+      return;
+    }
+
+    // Participants agreeing on evidence
     const { error } = await supabase
       .from('evidence')
       .update({ status: 'agreed' })
@@ -600,6 +643,49 @@ const ActiveDiscussion = () => {
       description: hasSource
         ? `Sourced evidence defended successfully! +${totalPoints} points awarded.`
         : `Evidence defended successfully! +${totalPoints} points awarded.`,
+    });
+  };
+
+  const handleDisagree = async (evidenceId: string) => {
+    const evidence = evidenceList.find(e => e.id === evidenceId);
+    if (!evidence) return;
+
+    // Spectators disagreeing deducts points
+    if (isSpectator) {
+      const pointsToDeduct = -1;
+      const isDebater1 = evidence.debater_id === discussion?.debater1_id;
+      const newScore = Math.max(0, isDebater1 
+        ? discussion!.debater1_score + pointsToDeduct 
+        : discussion!.debater2_score + pointsToDeduct);
+
+      const { error } = await supabase
+        .from('debates')
+        .update(isDebater1 ? { debater1_score: newScore } : { debater2_score: newScore })
+        .eq('id', discussionId);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to deduct points",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      loadDiscussion();
+      loadEvidence();
+
+      toast({
+        title: "Disagreed",
+        description: `${pointsToDeduct} point deducted.`,
+      });
+      return;
+    }
+
+    toast({
+      title: "Not Allowed",
+      description: "Only spectators can disagree. Participants should challenge instead.",
+      variant: "destructive",
     });
   };
 
@@ -1103,7 +1189,39 @@ const ActiveDiscussion = () => {
                 const isChallenged = evidence.status === "challenged";
                 const isEvidenceRequested = evidence.status === "evidence_requested";
                 
-                // Determine if user can take action
+                // Spectators can only agree/disagree with any evidence
+                if (isSpectator) {
+                  return (
+                    <TimelineEvidenceCard
+                      key={evidence.id}
+                      evidence={evidence}
+                      index={index}
+                      participantUsername={
+                        evidence.debater_id === discussion.debater1_id
+                          ? discussion.debater1.username
+                          : discussion.debater2.username
+                      }
+                      isCurrentUser={false}
+                      canAgree={true}
+                      canDisagree={true}
+                      canChallenge={false}
+                      canRequestEvidence={false}
+                      canValidate={false}
+                      canAddSource={false}
+                      needsAction={false}
+                      onAgree={() => handleAgree(evidence.id)}
+                      onDisagree={() => handleDisagree(evidence.id)}
+                      onChallenge={() => {}}
+                      onRequestEvidence={() => {}}
+                      onValidate={() => {}}
+                      onAddSource={() => {}}
+                      onRerateSource={() => handleRerateSource(evidence.id)}
+                      isReratingSource={isReratingSource}
+                    />
+                  );
+                }
+                
+                // Participants logic
                 const canAgree = isPending && !isCurrentUser;
                 const canChallenge = isPending && !isCurrentUser;
                 const canRequestEvidence = isPending && !isCurrentUser;
@@ -1125,12 +1243,14 @@ const ActiveDiscussion = () => {
                     }
                     isCurrentUser={isCurrentUser}
                     canAgree={canAgree}
+                    canDisagree={false}
                     canChallenge={canChallenge}
                     canRequestEvidence={canRequestEvidence}
                     canValidate={canValidate}
                     canAddSource={canAddSource}
                     needsAction={needsAction}
                     onAgree={() => handleAgree(evidence.id)}
+                    onDisagree={() => {}}
                     onChallenge={() => handleChallenge(evidence.id)}
                     onRequestEvidence={() => handleRequestEvidence(evidence.id)}
                     onValidate={() => handleValidate(evidence.id)}
