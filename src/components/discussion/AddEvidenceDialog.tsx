@@ -156,8 +156,8 @@ export const AddEvidenceDialog = ({
       
       if (!startsWithRequired) {
         toast({
-          title: "Invalid Evidence Format",
-          description: "Your evidence must start with 'I think', 'I believe', or 'I know that'",
+          title: "Invalid Rebuttal Format",
+          description: "Your rebuttal must start with 'I think', 'I believe', or 'I know that'",
           variant: "destructive"
         });
         return;
@@ -192,7 +192,7 @@ export const AddEvidenceDialog = ({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between text-2xl">
-            <span>{isUpdatingSource ? "Add Source to Evidence" : "Add Evidence"}</span>
+            <span>{isUpdatingSource ? "Add Source to Rebuttal" : "Add Rebuttal"}</span>
             {!isUpdatingSource && lastSaved && (
               <span className="text-xs text-muted-foreground font-normal flex items-center gap-1">
                 <Save className="w-3 h-3" />
@@ -220,7 +220,7 @@ export const AddEvidenceDialog = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="content" className="text-base">
-                  Evidence Description
+                  Rebuttal Description
                 </Label>
                 <Button
                   type="button"
@@ -347,7 +347,7 @@ export const AddEvidenceDialog = ({
               className="flex-1"
               disabled={isUpdatingSource ? !sourceUrl : !content}
             >
-              {isUpdatingSource ? "Add Source" : "Submit Evidence"}
+              {isUpdatingSource ? "Add Source" : "Submit Rebuttal"}
             </Button>
           </div>
         </form>

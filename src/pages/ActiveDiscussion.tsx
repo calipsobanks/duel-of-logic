@@ -976,7 +976,7 @@ const ActiveDiscussion = () => {
         )}
       </div>
 
-      {/* Floating Add Evidence Button */}
+      {/* Floating Add Rebuttal Button */}
       {canAddEvidence && evidenceList.length > 0 && (
         <Button
           size="lg"
@@ -987,7 +987,7 @@ const ActiveDiscussion = () => {
         </Button>
       )}
 
-      {/* Add Evidence Dialog */}
+      {/* Add Rebuttal Dialog */}
       <AddEvidenceDialog
         open={isAddingEvidence}
         onOpenChange={(open) => {

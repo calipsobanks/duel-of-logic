@@ -344,7 +344,7 @@ const OnboardingModal = ({ open, userId, onComplete }: OnboardingModalProps) => 
                 <div className="flex items-start gap-3">
                   <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
                   <div>
-                    <p className="font-semibold text-sm">Add Evidence</p>
+                    <p className="font-semibold text-sm">Add Rebuttal</p>
                     <p className="text-xs text-muted-foreground">Present claims with reliable sources</p>
                   </div>
                 </div>
