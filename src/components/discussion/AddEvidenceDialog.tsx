@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, Loader2, Save } from "lucide-react";
+import { Mic, MicOff, Loader2, Save, Plus, X } from "lucide-react";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,6 +25,11 @@ interface AddEvidenceDialogProps {
   debateId?: string; // For unique draft storage
 }
 
+interface Source {
+  url: string;
+  type: "factual" | "opinionated";
+}
+
 export const AddEvidenceDialog = ({
   open,
   onOpenChange,
@@ -35,8 +40,7 @@ export const AddEvidenceDialog = ({
   debateId
 }: AddEvidenceDialogProps) => {
   const [content, setContent] = useState("");
-  const [sourceUrl, setSourceUrl] = useState("");
-  const [sourceType, setSourceType] = useState<"factual" | "opinionated">("factual");
+  const [sources, setSources] = useState<Source[]>([{ url: "", type: "factual" }]);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const { isRecording, isTranscribing, startRecording, stopRecording, cancelRecording } = useVoiceRecording();
   const { toast } = useToast();
@@ -58,8 +62,7 @@ export const AddEvidenceDialog = ({
           try {
             const draft = JSON.parse(savedDraft);
             setContent(draft.content || "");
-            setSourceUrl(draft.sourceUrl || "");
-            setSourceType(draft.sourceType || "factual");
+            setSources(draft.sources || [{ url: "", type: "factual" }]);
             setLastSaved(new Date(draft.timestamp));
             toast({
               title: "Draft Restored",
@@ -86,12 +89,11 @@ export const AddEvidenceDialog = ({
     }
 
     // Only save if there's content
-    if (content || sourceUrl) {
+    if (content || sources.some(s => s.url)) {
       saveTimeoutRef.current = setTimeout(() => {
         const draft = {
           content,
-          sourceUrl,
-          sourceType,
+          sources,
           timestamp: new Date().toISOString()
         };
         localStorage.setItem(draftKey, JSON.stringify(draft));
@@ -104,7 +106,7 @@ export const AddEvidenceDialog = ({
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [content, sourceUrl, sourceType, open, isUpdatingSource, debateId]);
+  }, [content, sources, open, isUpdatingSource, debateId]);
 
   const handleStarterPhrase = (phrase: string) => {
     setContent(prev => {
@@ -135,6 +137,24 @@ export const AddEvidenceDialog = ({
     }
   };
 
+  const addSource = () => {
+    if (sources.length < 5) {
+      setSources([...sources, { url: "", type: "factual" }]);
+    }
+  };
+
+  const removeSource = (index: number) => {
+    if (sources.length > 1) {
+      setSources(sources.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateSource = (index: number, field: keyof Source, value: string) => {
+    const newSources = [...sources];
+    newSources[index] = { ...newSources[index], [field]: value };
+    setSources(newSources);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -142,8 +162,11 @@ export const AddEvidenceDialog = ({
       cancelRecording();
     }
     
-    // When updating source, we need the source URL
-    if (isUpdatingSource && !sourceUrl) {
+    // Filter out empty sources
+    const validSources = sources.filter(s => s.url.trim());
+    
+    // When updating source, we need at least one source URL
+    if (isUpdatingSource && validSources.length === 0) {
       return;
     }
     
@@ -168,7 +191,10 @@ export const AddEvidenceDialog = ({
       const evidenceData = {
         submittedBy: currentParticipantName,
         content: evidenceContent,
-        ...(sourceUrl && { sourceUrl, sourceType })
+        ...(validSources.length > 0 && { 
+          sourceUrl: JSON.stringify(validSources),
+          sourceType: validSources[0].type // Use first source type for backward compatibility
+        })
       };
 
       onSubmit(evidenceData);
@@ -181,8 +207,7 @@ export const AddEvidenceDialog = ({
       
       // Reset form
       setContent("");
-      setSourceUrl("");
-      setSourceType("factual");
+      setSources([{ url: "", type: "factual" }]);
       setLastSaved(null);
     }
   };
@@ -289,49 +314,79 @@ export const AddEvidenceDialog = ({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="sourceUrl" className="text-base">
-              Source URL {isUpdatingSource ? <span className="text-destructive">(Required)</span> : <span className="text-muted-foreground text-sm">(Optional - Bonus points if provided)</span>}
-            </Label>
-            <Input
-              id="sourceUrl"
-              type="url"
-              placeholder="https://example.com/source"
-              value={sourceUrl}
-              onChange={(e) => setSourceUrl(e.target.value)}
-              required={isUpdatingSource}
-            />
-          </div>
-
-          {sourceUrl && (
-            <div className="space-y-3">
-              <Label className="text-base">Source Classification</Label>
-              <RadioGroup
-                value={sourceType}
-                onValueChange={(value) => setSourceType(value as "factual" | "opinionated")}
-              >
-                <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <RadioGroupItem value="factual" id="factual" />
-                  <Label htmlFor="factual" className="flex-1 cursor-pointer">
-                    <span className="font-semibold">Factual Source</span>
-                    <p className="text-sm text-muted-foreground">
-                      Based on verifiable data, research, or objective information
-                    </p>
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <RadioGroupItem value="opinionated" id="opinionated" />
-                  <Label htmlFor="opinionated" className="flex-1 cursor-pointer">
-                    <span className="font-semibold">Opinionated Source</span>
-                    <p className="text-sm text-muted-foreground">
-                      Contains subjective views, interpretations, or editorial content
-                    </p>
-                  </Label>
-                </div>
-              </RadioGroup>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-base">
+                Sources {isUpdatingSource ? <span className="text-destructive">(Required)</span> : <span className="text-muted-foreground text-sm">(Optional - Bonus points if provided)</span>}
+              </Label>
+              {sources.length < 5 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addSource}
+                  className="gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Source
+                </Button>
+              )}
             </div>
-          )}
+
+            {sources.map((source, index) => (
+              <div key={index} className="space-y-3 p-4 border rounded-lg bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Source {index + 1}</Label>
+                  {sources.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSource(index)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <Input
+                  type="url"
+                  placeholder="https://example.com/source"
+                  value={source.url}
+                  onChange={(e) => updateSource(index, "url", e.target.value)}
+                  required={isUpdatingSource && index === 0}
+                />
+
+                {source.url && (
+                  <RadioGroup
+                    value={source.type}
+                    onValueChange={(value) => updateSource(index, "type", value)}
+                  >
+                    <div className="flex items-center space-x-3 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="factual" id={`factual-${index}`} />
+                      <Label htmlFor={`factual-${index}`} className="flex-1 cursor-pointer text-sm">
+                        <span className="font-semibold">Factual</span>
+                        <p className="text-xs text-muted-foreground">
+                          Based on verifiable data
+                        </p>
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-3 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="opinionated" id={`opinionated-${index}`} />
+                      <Label htmlFor={`opinionated-${index}`} className="flex-1 cursor-pointer text-sm">
+                        <span className="font-semibold">Opinionated</span>
+                        <p className="text-xs text-muted-foreground">
+                          Contains subjective views
+                        </p>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              </div>
+            ))}
+          </div>
 
           <div className="flex gap-3 pt-4">
             <Button
@@ -345,7 +400,7 @@ export const AddEvidenceDialog = ({
             <Button
               type="submit"
               className="flex-1"
-              disabled={isUpdatingSource ? !sourceUrl : !content}
+              disabled={isUpdatingSource ? !sources.some(s => s.url) : !content}
             >
               {isUpdatingSource ? "Add Source" : "Submit Rebuttal"}
             </Button>
