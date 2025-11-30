@@ -39,12 +39,14 @@ interface TimelineEvidenceCardProps {
   participantUsername: string;
   isCurrentUser: boolean;
   canAgree: boolean;
+  canDisagree: boolean;
   canChallenge: boolean;
   canRequestEvidence: boolean;
   canValidate: boolean;
   canAddSource: boolean;
   needsAction: boolean;
   onAgree: () => void;
+  onDisagree: () => void;
   onChallenge: () => void;
   onRequestEvidence: () => void;
   onValidate: () => void;
@@ -59,12 +61,14 @@ export const TimelineEvidenceCard = ({
   participantUsername,
   isCurrentUser,
   canAgree,
+  canDisagree,
   canChallenge,
   canRequestEvidence,
   canValidate,
   canAddSource,
   needsAction,
   onAgree,
+  onDisagree,
   onChallenge,
   onRequestEvidence,
   onValidate,
@@ -299,7 +303,7 @@ export const TimelineEvidenceCard = ({
       )}
 
       {/* Action Buttons */}
-      {(canAgree || canChallenge || canRequestEvidence || canValidate || canAddSource) && (
+      {(canAgree || canDisagree || canChallenge || canRequestEvidence || canValidate || canAddSource) && (
         <div className="flex items-center gap-2 pt-2 border-t">
           {canAgree && (
             <Button
@@ -309,6 +313,17 @@ export const TimelineEvidenceCard = ({
             >
               <Check className="w-4 h-4 mr-1" />
               Agree
+            </Button>
+          )}
+          {canDisagree && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={onDisagree}
+              className="flex-1"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Disagree
             </Button>
           )}
           {canChallenge && (

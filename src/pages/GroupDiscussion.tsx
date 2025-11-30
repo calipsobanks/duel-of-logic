@@ -463,12 +463,14 @@ export default function GroupDiscussion() {
                         participantUsername={e.profiles.username}
                         isCurrentUser={isMyEvidence}
                         canAgree={!isMyEvidence && !responded}
+                        canDisagree={false}
                         canChallenge={false}
                         canRequestEvidence={false}
                         canValidate={false}
                         canAddSource={false}
                         needsAction={!isMyEvidence && !responded}
                         onAgree={() => handleRespond(e.id, "agree")}
+                        onDisagree={() => {}}
                         onChallenge={() => {}}
                         onRequestEvidence={() => {}}
                         onValidate={() => {}}
