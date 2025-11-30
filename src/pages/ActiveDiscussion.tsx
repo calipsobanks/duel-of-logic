@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, Plus, Lightbulb, Share2, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { formatDistanceToNow } from "date-fns";
 import { AddEvidenceDialog } from "@/components/discussion/AddEvidenceDialog";
 import { TimelineEvidenceCard } from "@/components/discussion/TimelineEvidenceCard";
 import { VsIntroAnimation } from "@/components/discussion/VsIntroAnimation";
@@ -996,10 +997,15 @@ const ActiveDiscussion = () => {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h3 className="text-sm font-semibold text-foreground">AI Moderator Analysis</h3>
                   {isLoadingEvaluation && (
                     <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {evaluationHistory.length > 0 && !isLoadingEvaluation && (
+                    <span className="text-xs text-muted-foreground">
+                      · Updated {formatDistanceToNow(new Date(evaluationHistory[0].created_at), { addSuffix: true })}
+                    </span>
                   )}
                   {evaluationError && !isLoadingEvaluation && (
                     <Button
