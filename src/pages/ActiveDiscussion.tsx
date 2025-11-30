@@ -993,9 +993,15 @@ const ActiveDiscussion = () => {
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {aiEvaluation}
                   </p>
+                ) : isLoadingEvaluation ? (
+                  <div className="space-y-2">
+                    <div className="h-3 bg-muted animate-pulse rounded" />
+                    <div className="h-3 bg-muted animate-pulse rounded w-5/6" />
+                    <div className="h-3 bg-muted animate-pulse rounded w-4/6" />
+                  </div>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
-                    Analyzing debate positions...
+                    Waiting for analysis...
                   </p>
                 )}
               </div>
