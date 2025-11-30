@@ -421,7 +421,7 @@ export default function GroupDiscussion() {
           <div className="lg:col-span-2">
             {canSubmitEvidence() && (
               <Button onClick={() => setShowAddEvidence(true)} className="w-full mb-4">
-                Submit Evidence
+                Submit Rebuttal
               </Button>
             )}
 
